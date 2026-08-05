@@ -1,0 +1,13 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "恰好俱乐部",
+    "navigationBarBackgroundColor": "#fdfcf8",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#fdfcf8"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
