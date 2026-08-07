@@ -1,8 +1,17 @@
+import { useState } from 'react';
+import { AppShell } from './components/AppShell';
+import type { AppTab } from './components/BottomNav';
+import { DiscoverPage } from './pages/DiscoverPage';
+import { QiahaoProvider } from './state/QiahaoContext';
+
 export default function App() {
+  const [activeTab, setActiveTab] = useState<AppTab>('discover');
+
   return (
-    <main>
-      <h1>恰好</h1>
-      <button type="button">发现</button>
-    </main>
+    <QiahaoProvider>
+      <AppShell activeTab={activeTab} onTabChange={setActiveTab}>
+        <DiscoverPage onOpenActivity={() => undefined} />
+      </AppShell>
+    </QiahaoProvider>
   );
 }
