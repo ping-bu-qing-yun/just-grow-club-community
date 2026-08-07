@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 
 afterEach(cleanup);
 
@@ -35,4 +35,9 @@ class MemoryStorage implements Storage {
 Object.defineProperty(window, 'localStorage', {
   configurable: true,
   value: new MemoryStorage(),
+});
+
+Object.defineProperty(window, 'scrollTo', {
+  configurable: true,
+  value: vi.fn(),
 });
