@@ -21,13 +21,19 @@ function QiahaoApp() {
   function changeTab(tab: AppTab) {
     setSelectedActivityId(null);
     setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  function openActivity(activityId: string) {
+    setSelectedActivityId(activityId);
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
 
   let content;
   if (selectedActivity) {
-    content = <ActivityDetail activity={selectedActivity} onBack={() => setSelectedActivityId(null)} />;
+    content = <ActivityDetail activity={selectedActivity} onBack={() => { setSelectedActivityId(null); window.scrollTo({ top: 0 }); }} />;
   } else if (activeTab === 'saved') {
-    content = <SavedPage onExplore={() => changeTab('discover')} onOpenActivity={setSelectedActivityId} />;
+    content = <SavedPage onExplore={() => changeTab('discover')} onOpenActivity={openActivity} />;
   } else if (activeTab === 'messages') {
     content = <MessagesPage />;
   } else if (activeTab === 'create') {
@@ -35,7 +41,7 @@ function QiahaoApp() {
   } else if (activeTab === 'profile') {
     content = <ProfilePage onNotice={setToast} />;
   } else {
-    content = <DiscoverPage onOpenActivity={setSelectedActivityId} />;
+    content = <DiscoverPage onOpenActivity={openActivity} />;
   }
 
   return (
