@@ -1,0 +1,73 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  phone TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  name TEXT NOT NULL,
+  avatar TEXT NOT NULL,
+  bio TEXT NOT NULL DEFAULT '',
+  verified INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS activities (
+  id TEXT PRIMARY KEY,
+  host_id TEXT NOT NULL REFERENCES users(id),
+  title TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('饭搭子','咖啡','运动','徒步','看展','桌游')),
+  image TEXT NOT NULL,
+  date_label TEXT NOT NULL,
+  time TEXT NOT NULL,
+  location TEXT NOT NULL,
+  distance TEXT NOT NULL,
+  description TEXT NOT NULL,
+  capacity INTEGER NOT NULL CHECK (capacity BETWEEN 2 AND 50),
+  price INTEGER NOT NULL CHECK (price >= 0),
+  featured INTEGER NOT NULL DEFAULT 0,
+  note TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_activities_created ON activities(created_at DESC);
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_id TEXT NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, activity_id)
+);
+CREATE TABLE IF NOT EXISTS activity_members (
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_id TEXT NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'joined' CHECK (status = 'joined'),
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, activity_id)
+);
+CREATE TABLE IF NOT EXISTS threads (
+  id TEXT PRIMARY KEY,
+  activity_id TEXT UNIQUE REFERENCES activities(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  system INTEGER NOT NULL DEFAULT 0,
+  image TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS thread_members (
+  thread_id TEXT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  unread INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (thread_id, user_id)
+);
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  thread_id TEXT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
+  sender_id TEXT REFERENCES users(id),
+  body TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, created_at DESC);

@@ -1,10 +1,11 @@
-import { BadgeCheck, ChevronRight, Heart, MessageSquareText, Settings, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
+import { BadgeCheck, ChevronRight, Heart, LogOut, MessageSquareText, Settings, ShieldCheck, Sparkles, UsersRound } from 'lucide-react';
 import { currentUser } from '../domain/seed';
 import { useQiahao } from '../state/QiahaoContext';
 
 export function ProfilePage({ onNotice }: { onNotice: (message: string) => void }) {
-  const { activities, joinedIds, savedIds } = useQiahao();
-  const hostedCount = activities.filter((activity) => activity.host.id === currentUser.id).length;
+  const { activities, joinedIds, savedIds, user, logout } = useQiahao();
+  const identity = user ?? currentUser;
+  const hostedCount = activities.filter((activity) => activity.host.id === identity.id).length;
 
   const menu = [
     { label: `我发起的 · ${hostedCount}`, Icon: Sparkles },
@@ -12,14 +13,15 @@ export function ProfilePage({ onNotice }: { onNotice: (message: string) => void 
     { label: `我的心愿 · ${savedIds.size}`, Icon: Heart },
     { label: '安全中心', Icon: ShieldCheck },
     { label: '设置', Icon: Settings },
+    { label: '退出登录', Icon: LogOut },
   ];
 
   return (
     <main className="page profile-page">
       <div className="profile-cover" />
       <section className="profile-identity">
-        <img src={currentUser.avatar} alt={currentUser.name} />
-        <div><h1>{currentUser.name}</h1><p>{currentUser.bio}</p></div>
+        <img src={identity.avatar} alt={identity.name} />
+        <div><h1>{identity.name}</h1><p>{identity.bio}</p></div>
         <button type="button" className="icon-button" aria-label="编辑资料"><MessageSquareText size={19} /></button>
       </section>
 
@@ -36,7 +38,7 @@ export function ProfilePage({ onNotice }: { onNotice: (message: string) => void 
 
       <section className="profile-menu" aria-label="个人功能">
         {menu.map(({ label, Icon }) => (
-          <button key={label} type="button" onClick={() => onNotice('该入口将在接入账号服务后开放')}>
+          <button key={label} type="button" onClick={() => label === '退出登录' ? void logout() : onNotice('该入口将在接入账号服务后开放')}>
             <span><Icon size={19} />{label}</span><ChevronRight size={18} />
           </button>
         ))}

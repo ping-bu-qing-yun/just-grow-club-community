@@ -10,9 +10,13 @@ import { ProfilePage } from './pages/ProfilePage';
 import { QiahaoProvider } from './state/QiahaoContext';
 import { useQiahao } from './state/QiahaoContext';
 import { Toast } from './components/Toast';
+import { LoginPage } from './pages/LoginPage';
 
 function QiahaoApp() {
-  const { activities } = useQiahao();
+  const { activities, status, error, retry, login } = useQiahao();
+  if (status === 'anonymous') return <LoginPage login={login} />;
+  if (status === 'loading') return <main className="app-state"><p>正在打开恰好…</p></main>;
+  if (status === 'error') return <main className="app-state"><p>{error ?? '暂时无法连接服务器'}</p><button type="button" onClick={retry}>重试</button></main>;
   const [activeTab, setActiveTab] = useState<AppTab>('discover');
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
