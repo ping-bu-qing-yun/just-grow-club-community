@@ -1,7 +1,7 @@
 node_modules/
 dist/
 .superpowers/
+.worktrees/
 .vite/
 playwright-report/
 test-results/
-
