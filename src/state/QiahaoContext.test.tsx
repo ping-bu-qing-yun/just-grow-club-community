@@ -1,6 +1,7 @@
-import { act, render, screen } from '@testing-library/react';
-import { beforeEach, expect, it } from 'vitest';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, expect, it, vi } from 'vitest';
 import { QiahaoProvider, useQiahao } from './QiahaoContext';
+import type { QiahaoApi } from '../api/types';
 
 function StoreProbe() {
   const store = useQiahao();
@@ -64,4 +65,20 @@ it('creates an activity at the top and restores persisted state', () => {
 
   expect(screen.getByTestId('saved')).toHaveTextContent('walk-001');
   expect(screen.getByTestId('first-title')).toHaveTextContent('周日城市散步');
+});
+
+it('hydrates an existing session before loading remote data', async () => {
+  const remoteApi: QiahaoApi = {
+    login: vi.fn(), logout: vi.fn(),
+    me: vi.fn().mockResolvedValue({ user: { id: 'me', phone: '13800000000', name: '小恰', avatar: '/avatar.jpg', bio: '', verified: true } }),
+    activities: vi.fn().mockResolvedValue({ activities: [] }),
+    createActivity: vi.fn(), favorite: vi.fn(), join: vi.fn(),
+    threads: vi.fn().mockResolvedValue({ threads: [] }),
+  };
+  localStorage.setItem('qiahao-auth-token', 'existing-token');
+  function Probe() { const store = useQiahao(); return <output data-testid="remote-status">{store.status}</output>; }
+  render(<QiahaoProvider apiClient={remoteApi}><Probe /></QiahaoProvider>);
+  expect(await screen.findByTestId('remote-status')).toHaveTextContent('authenticated');
+  expect(remoteApi.me).toHaveBeenCalled();
+  await waitFor(() => expect(remoteApi.activities).toHaveBeenCalled());
 });
