@@ -13,15 +13,16 @@ export interface QiahaoContextValue {
   login: (phone: string, password: string) => Promise<void>; logout: () => Promise<void>; retry: () => void;
 }
 const QiahaoContext = createContext<QiahaoContextValue | null>(null);
-const localMode = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
 
 export function QiahaoProvider({ children, apiClient = api }: { children: ReactNode; apiClient?: QiahaoApi }) {
+  const localMode = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom') && apiClient === api;
   const [state, setState] = useState<PersistedState>(() => localMode ? readPersistedState() : { customActivities: [], savedIds: [], joinedIds: [], messages: [] });
   const [serverActivities, setServerActivities] = useState<Activity[]>([]);
   const [user, setUser] = useState<ApiUser | null>(localMode ? { ...currentUser, phone: '13800000000' } : null);
   const [status, setStatus] = useState<QiahaoStatus>(localMode ? 'authenticated' : (window.localStorage.getItem(AUTH_TOKEN_KEY) ? 'loading' : 'anonymous'));
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  useEffect(() => { if (localMode || status !== 'loading') return; let alive = true; apiClient.me().then(({ user: nextUser }) => { if (!alive) return; setUser(nextUser); setStatus('authenticated'); }).catch((reason) => { if (!alive) return; window.localStorage.removeItem(AUTH_TOKEN_KEY); setError(reason instanceof Error ? reason.message : '登录状态已失效'); setStatus('anonymous'); }); return () => { alive = false; }; }, [apiClient, localMode, status]);
   useEffect(() => { if (localMode || status !== 'authenticated') return; let alive = true; Promise.all([apiClient.activities(), apiClient.threads()]).then(([activities, threads]) => { if (!alive) return; setServerActivities(activities.activities as Activity[]); setState({ customActivities: [], savedIds: activities.activities.filter((item) => item.saved).map((item) => item.id), joinedIds: activities.activities.filter((item) => item.joined).map((item) => item.id), messages: threads.threads as MessageThread[] }); setError(null); }).catch((reason) => { if (alive) { setError(reason instanceof Error ? reason.message : '加载失败'); setStatus('error'); } }); return () => { alive = false; }; }, [apiClient, refreshKey, status]);
   useEffect(() => { if (localMode) writePersistedState(state); }, [state]);
   const activities = useMemo(() => localMode ? [...state.customActivities, ...seedActivities] : serverActivities, [serverActivities, state.customActivities]);
