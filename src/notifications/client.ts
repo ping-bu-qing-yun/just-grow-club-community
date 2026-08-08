@@ -1,19 +1,7 @@
-import { AUTH_TOKEN_KEY, ApiError } from '../api/client';
+import { AUTH_TOKEN_KEY, ApiError, request } from '../api/client';
 import type { AppNotification } from './types';
 
 type NotificationListResponse = { notifications: AppNotification[]; unreadCount: number };
-
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
-  const headers: Record<string, string> = { ...(init.headers as Record<string, string> | undefined) };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (init.body) headers['content-type'] = 'application/json';
-  const response = await fetch(`/api${path}`, { ...init, headers });
-  if (response.status === 204) return undefined as T;
-  const body = await response.json() as { data?: T; error?: { code?: string; message?: string } };
-  if (!response.ok) throw new ApiError(response.status, body.error?.code ?? 'REQUEST_FAILED', body.error?.message ?? '通知请求失败');
-  return body.data as T;
-}
 
 export const notificationApi = {
   async list(): Promise<NotificationListResponse> {

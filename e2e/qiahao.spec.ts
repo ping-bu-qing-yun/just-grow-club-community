@@ -97,3 +97,63 @@ test('publishes an activity and a need from the central plus menu', async ({ pag
   await expect(page.getByRole('status')).toContainText('需求已发布');
   await expect(page.getByRole('heading', { name: '想找周末一起逛展、散步的搭子' })).toBeVisible();
 });
+
+test('opens the bell notification center, detail, and archives read notices', async ({ page }) => {
+  let archived = false;
+  const fixtures = [
+    { id: 'e2e-announcement', category: 'announcement', title: '本周活动上新', body: '周末轻聊天晚餐局已开放报名。', createdAt: '2026-08-08T09:30:00.000Z', read: false, target: { type: 'activity', id: 'club-dinner', label: '查看活动' } },
+    { id: 'e2e-system', category: 'system', title: '恰好安全提醒', body: '第一次线下见面请选择公共场所。', createdAt: '2026-08-08T08:15:00.000Z', read: true, target: { type: 'none' } },
+    { id: 'e2e-like', category: 'like', title: '有人赞了你的需求', body: '清和赞了你的需求。', createdAt: '2026-08-07T20:40:00.000Z', read: false, target: { type: 'need', id: 'need-001', label: '查看需求' } },
+    { id: 'e2e-comment', category: 'comment', title: '收到一条评论回复', body: '阿岚回复你：集合前我会在活动群里发准确位置。', createdAt: '2026-08-07T18:20:00.000Z', read: false, target: { type: 'messages', id: 'system-safety', label: '查看会话' } },
+  ];
+  await page.route('**/api/notifications**', async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    if (url.pathname.endsWith('/stream')) {
+      await route.fulfill({ status: 200, headers: { 'content-type': 'text/event-stream' }, body: ': connected\n\n' });
+      return;
+    }
+    if (request.method() === 'GET' && url.pathname === '/api/notifications') {
+      const notifications = archived ? fixtures.filter((item) => !item.read) : fixtures;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { notifications, unreadCount: notifications.filter((item) => !item.read).length } }) });
+      return;
+    }
+    if (request.method() === 'PATCH' && url.pathname.includes('/read')) {
+      const id = url.pathname.split('/').at(-2);
+      const notification = fixtures.find((item) => item.id === id);
+      if (notification) notification.read = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { notification: { ...notification, read: true, readAt: new Date().toISOString() } } }) });
+      return;
+    }
+    if (request.method() === 'POST' && url.pathname.endsWith('/read/archive')) {
+      archived = true;
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { archivedCount: 2 } }) });
+      return;
+    }
+    await route.continue();
+  });
+  await page.reload();
+  const bell = page.getByRole('button', { name: /^通知/ });
+  await expect(bell).toBeVisible();
+  await expect(page.locator('.notification-bell__dot')).toBeVisible();
+  await bell.click();
+
+  await expect(page.getByRole('heading', { name: '通知' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '活动', exact: true })).toHaveCount(0);
+  await expect(page.getByText('本周活动上新')).toBeVisible();
+
+  await page.getByRole('button', { name: '评论', exact: true }).click();
+  const comment = page.getByRole('button', { name: /收到一条评论回复/ });
+  await comment.click();
+  await expect(page.getByRole('heading', { name: '收到一条评论回复' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '查看会话' })).toBeVisible();
+
+  await page.getByRole('button', { name: '返回通知' }).click();
+  await page.getByRole('button', { name: '清空已读' }).click();
+  await expect(page.getByText('收到一条评论回复')).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: '恰好' })).toBeVisible();
+  await page.getByRole('button', { name: /^通知/ }).click();
+  await expect(page.getByText('恰好安全提醒')).toHaveCount(0);
+  await expect(page.getByText('收到一条评论回复')).toHaveCount(0);
+});

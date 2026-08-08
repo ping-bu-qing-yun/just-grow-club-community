@@ -3,7 +3,7 @@ import type { ApiActivity, ApiThread, ApiUser, QiahaoApi } from './types';
 
 export const AUTH_TOKEN_KEY = 'qiahao-auth-token';
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); this.name = 'ApiError'; } }
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
   const headers: Record<string, string> = { 'content-type': 'application/json', ...(init.headers as Record<string, string> | undefined) }; if (token) headers.Authorization = `Bearer ${token}`;
   const response = await fetch(`/api${path}`, { ...init, headers });
