@@ -1,15 +1,18 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it } from 'vitest';
 import App from '../App';
 
 beforeEach(() => window.localStorage.clear());
 
-it('validates required fields and publishes from the activities shortcut', async () => {
+it('validates required fields and publishes from the central plus menu', async () => {
   const user = userEvent.setup();
   render(<App />);
 
-  await user.click(screen.getByRole('button', { name: '发布活动' }));
+  await user.click(screen.getByRole('button', { name: '发布' }));
+  const sheet = screen.getByRole('dialog', { name: '选择发布类型' });
+  await user.click(within(sheet).getByRole('button', { name: /活动/ }));
+
   expect(screen.getByRole('heading', { name: '发起一次恰好的见面' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '确认发布' }));
   expect(screen.getByText('请填写活动标题')).toBeInTheDocument();
