@@ -31,6 +31,7 @@ test('completes discovery and browses the four mobile-first tabs', async ({ page
   for (const label of ['活动', '发现', '需求', '我的']) {
     await expect(page.getByRole('button', { name: label, exact: true })).toBeVisible();
   }
+  await expect(page.getByRole('button', { name: '发布' })).toBeVisible();
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', '/manifest.webmanifest');
   await expect.poll(
     () => page.locator('.club-feature img').evaluate((image: HTMLImageElement) => image.naturalWidth),
@@ -47,6 +48,7 @@ test('completes discovery and browses the four mobile-first tabs', async ({ page
 
   await page.getByRole('button', { name: '需求', exact: true }).click();
   await expect(page.getByRole('heading', { name: '先说出你想遇见什么' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '发布需求' })).toHaveCount(0);
   await page.getByRole('button', { name: '不想尴尬交换微信，但想认真认识人' }).click();
   await expect(page.getByText('这张需求正在发生什么')).toBeVisible();
   await page.getByRole('button', { name: '我也有' }).click();
@@ -68,9 +70,12 @@ test('completes discovery and browses the four mobile-first tabs', async ({ page
   }
 });
 
-test('publishes an activity and a need from their current entry points', async ({ page }, testInfo) => {
+test('publishes an activity and a need from the central plus menu', async ({ page }, testInfo) => {
   const activityTitle = `周日城市散步 · ${testInfo.project.name}`;
-  await page.getByRole('button', { name: '发布活动' }).click();
+
+  await page.getByRole('button', { name: '发布' }).click();
+  await expect(page.getByRole('dialog', { name: '选择发布类型' })).toBeVisible();
+  await page.getByRole('button', { name: /活动/ }).filter({ hasText: '线下' }).click();
   await page.getByRole('button', { name: '确认发布' }).click();
   await expect(page.getByText('请填写活动标题')).toBeVisible();
   await page.getByRole('button', { name: '徒步' }).click();
@@ -82,12 +87,13 @@ test('publishes an activity and a need from their current entry points', async (
   await page.getByRole('button', { name: '确认发布' }).click();
   await expect(page.getByRole('status')).toContainText('活动已发布');
 
-  await page.getByRole('button', { name: '需求', exact: true }).click();
-  await page.getByRole('button', { name: '发布需求' }).click();
+  await page.getByRole('button', { name: '发布' }).click();
+  await page.getByRole('button', { name: /需求/ }).filter({ hasText: '遇见' }).click();
   await page.getByRole('button', { name: '确认发布' }).click();
   await expect(page.getByText('先写下一句话')).toBeVisible();
   await page.getByLabel('需求内容').fill('想找周末一起逛展、散步的搭子');
   await page.getByRole('button', { name: '#周末' }).click();
   await page.getByRole('button', { name: '确认发布' }).click();
+  await expect(page.getByRole('status')).toContainText('需求已发布');
   await expect(page.getByRole('heading', { name: '想找周末一起逛展、散步的搭子' })).toBeVisible();
 });

@@ -1,4 +1,69 @@
-import { CalendarHeart,Compass,MessagesSquare,UserRound } from 'lucide-react';
-export type AppTab='activities'|'explore'|'needs'|'profile';
-const items=[{id:'activities' as const,label:'活动',Icon:CalendarHeart},{id:'explore' as const,label:'发现',Icon:Compass},{id:'needs' as const,label:'需求',Icon:MessagesSquare},{id:'profile' as const,label:'我的',Icon:UserRound}];
-export function BottomNav({activeTab,onChange}:{activeTab:AppTab;onChange:(tab:AppTab)=>void}){return <nav className="bottom-nav" aria-label="主要导航">{items.map(({id,label,Icon})=><button key={id} type="button" className={`bottom-nav__item bottom-nav__item--${id}${activeTab===id?' is-active':''}`} aria-current={activeTab===id?'page':undefined} onClick={()=>onChange(id)}><span className="bottom-nav__icon"><Icon size={22} strokeWidth={2}/></span><span>{label}</span></button>)}</nav>}
+import { CalendarHeart, Compass, MessagesSquare, Plus, UserRound } from 'lucide-react';
+
+export type AppTab = 'activities' | 'explore' | 'needs' | 'profile';
+
+const items = [
+  { id: 'activities' as const, label: '活动', Icon: CalendarHeart },
+  { id: 'explore' as const, label: '发现', Icon: Compass },
+  { id: 'needs' as const, label: '需求', Icon: MessagesSquare },
+  { id: 'profile' as const, label: '我的', Icon: UserRound },
+];
+
+export function BottomNav({
+  activeTab,
+  onChange,
+  onPublish,
+}: {
+  activeTab: AppTab;
+  onChange: (tab: AppTab) => void;
+  onPublish: () => void;
+}) {
+  const left = items.slice(0, 2);
+  const right = items.slice(2);
+
+  return (
+    <nav className="bottom-nav" aria-label="主要导航">
+      {left.map(({ id, label, Icon }) => (
+        <button
+          key={id}
+          type="button"
+          className={`bottom-nav__item bottom-nav__item--${id}${activeTab === id ? ' is-active' : ''}`}
+          aria-current={activeTab === id ? 'page' : undefined}
+          onClick={() => onChange(id)}
+        >
+          <span className="bottom-nav__icon">
+            <Icon size={22} strokeWidth={2} />
+          </span>
+          <span>{label}</span>
+        </button>
+      ))}
+
+      <button
+        type="button"
+        className="bottom-nav__item bottom-nav__item--create"
+        aria-label="发布"
+        onClick={onPublish}
+      >
+        <span className="bottom-nav__icon">
+          <Plus size={26} strokeWidth={2.4} />
+        </span>
+        <span>发布</span>
+      </button>
+
+      {right.map(({ id, label, Icon }) => (
+        <button
+          key={id}
+          type="button"
+          className={`bottom-nav__item bottom-nav__item--${id}${activeTab === id ? ' is-active' : ''}`}
+          aria-current={activeTab === id ? 'page' : undefined}
+          onClick={() => onChange(id)}
+        >
+          <span className="bottom-nav__icon">
+            <Icon size={22} strokeWidth={2} />
+          </span>
+          <span>{label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
