@@ -91,3 +91,18 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_state
   ON notifications(user_id, archived_at, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
   ON notifications(user_id, read_at, archived_at);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id TEXT PRIMARY KEY,
+  content_type TEXT NOT NULL CHECK (content_type IN ('activity','need','life')),
+  content_id TEXT NOT NULL,
+  author_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  body TEXT NOT NULL CHECK (length(body) BETWEEN 1 AND 500),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  deleted_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_comments_content_order
+  ON comments(content_type, content_id, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_comments_author_order
+  ON comments(author_id, created_at DESC);

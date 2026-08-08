@@ -4,6 +4,7 @@ import type { ActivityCategory, CreateActivityInput } from '../src/domain/types'
 import { toMysqlDateTime } from './db';
 import type { QiahaoConnection, QiahaoDatabase } from './db';
 import { createContent, listTagsForContent } from './content-repository';
+import { countComments } from './comment-repository';
 
 const categories = new Set<ActivityCategory>(['饭搭子', '咖啡', '运动', '徒步', '看展', '桌游']);
 
@@ -48,7 +49,7 @@ function toUser(row: UserRow | { id: string; name: string; avatar: string; verif
 }
 
 async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: string) {
-  const [participants, savedRows, joinedRows, tags] = await Promise.all([
+  const [participants, savedRows, joinedRows, tags, commentCount] = await Promise.all([
     database.query<UserRow[]>(
       `SELECT u.id,u.name,u.avatar,u.verified,u.bio
          FROM activity_members m
@@ -60,6 +61,7 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     database.query<RowDataPacket[]>('SELECT 1 FROM favorites WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
     database.query<RowDataPacket[]>('SELECT 1 FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
     listTagsForContent(database, row.id),
+    countComments(database, 'activity', row.id),
   ]);
   return {
     id: row.id,
@@ -85,6 +87,8 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     note: row.note,
     status: row.status,
     tags,
+    commentCount,
+    comments: commentCount,
     saved: savedRows.length > 0,
     joined: joinedRows.length > 0,
   };

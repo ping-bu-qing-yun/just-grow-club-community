@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import type { RowDataPacket } from 'mysql2/promise';
 import type { ApiNeed } from '../src/api/types';
-import type { QiahaoDatabase, QiahaoConnection } from './db';
+import type { QiahaoDatabase } from './db';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
-import { createContent, listTagsForContent, requireContent, updateContentItem, updateContentTags } from './content-repository';
+import { createContent, listTagsForContent, requireContent, updateContentTags } from './content-repository';
+import { countComments } from './comment-repository';
 
 type NeedRow = RowDataPacket & {
   id: string;
@@ -31,6 +32,7 @@ function toNeed(row: NeedRow, tags: ApiNeed['tags']): ApiNeed {
     reviewedAt: row.reviewed_at ? toIsoTimestamp(row.reviewed_at) : null,
     createdAt: toIsoTimestamp(row.created_at),
     updatedAt: toIsoTimestamp(row.updated_at),
+    commentCount: 0,
   };
 }
 
@@ -44,12 +46,22 @@ const needSelect = `
 export async function getNeed(database: QiahaoDatabase, id: string, publicOnly = true): Promise<ApiNeed | null> {
   const rows = await database.query<NeedRow[]>(`${needSelect} WHERE n.id=? ${publicOnly ? "AND ci.status='approved'" : ''} LIMIT 1`, [id]);
   if (!rows[0]) return null;
-  return toNeed(rows[0], await listTagsForContent(database, id) as ApiNeed['tags']);
+  const [tags, commentCount] = await Promise.all([
+    listTagsForContent(database, id),
+    countComments(database, 'need', id),
+  ]);
+  return { ...toNeed(rows[0], tags as ApiNeed['tags']), commentCount, comments: commentCount };
 }
 
 export async function listNeeds(database: QiahaoDatabase): Promise<ApiNeed[]> {
   const rows = await database.query<NeedRow[]>(`${needSelect} WHERE ci.status='approved' ORDER BY ci.published_at DESC,ci.created_at DESC`);
-  return Promise.all(rows.map(async (row) => toNeed(row, await listTagsForContent(database, row.id) as ApiNeed['tags'])));
+  return Promise.all(rows.map(async (row) => {
+    const [tags, commentCount] = await Promise.all([
+      listTagsForContent(database, row.id),
+      countComments(database, 'need', row.id),
+    ]);
+    return { ...toNeed(row, tags as ApiNeed['tags']), commentCount, comments: commentCount };
+  }));
 }
 
 export async function createNeed(database: QiahaoDatabase, authorId: string, body: string, tagRefs: readonly string[] = []): Promise<ApiNeed> {

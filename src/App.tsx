@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AppShell } from './components/AppShell';
 import type { AppTab } from './components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from './components/PublishTypeSheet';
-import type { ClubActivity, Need } from './club/types';
+import type { ClubActivity, LifePost, Need } from './club/types';
 import { ClubProvider, useClub } from './club/ClubContext';
 import { QiahaoProvider, useQiahao } from './state/QiahaoContext';
 import { LoginPage } from './pages/LoginPage';
@@ -11,6 +11,7 @@ import { ActivitiesHomePage } from './pages/ActivitiesHomePage';
 import { ExplorePage } from './pages/ExplorePage';
 import { NeedsPage } from './pages/NeedsPage';
 import { NeedDetailPage } from './pages/NeedDetailPage';
+import { LifePostDetailPage } from './pages/LifePostDetailPage';
 import { ClubActivityDetailPage } from './pages/ClubActivityDetailPage';
 import { ProfilePage, type ProfileDestination } from './pages/ProfilePage';
 import { ProfileEditorPage } from './pages/ProfileEditorPage';
@@ -38,6 +39,9 @@ function QiahaoApp() {
   const [activeTab, setActiveTab] = useState<AppTab>('activities');
   const [subview, setSubview] = useState<string | null>(null);
   const [selectedNeed, setSelectedNeed] = useState<Need | null>(null);
+  const [needFocusComments, setNeedFocusComments] = useState(false);
+  const [selectedLifePost, setSelectedLifePost] = useState<LifePost | null>(null);
+  const [lifeFocusComments, setLifeFocusComments] = useState(false);
   const [selectedClubActivity, setSelectedClubActivity] = useState<ClubActivity | null>(() =>
     getClubActivityById(readActivityIdFromLocation()),
   );
@@ -53,6 +57,9 @@ function QiahaoApp() {
     const activity = getClubActivityById(readActivityIdFromLocation());
     if (activity) {
       setSelectedNeed(null);
+      setNeedFocusComments(false);
+      setSelectedLifePost(null);
+      setLifeFocusComments(false);
       setFeedbackActivity(null);
       setNotificationSubview(null);
       setSelectedNotification(null);
@@ -80,6 +87,9 @@ function QiahaoApp() {
     setActiveTab(tab);
     setSubview(null);
     setSelectedNeed(null);
+    setNeedFocusComments(false);
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
     setSelectedClubActivity(null);
     setFeedbackActivity(null);
     setNotificationSubview(null);
@@ -103,7 +113,10 @@ function QiahaoApp() {
   function selectPublish(kind: PublishKind) {
     setPublishOpen(false);
     setSelectedNeed(null);
+    setNeedFocusComments(false);
     setSelectedClubActivity(null);
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
     writeActivityIdToLocation(null);
     if (kind === 'activity') setSubview('create-activity');
     if (kind === 'need') setSubview('create-need');
@@ -113,6 +126,9 @@ function QiahaoApp() {
 
   function openClubActivity(activity: ClubActivity) {
     setSelectedNeed(null);
+    setNeedFocusComments(false);
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
     setFeedbackActivity(null);
     setSelectedClubActivity(activity);
     setPublishOpen(false);
@@ -125,9 +141,36 @@ function QiahaoApp() {
     writeActivityIdToLocation(null);
   }
 
+  function openNeed(need: Need, focusComments = false) {
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
+    setSelectedClubActivity(null);
+    setFeedbackActivity(null);
+    setNeedFocusComments(focusComments);
+    setSelectedNeed(need);
+    setSubview(null);
+    writeActivityIdToLocation(null);
+    window.scrollTo({ top: 0 });
+  }
+
+  function openLifePost(post: LifePost, focusComments = false) {
+    setSelectedNeed(null);
+    setNeedFocusComments(false);
+    setSelectedClubActivity(null);
+    setFeedbackActivity(null);
+    setLifeFocusComments(focusComments);
+    setSelectedLifePost(post);
+    setSubview(null);
+    writeActivityIdToLocation(null);
+    window.scrollTo({ top: 0 });
+  }
+
   function openActivityFeedback(activity: ClubActivity) {
     setSelectedNeed(null);
+    setNeedFocusComments(false);
     setSelectedClubActivity(null);
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
     setFeedbackActivity(activity);
     setSubview(null);
     setNotificationSubview(null);
@@ -139,6 +182,9 @@ function QiahaoApp() {
 
   function openNotifications() {
     setSelectedNeed(null);
+    setNeedFocusComments(false);
+    setSelectedLifePost(null);
+    setLifeFocusComments(false);
     setSelectedClubActivity(null);
     setFeedbackActivity(null);
     setSubview(null);
@@ -169,7 +215,7 @@ function QiahaoApp() {
     }
     if (notification.target?.type === 'need') {
       const need = [...state.publishedNeeds, ...seedNeeds].find((item) => item.id === notification.target?.id);
-      if (need) return setSelectedNeed(need);
+      if (need) return openNeed(need);
       setToast('相关需求暂时无法打开');
       return;
     }
@@ -197,8 +243,12 @@ function QiahaoApp() {
         need={selectedNeed}
         onBack={() => setSelectedNeed(null)}
         onOpenActivity={openClubActivity}
+        focusComments={needFocusComments}
       />
     );
+  }
+  else if (selectedLifePost) {
+    content = <LifePostDetailPage post={selectedLifePost} onBack={() => setSelectedLifePost(null)} focusComments={lifeFocusComments} />;
   }
   else if (selectedClubActivity) {
     content = (
@@ -229,7 +279,7 @@ function QiahaoApp() {
         onBack={() => setSubview(null)}
         onOpenNeed={(need) => {
           setSubview(null);
-          setSelectedNeed(need);
+          openNeed(need);
           window.scrollTo({ top: 0 });
         }}
         onOpenClubActivity={openClubActivity}
@@ -267,7 +317,7 @@ function QiahaoApp() {
       />
     );
   } else if (activeTab === 'explore') content = <ExplorePage onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
-  else if (activeTab === 'needs') content = <NeedsPage onOpenNeed={setSelectedNeed} />;
+  else if (activeTab === 'needs') content = <NeedsPage onOpenNeed={openNeed} onOpenLifePost={openLifePost} />;
   else if (activeTab === 'profile') content = <ProfilePage onNotice={setToast} onNavigate={profileNavigate} />;
   else content = <ActivitiesHomePage onNeeds={() => changeTab('needs')} onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
 

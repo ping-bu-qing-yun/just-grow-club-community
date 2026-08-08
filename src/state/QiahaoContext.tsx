@@ -24,7 +24,7 @@ function toNeed(item: ApiNeed): Need {
     copy: item.body,
     image: '/assets/coffee.jpg',
     resonance: 0,
-    comments: 0,
+    comments: item.commentCount ?? item.comments ?? 0,
     response: '等待同频的人回应',
     similar: false,
   };
@@ -39,7 +39,7 @@ function toLifePost(item: ApiLifePost): LifePost {
     text: item.body,
     images: item.image ? [item.image] : [],
     tag: item.tags[0] ? `#${item.tags[0].label}` : '#生活记录',
-    comments: 0,
+    comments: item.commentCount ?? item.comments ?? 0,
     resonance: 0,
   };
 }

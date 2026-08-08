@@ -2,11 +2,13 @@ import type { CreateActivityInput } from '../domain/types';
 import type {
   AdminContentItem,
   ApiActivity,
+  ApiComment,
   ApiContentTag,
   ApiLifePost,
   ApiNeed,
   ApiThread,
   ApiUser,
+  CommentPage,
   ContentStatus,
   ContentType,
   QiahaoApi,
@@ -51,4 +53,15 @@ export const api: QiahaoApi = {
   favorite: (id, saved) => request<{ saved: boolean }>(`/activities/${id}/favorite`, { method: saved ? 'PUT' : 'DELETE' }),
   join: (id) => request<{ thread: ApiThread }>(`/activities/${id}/join`, { method: 'POST' }),
   threads: () => request<{ threads: ApiThread[] }>('/threads'),
+  listComments: ({ contentType, contentId, limit = 5, cursor }) => {
+    const params = new URLSearchParams({ contentType, contentId, limit: String(limit) });
+    if (cursor) params.set('cursor', cursor);
+    return request<CommentPage>(`/comments?${params.toString()}`);
+  },
+  createComment: ({ contentType, contentId, body }) =>
+    request<{ comment: ApiComment }>('/comments', {
+      method: 'POST',
+      body: JSON.stringify({ contentType, contentId, body }),
+    }),
+  deleteComment: (commentId) => request<void>(`/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
 };

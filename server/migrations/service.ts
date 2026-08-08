@@ -21,6 +21,7 @@ const requiredTables = [
   'life_posts',
   'content_tags',
   'content_item_tags',
+  'comments',
   'schema_migrations',
 ] as const;
 
@@ -51,6 +52,44 @@ async function verifyTables(database: QiahaoDatabase): Promise<void> {
   if (missing.length) throw new Error(`迁移后仍缺少数据表：${missing.join(', ')}`);
 }
 
+async function verifyColumns(database: QiahaoDatabase): Promise<void> {
+  const requiredColumns = new Map([
+    ['users', ['role']],
+    ['content_items', ['author_id', 'content_type', 'status', 'reviewed_by', 'reviewed_at', 'rejection_reason', 'published_at']],
+    ['needs', ['body', 'author_id']],
+    ['life_posts', ['body', 'image', 'author_id']],
+    ['content_tags', ['content_type', 'slug', 'label', 'enabled']],
+    ['content_item_tags', ['content_id', 'tag_id', 'content_type']],
+  ]);
+  const rows = await database.query<Array<RowDataPacket & { TABLE_NAME: string; COLUMN_NAME: string }>>(
+    `SELECT TABLE_NAME,COLUMN_NAME
+       FROM information_schema.columns
+      WHERE table_schema=DATABASE()
+        AND table_name IN (?)`,
+    [[...requiredColumns.keys()]],
+  );
+  const present = new Set(rows.map((row) => `${row.TABLE_NAME}.${row.COLUMN_NAME}`));
+  const missing: string[] = [];
+  for (const [table, columns] of requiredColumns) {
+    for (const column of columns) if (!present.has(`${table}.${column}`)) missing.push(`${table}.${column}`);
+  }
+  if (missing.length) throw new Error(`迁移后仍缺少字段：${missing.join(', ')}`);
+}
+
+async function ensureActivitiesContentForeignKey(database: QiahaoDatabase): Promise<void> {
+  const rows = await database.query<Array<RowDataPacket & { count: number | string }>>(
+    `SELECT COUNT(*) AS count
+       FROM information_schema.KEY_COLUMN_USAGE
+      WHERE CONSTRAINT_SCHEMA=DATABASE()
+        AND TABLE_NAME='activities'
+        AND COLUMN_NAME='id'
+        AND REFERENCED_TABLE_NAME='content_items'
+        AND REFERENCED_COLUMN_NAME='id'`,
+  );
+  if (Number(rows[0]?.count ?? 0) > 0) return;
+  await database.query('ALTER TABLE activities ADD CONSTRAINT fk_activities_content_item FOREIGN KEY (id) REFERENCES content_items(id)');
+}
+
 export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
   await database.query(
     `CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -71,5 +110,7 @@ export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
       [version],
     );
   }
+  await ensureActivitiesContentForeignKey(database);
   await verifyTables(database);
+  await verifyColumns(database);
 }

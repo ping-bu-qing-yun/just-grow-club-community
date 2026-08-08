@@ -3,7 +3,8 @@ import type { RowDataPacket } from 'mysql2/promise';
 import type { ApiLifePost } from '../src/api/types';
 import type { QiahaoDatabase } from './db';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
-import { createContent, listTagsForContent, requireContent, updateContentItem, updateContentTags } from './content-repository';
+import { createContent, listTagsForContent, requireContent, updateContentTags } from './content-repository';
+import { countComments } from './comment-repository';
 
 type LifeRow = RowDataPacket & {
   id: string;
@@ -33,6 +34,7 @@ function toLifePost(row: LifeRow, tags: ApiLifePost['tags']): ApiLifePost {
     reviewedAt: row.reviewed_at ? toIsoTimestamp(row.reviewed_at) : null,
     createdAt: toIsoTimestamp(row.created_at),
     updatedAt: toIsoTimestamp(row.updated_at),
+    commentCount: 0,
   };
 }
 
@@ -46,12 +48,22 @@ const lifeSelect = `
 export async function getLifePost(database: QiahaoDatabase, id: string, publicOnly = true): Promise<ApiLifePost | null> {
   const rows = await database.query<LifeRow[]>(`${lifeSelect} WHERE lp.id=? ${publicOnly ? "AND ci.status='approved'" : ''} LIMIT 1`, [id]);
   if (!rows[0]) return null;
-  return toLifePost(rows[0], await listTagsForContent(database, id) as ApiLifePost['tags']);
+  const [tags, commentCount] = await Promise.all([
+    listTagsForContent(database, id),
+    countComments(database, 'life', id),
+  ]);
+  return { ...toLifePost(rows[0], tags as ApiLifePost['tags']), commentCount, comments: commentCount };
 }
 
 export async function listLifePosts(database: QiahaoDatabase): Promise<ApiLifePost[]> {
   const rows = await database.query<LifeRow[]>(`${lifeSelect} WHERE ci.status='approved' ORDER BY ci.published_at DESC,ci.created_at DESC`);
-  return Promise.all(rows.map(async (row) => toLifePost(row, await listTagsForContent(database, row.id) as ApiLifePost['tags'])));
+  return Promise.all(rows.map(async (row) => {
+    const [tags, commentCount] = await Promise.all([
+      listTagsForContent(database, row.id),
+      countComments(database, 'life', row.id),
+    ]);
+    return { ...toLifePost(row, tags as ApiLifePost['tags']), commentCount, comments: commentCount };
+  }));
 }
 
 export async function createLifePost(database: QiahaoDatabase, authorId: string, body: string, image?: string, tagRefs: readonly string[] = []): Promise<ApiLifePost> {

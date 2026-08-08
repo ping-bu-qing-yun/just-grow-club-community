@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { ClubProvider } from '../club/ClubContext';
 import { clubActivities } from '../club/seed';
+import { buildActivityShareLink } from '../lib/activityShare';
 import { ClubActivityDetailPage } from './ClubActivityDetailPage';
 
 beforeEach(() => {
@@ -55,4 +56,22 @@ it('opens dislike reason sheet only on the fourth 不考虑 tap', async () => {
   await user.click(within(sheet).getByRole('button', { name: '地点有点远' }));
   expect(onNotice).toHaveBeenLastCalledWith('已记下不考虑：地点有点远');
   expect(screen.queryByRole('dialog', { name: '选择不考虑原因' })).not.toBeInTheDocument();
+});
+
+it('shares the activity via clipboard when system share is unavailable', async () => {
+  const user = userEvent.setup();
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  Object.defineProperty(navigator, 'share', {
+    configurable: true,
+    value: undefined,
+  });
+  const onNotice = renderDetail();
+
+  await user.click(screen.getByRole('button', { name: /分享周五轻聊天晚餐局/ }));
+  expect(writeText).toHaveBeenCalledWith(buildActivityShareLink('club-dinner'));
+  expect(onNotice).toHaveBeenCalledWith('分享链接已复制');
 });

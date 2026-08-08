@@ -1,30 +1,39 @@
-import { ArrowLeft, Bookmark, Heart, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Bookmark, Heart } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
 import { useClub } from '../club/ClubContext';
+import { CommentSection } from '../components/CommentSection';
 
 export function NeedDetailPage({
   need,
   onBack,
   onOpenActivity,
+  focusComments = false,
 }: {
   need: Need;
   onBack: () => void;
   onOpenActivity?: (activity: ClubActivity) => void;
+  focusComments?: boolean;
 }) {
   const { state, toggleNeedSaved, toggleNeedResonance } = useClub();
   const saved = state.savedNeedIds.includes(need.id);
   const resonated = state.resonatedNeedIds.includes(need.id);
 
   const resonanceCount = need.resonance + (resonated ? 1 : 0);
-  const commentCount = need.comments;
+  const [commentCount, setCommentCount] = useState(need.comments);
   const hasResponse = Boolean(need.responseActivityId);
   const responseCount = hasResponse ? 1 : 0;
   const responseActivity = hasResponse
     ? clubActivities.find((item) => item.id === need.responseActivityId)
     : undefined;
   const statsEmpty = resonanceCount === 0 && commentCount === 0 && responseCount === 0;
-  const commentsEmpty = commentCount === 0;
+
+  useEffect(() => {
+    if (!focusComments) return;
+    const comments = document.getElementById(`need-${need.id}-comments`);
+    comments?.scrollIntoView?.({ block: 'start' });
+  }, [focusComments, need.id]);
 
   function handleViewActivity() {
     if (!responseActivity || !onOpenActivity) return;
@@ -87,30 +96,12 @@ export function NeedDetailPage({
           )}
         </section>
 
-        <section className={`need-comments${commentsEmpty ? ' is-empty' : ''}`}>
-          <h2>大家怎么说</h2>
-          {commentsEmpty ? (
-            <div className="need-empty-panel" aria-disabled="true">
-              <strong>还没有评论</strong>
-              <span>第一个说点什么吧</span>
-            </div>
-          ) : (
-            <>
-              <article>
-                <span>林</span>
-                <p>我也是，不想被安排认识谁，但愿意在合适的场景里自然认识。</p>
-              </article>
-              <article>
-                <span>M</span>
-                <p>如果人数少一点、地点近一点，我会想参加。</p>
-              </article>
-              <button type="button">
-                <MessageCircle size={16} />
-                展开更多评论
-              </button>
-            </>
-          )}
-        </section>
+        <CommentSection
+          contentType="need"
+          contentId={need.id}
+          title="大家怎么说"
+          onCountChange={setCommentCount}
+        />
 
         <div className="need-detail-actions">
           <button

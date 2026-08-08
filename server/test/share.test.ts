@@ -1,8 +1,8 @@
 import { afterEach, expect } from 'vitest';
-import { authInject, buildTestApp, mysqlIt } from './helpers';
+import { buildTestApp, mysqlIt } from './helpers';
 import { getShareActivity } from '../share-catalog';
 
-const resources: Array<{ app: { close: () => Promise<void>; inject: Function }; database: { close: () => void } }> = [];
+const resources: Array<{ app: { close: () => Promise<void>; inject: (opts: unknown) => Promise<{ statusCode: number; headers: Record<string, unknown>; body: string }> }; database: { close: () => void } }> = [];
 afterEach(async () => {
   for (const resource of resources.splice(0)) {
     await resource.app.close();
@@ -20,7 +20,7 @@ mysqlIt('returns og html for activity share landing pages', async () => {
     headers: { host: '127.0.0.1:3001' },
   });
   expect(response.statusCode).toBe(200);
-  expect(response.headers['content-type']).toContain('text/html');
+  expect(String(response.headers['content-type'])).toContain('text/html');
   expect(response.body).toContain(`og:title" content="${activity.title}"`);
   expect(response.body).toContain('og:image');
   expect(response.body).toContain('/assets/food.jpg');

@@ -4,6 +4,7 @@ import { AvatarStack } from '../components/AvatarStack';
 import { JoinSheet } from '../components/JoinSheet';
 import type { Activity } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
+import { CommentSection } from '../components/CommentSection';
 
 export function ActivityDetail({ activity, onBack }: { activity: Activity; onBack: () => void }) {
   const { joinedIds, savedIds, joinActivity, toggleSaved } = useQiahao();
@@ -55,6 +56,8 @@ export function ActivityDetail({ activity, onBack }: { activity: Activity; onBac
           <ShieldCheck size={21} />
           <div><strong>见面小提示</strong><p>{activity.note ?? '请选择公共场所集合，并提前确认彼此的行程。'}</p></div>
         </section>
+
+        <CommentSection contentType="activity" contentId={activity.id} title="活动评论" />
       </div>
 
       <div className="detail-action">

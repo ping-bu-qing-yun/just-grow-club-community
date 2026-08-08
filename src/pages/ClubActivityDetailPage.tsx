@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
+import { CommentSection } from '../components/CommentSection';
 import { shareActivity } from '../lib/activityShare';
 
 const DISLIKE_COUNT_KEY = 'qiahao-dislike-count';
@@ -173,6 +174,8 @@ export function ClubActivityDetailPage({
             <p>{activity.boundary}</p>
           </div>
         </section>
+
+        <CommentSection contentType="activity" contentId={activity.id} title="活动评论" />
 
         <div className="detail-secondary-actions">
           <button

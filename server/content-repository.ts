@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { RowDataPacket, ResultSetHeader } from 'mysql2/promise';
+import type { RowDataPacket } from 'mysql2/promise';
 import type { ContentStatus, ContentType } from '../src/api/types';
 import type { QiahaoConnection, QiahaoDatabase } from './db';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
@@ -54,10 +54,13 @@ type AdminRow = ContentRow & {
   reviewer_avatar: string | null;
   reviewer_verified: number | boolean | null;
   reviewer_bio: string | null;
-  title: string | null;
-  body: string | null;
+  activity_title: string | null;
+  activity_body: string | null;
+  need_body: string | null;
+  life_body: string | null;
   category: string | null;
-  image: string | null;
+  activity_image: string | null;
+  life_image: string | null;
 };
 
 export class ContentRepositoryError extends Error {
@@ -200,6 +203,7 @@ export async function listContentTags(database: ContentExecutor, contentType?: C
 }
 
 export async function createContentTag(database: ContentExecutor, input: { contentType: ContentType; slug: string; label: string }): Promise<ContentTag> {
+  if (typeof input.slug !== 'string' || typeof input.label !== 'string') throw new ContentRepositoryError('TAG_NOT_FOUND', '标签格式无效');
   const slug = input.slug.trim().toLowerCase();
   const label = input.label.trim();
   if (!/^[a-z0-9][a-z0-9-]{0,119}$/.test(slug) || !label || label.length > 120) {
@@ -225,15 +229,25 @@ export async function createContentTag(database: ContentExecutor, input: { conte
 export async function updateContentTag(database: ContentExecutor, id: string, input: { slug?: string; label?: string; enabled?: boolean }): Promise<ContentTag> {
   const current = await database.query<TagRow[]>('SELECT id,content_type,slug,label,enabled FROM content_tags WHERE id=? LIMIT 1', [id]);
   if (!current[0]) throw new ContentRepositoryError('TAG_NOT_FOUND', '标签不存在');
+  if ((input.slug !== undefined && typeof input.slug !== 'string') || (input.label !== undefined && typeof input.label !== 'string') || (input.enabled !== undefined && typeof input.enabled !== 'boolean')) {
+    throw new ContentRepositoryError('TAG_NOT_FOUND', '标签格式无效');
+  }
   const nextSlug = input.slug === undefined ? current[0].slug : input.slug.trim().toLowerCase();
   const nextLabel = input.label === undefined ? current[0].label : input.label.trim();
   if (!/^[a-z0-9][a-z0-9-]{0,119}$/.test(nextSlug) || !nextLabel || nextLabel.length > 120) {
     throw new ContentRepositoryError('TAG_NOT_FOUND', '标签格式无效');
   }
-  await database.query(
-    'UPDATE content_tags SET slug=?,label=?,enabled=?,updated_at=? WHERE id=?',
-    [nextSlug, nextLabel, input.enabled === undefined ? current[0].enabled : input.enabled ? 1 : 0, toMysqlDateTime(), id],
-  );
+  try {
+    await database.query(
+      'UPDATE content_tags SET slug=?,label=?,enabled=?,updated_at=? WHERE id=?',
+      [nextSlug, nextLabel, input.enabled === undefined ? current[0].enabled : input.enabled ? 1 : 0, toMysqlDateTime(), id],
+    );
+  } catch (error) {
+    if (error instanceof Error && /duplicate|unique/i.test(error.message)) {
+      throw new ContentRepositoryError('DUPLICATE_TAG', '同类型标签已存在', 409);
+    }
+    throw error;
+  }
   const rows = await database.query<TagRow[]>('SELECT id,content_type,slug,label,enabled FROM content_tags WHERE id=?', [id]);
   return toTag(rows[0]);
 }
@@ -296,7 +310,8 @@ export async function listAdminContent(database: QiahaoDatabase, filters: { type
     params.push(filters.tag, filters.tag, filters.tag);
   }
   const rows = await database.query<AdminRow[]>(
-    `SELECT ci.*,u.id AS author_id,u.name AS author_name,u.avatar AS author_avatar,u.verified AS author_verified,u.bio AS author_bio,
+    `SELECT ci.id,ci.author_id,ci.content_type,ci.status,ci.reviewed_by,ci.reviewed_at,ci.rejection_reason,ci.published_at,ci.created_at,ci.updated_at,
+            u.name AS author_name,u.avatar AS author_avatar,u.verified AS author_verified,u.bio AS author_bio,
             r.id AS reviewer_id,r.name AS reviewer_name,r.avatar AS reviewer_avatar,r.verified AS reviewer_verified,r.bio AS reviewer_bio,
             a.title AS activity_title,a.description AS activity_body,a.category,a.image AS activity_image,
             n.body AS need_body,lp.body AS life_body,lp.image AS life_image
