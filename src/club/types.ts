@@ -1,0 +1,5 @@
+export interface BasicProfile { nickname: string; birthDate: string; gender: string; education: string; occupation: string; height: string; city: string; hometown: string; relationship: string; bio: string; tags: string[]; preferences: string[] }
+export interface Need { id: string; author: string; subtitle: string; tags: string[]; title: string; copy: string; image: string; resonance: number; comments: number; response: string; similar?: boolean }
+export interface LifePost { id: string; author: string; meta: string; kind: string; text: string; images: string[]; tag: string; comments: number; resonance: number }
+export interface ClubActivity { id: string; theme: 'low'|'deep'|'walk'|'workshop'|'other'; status: '成熟活动'|'预活动'; title: string; tags: string[]; description: string; image: string; date: string; location: string; people: string; fee: string }
+export interface ClubState { onboardingComplete: boolean; onboardingStep: number; lightAnswers: string[][]; qaAnswers: Record<string,string>; profile: BasicProfile; savedNeedIds: string[]; resonatedNeedIds: string[]; publishedNeeds: Need[] }

@@ -1,0 +1,6 @@
+import { render,screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expect,it,vi } from 'vitest';
+import { ClubProvider } from '../../club/ClubContext';
+import { OnboardingFlow } from './OnboardingFlow';
+it('completes the four self discovery modules',async()=>{const user=userEvent.setup();const done=vi.fn();render(<ClubProvider><OnboardingFlow onComplete={done}/></ClubProvider>);expect(screen.getByText('你的回答就是最好的自我介绍')).toBeInTheDocument();for(const answer of ['想认识靠谱的人','少人数饭局','怕尴尬'])await user.click(screen.getByRole('button',{name:answer}));await user.click(screen.getByRole('button',{name:'继续到 QA 问答'}));expect(screen.getByText('QA 问答')).toBeInTheDocument();await user.type(screen.getByLabelText('当前回答'),'做自己的时候很舒服');await user.click(screen.getByRole('button',{name:'保存并继续'}));await user.click(screen.getByRole('button',{name:'跳到基础资料'}));await user.clear(screen.getByLabelText('昵称'));await user.type(screen.getByLabelText('昵称'),'小满');await user.click(screen.getByRole('button',{name:'生成画像'}));expect(screen.getByText('低压力线下重启型')).toBeInTheDocument();await user.click(screen.getByRole('button',{name:/去看活动/}));expect(done).toHaveBeenCalled();});
