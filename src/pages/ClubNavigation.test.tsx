@@ -3,14 +3,20 @@ import { expect, it, vi } from 'vitest';
 import { BottomNav } from '../components/BottomNav';
 import { ClubProvider } from '../club/ClubContext';
 import { ActivitiesHomePage } from './ActivitiesHomePage';
+import { QiahaoProvider } from '../state/QiahaoContext';
+import { NotificationsProvider } from '../notifications/NotificationContext';
 
 it('uses four club tabs plus central publish and shows portrait recommendations', () => {
   render(
     <>
       <BottomNav activeTab="activities" onChange={vi.fn()} onPublish={vi.fn()} />
-      <ClubProvider>
-        <ActivitiesHomePage onNeeds={vi.fn()} />
-      </ClubProvider>
+      <QiahaoProvider>
+        <NotificationsProvider>
+          <ClubProvider>
+            <ActivitiesHomePage onNeeds={vi.fn()} onOpenActivity={vi.fn()} onOpenNotifications={vi.fn()} />
+          </ClubProvider>
+        </NotificationsProvider>
+      </QiahaoProvider>
     </>,
   );
 

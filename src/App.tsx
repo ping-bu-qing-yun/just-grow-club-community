@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AppShell } from './components/AppShell';
 import type { AppTab } from './components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from './components/PublishTypeSheet';
-import type { Need } from './club/types';
+import type { ClubActivity, Need } from './club/types';
 import { ClubProvider, useClub } from './club/ClubContext';
 import { QiahaoProvider, useQiahao } from './state/QiahaoContext';
 import { LoginPage } from './pages/LoginPage';
@@ -11,6 +11,7 @@ import { ActivitiesHomePage } from './pages/ActivitiesHomePage';
 import { ExplorePage } from './pages/ExplorePage';
 import { NeedsPage } from './pages/NeedsPage';
 import { NeedDetailPage } from './pages/NeedDetailPage';
+import { ClubActivityDetailPage } from './pages/ClubActivityDetailPage';
 import { ProfilePage, type ProfileDestination } from './pages/ProfilePage';
 import { ProfileEditorPage } from './pages/ProfileEditorPage';
 import { ProfileRecordsPage } from './pages/ProfileRecordsPage';
@@ -21,13 +22,22 @@ import { MessagesPage } from './pages/MessagesPage';
 import { SavedPage } from './pages/SavedPage';
 import { Toast } from './components/Toast';
 import { canPublishActivity } from './domain/roles';
+import { NotificationsProvider, useNotifications } from './notifications/NotificationContext';
+import { NotificationCenterPage } from './pages/NotificationCenterPage';
+import { NotificationDetailPage } from './pages/NotificationDetailPage';
+import type { AppNotification } from './notifications/types';
+import { clubActivities, seedNeeds } from './club/seed';
 
 function QiahaoApp() {
   const { status, error, retry, login, user } = useQiahao();
   const { state } = useClub();
+  const { notifications, markRead } = useNotifications();
   const [activeTab, setActiveTab] = useState<AppTab>('activities');
   const [subview, setSubview] = useState<string | null>(null);
   const [selectedNeed, setSelectedNeed] = useState<Need | null>(null);
+  const [selectedClubActivity, setSelectedClubActivity] = useState<ClubActivity | null>(null);
+  const [notificationSubview, setNotificationSubview] = useState<'center' | 'detail' | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
 
@@ -49,6 +59,9 @@ function QiahaoApp() {
     setActiveTab(tab);
     setSubview(null);
     setSelectedNeed(null);
+    setSelectedClubActivity(null);
+    setNotificationSubview(null);
+    setSelectedNotification(null);
     setPublishOpen(false);
     window.scrollTo({ top: 0 });
   }
@@ -67,15 +80,63 @@ function QiahaoApp() {
   function selectPublish(kind: PublishKind) {
     setPublishOpen(false);
     setSelectedNeed(null);
+    setSelectedClubActivity(null);
     if (kind === 'activity') setSubview('create-activity');
     if (kind === 'need') setSubview('create-need');
     if (kind === 'life') setSubview('create-life');
     window.scrollTo({ top: 0 });
   }
 
+  function openClubActivity(activity: ClubActivity) {
+    setSelectedNeed(null);
+    setSelectedClubActivity(activity);
+    setPublishOpen(false);
+    window.scrollTo({ top: 0 });
+  }
+
+  function openNotifications() {
+    setSelectedNeed(null);
+    setSelectedClubActivity(null);
+    setSubview(null);
+    setNotificationSubview('center');
+    setSelectedNotification(null);
+    window.scrollTo({ top: 0 });
+  }
+
+  function openNotification(notification: AppNotification) {
+    markRead(notification.id);
+    setSelectedNotification(notification);
+    setNotificationSubview('detail');
+    window.scrollTo({ top: 0 });
+  }
+
+  function navigateFromNotification(notification: AppNotification) {
+    setNotificationSubview(null);
+    setSelectedNotification(null);
+    if (notification.target?.type === 'activity') {
+      const activity = clubActivities.find((item) => item.id === notification.target?.id) ?? clubActivities[0];
+      return openClubActivity(activity);
+    }
+    if (notification.target?.type === 'need') {
+      const need = [...state.publishedNeeds, ...seedNeeds].find((item) => item.id === notification.target?.id);
+      if (need) return setSelectedNeed(need);
+    }
+    if (notification.target?.type === 'messages') setSubview('messages');
+  }
+
   let content;
-  if (selectedNeed) content = <NeedDetailPage need={selectedNeed} onBack={() => setSelectedNeed(null)} />;
-  else if (subview === 'editor') content = <ProfileEditorPage onBack={() => setSubview(null)} />;
+  if (notificationSubview === 'center') content = <NotificationCenterPage onBack={() => setNotificationSubview(null)} onOpen={openNotification} />;
+  else if (notificationSubview === 'detail' && selectedNotification) content = <NotificationDetailPage notification={selectedNotification} onBack={() => setNotificationSubview('center')} onNavigate={navigateFromNotification} />;
+  else if (selectedNeed) content = <NeedDetailPage need={selectedNeed} onBack={() => setSelectedNeed(null)} />;
+  else if (selectedClubActivity) {
+    content = (
+      <ClubActivityDetailPage
+        activity={selectedClubActivity}
+        onBack={() => setSelectedClubActivity(null)}
+        onNotice={setToast}
+      />
+    );
+  } else if (subview === 'editor') content = <ProfileEditorPage onBack={() => setSubview(null)} />;
   else if (subview === 'messages') content = <MessagesPage />;
   else if (subview === 'saved-activities') {
     content = <SavedPage onExplore={() => changeTab('explore')} onOpenActivity={() => setToast('活动详情已打开')} />;
@@ -110,13 +171,13 @@ function QiahaoApp() {
         }}
       />
     );
-  } else if (activeTab === 'explore') content = <ExplorePage />;
+  } else if (activeTab === 'explore') content = <ExplorePage onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
   else if (activeTab === 'needs') content = <NeedsPage onOpenNeed={setSelectedNeed} />;
   else if (activeTab === 'profile') content = <ProfilePage onNotice={setToast} onNavigate={profileNavigate} />;
-  else content = <ActivitiesHomePage onNeeds={() => changeTab('needs')} />;
+  else content = <ActivitiesHomePage onNeeds={() => changeTab('needs')} onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
 
   return (
-    <AppShell activeTab={activeTab} onTabChange={changeTab} onPublish={openPublish}>
+    <AppShell activeTab={activeTab} onTabChange={changeTab} onPublish={openPublish} showBottomNav={!notificationSubview}>
       {content}
       {publishOpen && (
         <PublishTypeSheet
@@ -133,9 +194,11 @@ function QiahaoApp() {
 export default function App() {
   return (
     <QiahaoProvider>
-      <ClubProvider>
-        <QiahaoApp />
-      </ClubProvider>
+      <NotificationsProvider>
+        <ClubProvider>
+          <QiahaoApp />
+        </ClubProvider>
+      </NotificationsProvider>
     </QiahaoProvider>
   );
 }

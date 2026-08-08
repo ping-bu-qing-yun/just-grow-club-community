@@ -6,12 +6,14 @@ import { seedDatabase } from './seed';
 import { createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
 import type { CreateActivityInput } from '../src/domain/types';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
+import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
+import { NotificationHub } from './notification-hub';
 
-type Options = { database: QiahaoDatabase };
+type Options = { database: QiahaoDatabase; notificationHub?: NotificationHub };
 function fail(reply: { code: (status: number) => any; send: (body: unknown) => any }, status: number, code: string, message: string) { return reply.code(status).send({ error: { code, message } }); }
 function userFrom(request: FastifyRequest, database: QiahaoDatabase) { return authenticateToken(database, request.headers.authorization); }
 
-export function buildApp({ database }: Options): FastifyInstance {
+export function buildApp({ database, notificationHub = new NotificationHub() }: Options): FastifyInstance {
   const app = Fastify({ logger: false });
   app.register(cors, { origin: ['http://127.0.0.1:5174', 'http://localhost:5174'] });
   app.get('/api/health', async () => ({ data: { status: 'ok' } }));
@@ -32,7 +34,54 @@ export function buildApp({ database }: Options): FastifyInstance {
   app.post<{ Params: { id: string } }>('/api/activities/:id/join', async (request, reply) => { const user = userFrom(request, database); if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录'); const result = joinActivity(database, user.id, request.params.id); if (result.kind === 'missing') return fail(reply, 404, 'NOT_FOUND', '活动不存在'); if (result.kind === 'full') return fail(reply, 409, 'ACTIVITY_FULL', '活动名额已满'); return { data: { thread: result.thread } }; });
   app.get('/api/threads', async (request, reply) => { const user = userFrom(request, database); if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录'); return { data: { threads: listThreads(database, user.id) } }; });
   app.get<{ Params: { id: string } }>('/api/threads/:id/messages', async (request, reply) => { const user = userFrom(request, database); if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录'); const result = listMessages(database, user.id, request.params.id); if (result.kind === 'missing') return fail(reply, 404, 'NOT_FOUND', '会话不存在'); if (result.kind === 'forbidden') return fail(reply, 403, 'FORBIDDEN', '无权查看此会话'); return { data: { messages: result.messages } }; });
+  app.get('/api/notifications', async (request, reply) => {
+    const user = userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    const notifications = listNotifications(database, user.id);
+    return { data: { notifications, unreadCount: notifications.filter((item) => !item.read).length } };
+  });
+  app.patch<{ Params: { id: string } }>('/api/notifications/:id/read', async (request, reply) => {
+    const user = userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    const notification = getNotification(database, user.id, request.params.id);
+    if (!notification) return fail(reply, 404, 'NOT_FOUND', '通知不存在');
+    const updated = markNotificationRead(database, user.id, request.params.id)!;
+    notificationHub.publish(user.id, { type: 'upsert', notification: updated });
+    return { data: { notification: updated } };
+  });
+  const archiveHandler = async (request: FastifyRequest, reply: any) => {
+    const user = userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    const ids = archiveReadNotifications(database, user.id);
+    if (ids.length) notificationHub.publish(user.id, { type: 'archive', ids });
+    return { data: { archivedCount: ids.length } };
+  };
+  app.post('/api/notifications/read/archive', archiveHandler);
+  app.delete('/api/notifications/read', archiveHandler);
+  app.get('/api/notifications/stream', async (request, reply) => {
+    const user = userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    reply.hijack();
+    const response = reply.raw;
+    response.writeHead(200, {
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-cache, no-transform',
+      connection: 'keep-alive',
+      'x-accel-buffering': 'no',
+    });
+    response.write(': connected\n\n');
+    const unsubscribe = notificationHub.subscribe(user.id, (event) => {
+      if (!response.destroyed) response.write(`event: notification\ndata: ${JSON.stringify(event)}\n\n`);
+    });
+    const heartbeat = setInterval(() => {
+      if (!response.destroyed) response.write(': heartbeat\n\n');
+    }, 15_000);
+    response.on('close', () => {
+      clearInterval(heartbeat);
+      unsubscribe();
+    });
+  });
   return app;
 }
 
-export async function createSeededApp(database: QiahaoDatabase) { await seedDatabase(database); return buildApp({ database }); }
+export async function createSeededApp(database: QiahaoDatabase, notificationHub?: NotificationHub) { await seedDatabase(database); return buildApp({ database, notificationHub }); }

@@ -56,7 +56,7 @@ export function NotificationCenterPage({ onBack, onOpen }: { onBack: () => void;
 
       <nav className="notification-filters" aria-label="通知分类">
         {filters.map((item) => (
-          <button type="button" key={item.value} className={filter === item.value ? 'is-active' : ''} aria-pressed={filter === item.value} onClick={() => setFilter(item.value)}>
+            <button type="button" key={item.value} className={filter === item.value ? 'is-active' : ''} aria-label={item.label} aria-pressed={filter === item.value} onClick={() => setFilter(item.value)}>
             {item.label}{item.value === 'all' && unreadCount > 0 ? <b>{unreadCount > 99 ? '99+' : unreadCount}</b> : null}
           </button>
         ))}
