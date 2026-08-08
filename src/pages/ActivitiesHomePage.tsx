@@ -1,14 +1,21 @@
-import { ArrowRight, Bell, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { clubActivities, seedNeeds } from '../club/seed';
+import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { ClubActivityCard } from '../components/ClubActivityCard';
+import { NotificationBell } from '../notifications/NotificationBell';
 
 export function ActivitiesHomePage({
   onNeeds,
+  onOpenActivity,
+  onOpenNotifications,
 }: {
   onNeeds: () => void;
+  onOpenActivity: (activity: ClubActivity) => void;
+  onOpenNotifications: () => void;
 }) {
   const { state } = useClub();
+  const featured = clubActivities[0];
 
   return (
     <main className="club-home page">
@@ -17,9 +24,7 @@ export function ActivitiesHomePage({
           <small>周末好，{state.profile.nickname}</small>
           <h1>恰好</h1>
         </div>
-        <button className="icon-button" aria-label="通知">
-          <Bell size={20} />
-        </button>
+        <NotificationBell onOpen={onOpenNotifications} />
       </header>
 
       <section className="portrait-strip">
@@ -39,14 +44,21 @@ export function ActivitiesHomePage({
         </div>
       </section>
 
-      <section className="club-feature">
-        <img src={clubActivities[0].image} alt="周五轻聊天晚餐局" />
+      <button
+        type="button"
+        className="club-feature"
+        onClick={() => onOpenActivity(featured)}
+        aria-label={`查看${featured.title}详情`}
+      >
+        <img src={featured.image} alt={featured.title} />
         <div>
           <small>本周精选 · 成熟活动</small>
-          <h2>周五轻聊天晚餐局</h2>
-          <p>6-8人 · KIC附近 · 周五19:30</p>
+          <h2>{featured.title}</h2>
+          <p>
+            {featured.people} · {featured.location.split('/')[0].trim()} · {featured.date.replace(' · ', '')}
+          </p>
         </div>
-      </section>
+      </button>
 
       <section className="club-section">
         <header>
@@ -57,7 +69,7 @@ export function ActivitiesHomePage({
         </header>
         <div className="club-card-list">
           {clubActivities.slice(1, 4).map((activity) => (
-            <ClubActivityCard key={activity.id} activity={activity} />
+            <ClubActivityCard key={activity.id} activity={activity} onOpen={onOpenActivity} />
           ))}
         </div>
       </section>

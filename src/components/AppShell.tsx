@@ -6,17 +6,19 @@ export function AppShell({
   activeTab,
   onTabChange,
   onPublish,
+  showBottomNav = true,
 }: {
   children: ReactNode;
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
   onPublish: () => void;
+  showBottomNav?: boolean;
 }) {
   return (
     <div className="app-canvas">
       <div className="app-shell">
         <div className="app-shell__content">{children}</div>
-        <BottomNav activeTab={activeTab} onChange={onTabChange} onPublish={onPublish} />
+        {showBottomNav ? <BottomNav activeTab={activeTab} onChange={onTabChange} onPublish={onPublish} /> : null}
       </div>
     </div>
   );

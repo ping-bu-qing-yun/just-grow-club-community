@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { hashPassword } from './auth';
 import type { QiahaoDatabase } from './db';
+import { seedNotifications } from './notification-repository';
 
 const now = '2026-08-07T10:00:00.000Z';
 const users = [
@@ -34,4 +35,5 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
   db.prepare(`INSERT OR IGNORE INTO threads (id, title, system, created_at) VALUES (?, ?, 1, ?)`).run('system-safety', '恰好安全助手', now);
   db.prepare(`INSERT OR IGNORE INTO thread_members (thread_id, user_id, unread) VALUES (?, ?, 1)`).run('system-safety', 'me');
   db.prepare(`INSERT OR IGNORE INTO messages (id, thread_id, body, created_at) VALUES (?, ?, ?, ?)`).run('system-safety-message', 'system-safety', '初次见面请选择公共场所，并告诉朋友你的行程。', now);
+  seedNotifications(database);
 }

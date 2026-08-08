@@ -16,6 +16,8 @@ export interface AppNotification {
   body: string;
   createdAt: string;
   read: boolean;
+  readAt?: string | null;
+  archivedAt?: string | null;
   actor?: {
     id: string;
     name: string;

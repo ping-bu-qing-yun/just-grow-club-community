@@ -1,7 +1,7 @@
 import { AUTH_TOKEN_KEY, ApiError } from '../api/client';
 import type { AppNotification } from './types';
 
-type NotificationListResponse = { notifications: AppNotification[] };
+type NotificationListResponse = { notifications: AppNotification[]; unreadCount: number };
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
@@ -16,24 +16,26 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const notificationApi = {
-  async list(): Promise<AppNotification[]> {
+  async list(): Promise<NotificationListResponse> {
     const data = await request<NotificationListResponse>('/notifications');
-    return data.notifications;
+    return data;
   },
-  markRead(id: string): Promise<void> {
-    return request<void>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
+  markRead(id: string): Promise<{ notification: AppNotification }> {
+    return request<{ notification: AppNotification }>(`/notifications/${encodeURIComponent(id)}/read`, { method: 'PATCH' });
   },
-  clearRead(): Promise<void> {
-    return request<void>('/notifications/read', { method: 'DELETE' });
+  clearRead(): Promise<{ archivedCount: number }> {
+    return request<{ archivedCount: number }>('/notifications/read/archive', { method: 'POST' });
   },
 };
 
 export async function listenForNotifications({
   signal,
   onNotification,
+  onArchive,
 }: {
   signal: AbortSignal;
   onNotification: (notification: AppNotification) => void;
+  onArchive?: (ids: string[]) => void;
 }): Promise<void> {
   const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
   const response = await fetch('/api/notifications/stream', {
@@ -55,7 +57,12 @@ export async function listenForNotifications({
       for (const block of blocks) {
         const data = block.split(/\r?\n/).filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trim()).join('');
         if (!data) continue;
-        try { onNotification(JSON.parse(data) as AppNotification); } catch { /* Ignore malformed push payloads. */ }
+        try {
+          const event = JSON.parse(data) as { type?: string; notification?: AppNotification; ids?: string[] };
+          if (event.type === 'archive') onArchive?.(event.ids ?? []);
+          else if (event.notification) onNotification(event.notification);
+          else onNotification(event as AppNotification);
+        } catch { /* Ignore malformed push payloads. */ }
       }
     }
   } finally {
