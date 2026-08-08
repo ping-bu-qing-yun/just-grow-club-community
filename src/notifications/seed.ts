@@ -8,7 +8,7 @@ export const seedNotifications: AppNotification[] = [
     body: '周末轻聊天晚餐局和滨江轻徒步已开放报名，先看看有没有适合你的见面。',
     createdAt: '2026-08-08T09:30:00.000Z',
     read: false,
-    target: { type: 'activity', label: '查看活动' },
+    target: { type: 'activity', id: 'club-dinner', label: '查看活动' },
   },
   {
     id: 'notice-safety',
@@ -27,7 +27,7 @@ export const seedNotifications: AppNotification[] = [
     createdAt: '2026-08-07T20:40:00.000Z',
     read: false,
     actor: { id: 'u2', name: '清和', avatar: '/assets/avatar-2.jpg' },
-    target: { type: 'need', label: '查看需求' },
+    target: { type: 'need', id: 'd1', label: '查看需求' },
   },
   {
     id: 'notice-comment-activity',

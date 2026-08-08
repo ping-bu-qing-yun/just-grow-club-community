@@ -114,12 +114,16 @@ function QiahaoApp() {
     setNotificationSubview(null);
     setSelectedNotification(null);
     if (notification.target?.type === 'activity') {
-      const activity = clubActivities.find((item) => item.id === notification.target?.id) ?? clubActivities[0];
-      return openClubActivity(activity);
+      const activity = clubActivities.find((item) => item.id === notification.target?.id);
+      if (activity) return openClubActivity(activity);
+      setToast('相关活动暂时无法打开');
+      return;
     }
     if (notification.target?.type === 'need') {
       const need = [...state.publishedNeeds, ...seedNeeds].find((item) => item.id === notification.target?.id);
       if (need) return setSelectedNeed(need);
+      setToast('相关需求暂时无法打开');
+      return;
     }
     if (notification.target?.type === 'messages') setSubview('messages');
   }

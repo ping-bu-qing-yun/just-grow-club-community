@@ -1,6 +1,32 @@
 import { ArrowLeft, Heart, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
+import {
+  FeedbackReasonSheet,
+  type FeedbackReasonKind,
+} from '../components/FeedbackReasonSheet';
+
+const DISLIKE_COUNT_KEY = 'qiahao-dislike-count';
+/** 前 3 次「不考虑」仅记数；从第 4 次起弹出原因 */
+const DISLIKE_REASON_THRESHOLD = 4;
+
+function readDislikeCount(): number {
+  try {
+    const raw = window.localStorage.getItem(DISLIKE_COUNT_KEY);
+    const value = raw ? Number.parseInt(raw, 10) : 0;
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function writeDislikeCount(count: number) {
+  try {
+    window.localStorage.setItem(DISLIKE_COUNT_KEY, String(count));
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
 
 export function ClubActivityDetailPage({
   activity,
@@ -15,19 +41,42 @@ export function ClubActivityDetailPage({
   const [joined, setJoined] = useState(false);
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [feedback, setFeedback] = useState<'consider' | 'dislike' | null>(null);
+  const [reasonSheet, setReasonSheet] = useState<FeedbackReasonKind | null>(null);
 
   const feeLabel = activity.fee === '免费' ? '免费参加' : activity.fee;
   const needsText = activity.needs.join('、');
   const peopleText = `${activity.people}${activity.people.includes('男女') ? '' : '，男女比例尽量均衡'}`;
 
   function handleConsider() {
-    setFeedback('consider');
-    onNotice?.('已记下你的考虑，稍后可在消息里提醒你');
+    setReasonSheet('consider');
   }
 
   function handleDislike() {
+    const nextCount = readDislikeCount() + 1;
+    writeDislikeCount(nextCount);
+
+    if (nextCount >= DISLIKE_REASON_THRESHOLD) {
+      setReasonSheet('dislike');
+      return;
+    }
+
     setFeedback('dislike');
-    onNotice?.('已收到反馈，会少推相似活动');
+    onNotice?.(`已记下不考虑（${nextCount}/3），会少推相似活动`);
+  }
+
+  function handleReasonSelect(reason: string) {
+    const kind = reasonSheet;
+    setReasonSheet(null);
+    if (!kind) return;
+
+    if (kind === 'consider') {
+      setFeedback('consider');
+      onNotice?.(`已记下：${reason}`);
+      return;
+    }
+
+    setFeedback('dislike');
+    onNotice?.(`已记下不考虑：${reason}`);
   }
 
   return (
@@ -122,7 +171,7 @@ export function ClubActivityDetailPage({
             aria-pressed={feedback === 'dislike'}
             onClick={handleDislike}
           >
-            不喜欢
+            不考虑
           </button>
         </div>
       </div>
@@ -185,6 +234,14 @@ export function ClubActivityDetailPage({
             </button>
           </section>
         </div>
+      )}
+
+      {reasonSheet && (
+        <FeedbackReasonSheet
+          kind={reasonSheet}
+          onSelect={handleReasonSelect}
+          onClose={() => setReasonSheet(null)}
+        />
       )}
     </main>
   );
