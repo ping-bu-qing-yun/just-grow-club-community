@@ -1,9 +1,9 @@
-import { randomUUID } from 'node:crypto';
 import { hashPassword } from './auth';
+import { toMysqlDateTime } from './db';
 import type { QiahaoDatabase } from './db';
 import { seedNotifications } from './notification-repository';
 
-const now = '2026-08-07T10:00:00.000Z';
+const seedTime = '2026-08-07T10:00:00.000Z';
 const users = [
   ['u1', '13800000001', '阿矚', '/assets/avatar-1.jpg', '户外领队，走路不卷速度。', 1],
   ['u2', '13800000002', '清和', '/assets/avatar-2.jpg', '咖啡和城市散步。', 1],
@@ -24,16 +24,44 @@ const activities = [
 ] as const;
 
 export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
-  const db = database.raw;
   const passwordHash = await hashPassword('qiahao123');
-  db.prepare(`INSERT OR IGNORE INTO users (id, phone, password_hash, name, avatar, bio, verified, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run('me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, now, now);
-  const userStmt = db.prepare(`INSERT OR IGNORE INTO users (id, phone, password_hash, name, avatar, bio, verified, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-  for (const [id, phone, name, avatar, bio, verified] of users) userStmt.run(id, phone, passwordHash, name, avatar, bio, verified, now, now);
-  const activityStmt = db.prepare(`INSERT OR IGNORE INTO activities (id, host_id, title, category, image, date_label, time, location, distance, description, capacity, price, featured, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-  for (const activity of activities) activityStmt.run(...activity, '', now);
-  db.prepare(`INSERT OR IGNORE INTO threads (id, title, system, created_at) VALUES (?, ?, 1, ?)`).run('system-safety', '恰好安全助手', now);
-  db.prepare(`INSERT OR IGNORE INTO thread_members (thread_id, user_id, unread) VALUES (?, ?, 1)`).run('system-safety', 'me');
-  db.prepare(`INSERT OR IGNORE INTO messages (id, thread_id, body, created_at) VALUES (?, ?, ?, ?)`).run('system-safety-message', 'system-safety', '初次见面请选择公共场所，并告诉朋友你的行程。', now);
-  seedNotifications(database);
+  const now = toMysqlDateTime(seedTime);
+  await database.query(
+    `INSERT IGNORE INTO users
+      (id,phone,password_hash,name,avatar,bio,verified,created_at,updated_at)
+     VALUES (?,?,?,?,?,?,?,?,?)`,
+    ['me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, now, now],
+  );
+  for (const [id, phone, name, avatar, bio, verified] of users) {
+    await database.query(
+      `INSERT IGNORE INTO users
+        (id,phone,password_hash,name,avatar,bio,verified,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?)`,
+      [id, phone, passwordHash, name, avatar, bio, verified, now, now],
+    );
+  }
+  for (const activity of activities) {
+    await database.query(
+      `INSERT IGNORE INTO activities
+        (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [...activity, '', now],
+    );
+  }
+  await database.query(
+    `INSERT IGNORE INTO threads (id,title,system,created_at)
+     VALUES (?,?,?,?)`,
+    ['system-safety', '恰好安全助手', 1, now],
+  );
+  await database.query(
+    `INSERT IGNORE INTO thread_members (thread_id,user_id,unread)
+     VALUES (?,?,?)`,
+    ['system-safety', 'me', 1],
+  );
+  await database.query(
+    `INSERT IGNORE INTO messages (id,thread_id,body,created_at)
+     VALUES (?,?,?,?)`,
+    ['system-safety-message', 'system-safety', '初次见面请选择公共场所，并告诉朋友你的行程。', now],
+  );
+  await seedNotifications(database);
 }

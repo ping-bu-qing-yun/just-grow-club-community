@@ -9,7 +9,7 @@ export interface NotificationRedisBridge {
   close(): Promise<void>;
 }
 
-/** Redis is optional for local SQLite development and required for multi-instance fan-out. */
+/** Redis is optional for a single API instance and required for multi-instance fan-out. */
 export async function connectNotificationRedis(hub: NotificationHub): Promise<NotificationRedisBridge | null> {
   const url = process.env.REDIS_URL;
   if (!url) return null;

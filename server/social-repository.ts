@@ -1,8 +1,156 @@
 import { randomUUID } from 'node:crypto';
-import type { QiahaoDatabase } from './db';
+import type { RowDataPacket } from 'mysql2/promise';
+import type { MessageThread } from '../src/domain/types';
+import { toMysqlDateTime } from './db';
+import type { QiahaoConnection, QiahaoDatabase } from './db';
 
-export function setFavorite(db: QiahaoDatabase, userId: string, activityId: string, saved: boolean) { const exists = db.raw.prepare('SELECT 1 FROM activities WHERE id=?').get(activityId); if (!exists) return false; if (saved) db.raw.prepare('INSERT OR IGNORE INTO favorites (user_id,activity_id,created_at) VALUES (?,?,?)').run(userId, activityId, new Date().toISOString()); else db.raw.prepare('DELETE FROM favorites WHERE user_id=? AND activity_id=?').run(userId, activityId); return true; }
-export function joinActivity(db: QiahaoDatabase, userId: string, activityId: string) { const activity = db.raw.prepare('SELECT id,title,host_id,capacity,image FROM activities WHERE id=?').get(activityId) as any; if (!activity) return { kind: 'missing' as const }; const existing = db.raw.prepare('SELECT 1 FROM activity_members WHERE user_id=? AND activity_id=?').get(userId, activityId); const threadId = `thread-${activityId}`; if (existing) return { kind: 'ok' as const, thread: thread(db, threadId) }; const count = (db.raw.prepare("SELECT COUNT(*) AS count FROM activity_members WHERE activity_id=? AND status='joined'").get(activityId) as { count: number }).count; if (count >= activity.capacity) return { kind: 'full' as const }; const now = new Date().toISOString(); db.raw.exec('BEGIN'); try { db.raw.prepare('INSERT INTO activity_members (user_id,activity_id,status,created_at) VALUES (?,?,?,?)').run(userId, activityId, 'joined', now); db.raw.prepare('INSERT OR IGNORE INTO threads (id,activity_id,title,system,image,created_at) VALUES (?,?,?,?,0,?)').run(threadId, activityId, `${activity.title}群聊`, activity.image, now); db.raw.prepare('INSERT OR IGNORE INTO thread_members (thread_id,user_id,unread) VALUES (?,?,1)').run(threadId, userId); db.raw.prepare('INSERT OR IGNORE INTO thread_members (thread_id,user_id,unread) VALUES (?,?,0)').run(threadId, activity.host_id); db.raw.prepare('INSERT INTO messages (id,thread_id,sender_id,body,created_at) VALUES (?,?,?,?,?)').run(randomUUID(), threadId, activity.host_id, '欢迎加入，出发前会在这里同步集合信息。', now); db.raw.exec('COMMIT'); } catch (error) { db.raw.exec('ROLLBACK'); throw error; } return { kind: 'ok' as const, thread: thread(db, threadId) }; }
-function thread(db: QiahaoDatabase, id: string) { const row = db.raw.prepare(`SELECT t.id,t.activity_id,t.title,t.image,t.system, m.body AS last_message,m.created_at, tm.unread FROM threads t LEFT JOIN messages m ON m.id=(SELECT id FROM messages WHERE thread_id=t.id ORDER BY created_at DESC LIMIT 1) JOIN thread_members tm ON tm.thread_id=t.id WHERE t.id=? ORDER BY m.created_at DESC`).get(id) as any; return row ? { id: row.id, activityId: row.activity_id ?? undefined, title: row.title, lastMessage: row.last_message ?? '', time: row.created_at ?? '', unread: row.unread, image: row.image ?? undefined, system: Boolean(row.system) } : null; }
-export function listThreads(db: QiahaoDatabase, userId: string) { const rows = db.raw.prepare(`SELECT t.id FROM threads t JOIN thread_members tm ON tm.thread_id=t.id WHERE tm.user_id=? ORDER BY t.created_at DESC`).all(userId) as Array<{ id: string }>; return rows.map((row) => thread(db, row.id)).filter(Boolean); }
-export function listMessages(db: QiahaoDatabase, userId: string, threadId: string) { const member = db.raw.prepare('SELECT 1 FROM thread_members WHERE thread_id=? AND user_id=?').get(threadId, userId); if (!member) return { kind: 'forbidden' as const }; const exists = db.raw.prepare('SELECT 1 FROM threads WHERE id=?').get(threadId); if (!exists) return { kind: 'missing' as const }; const messages = db.raw.prepare(`SELECT id,thread_id AS threadId,sender_id AS senderId,body,created_at AS createdAt FROM messages WHERE thread_id=? ORDER BY created_at`).all(threadId); return { kind: 'ok' as const, messages }; }
+type ActivityRow = RowDataPacket & {
+  id: string;
+  title: string;
+  host_id: string;
+  capacity: number | string;
+  image: string;
+};
+
+type ThreadRow = RowDataPacket & {
+  id: string;
+  activity_id: string | null;
+  title: string;
+  image: string | null;
+  system: number | boolean;
+  last_message: string | null;
+  message_created_at: string | null;
+  unread: number | string;
+};
+
+export async function setFavorite(database: QiahaoDatabase, userId: string, activityId: string, saved: boolean): Promise<boolean> {
+  const activities = await database.query<RowDataPacket[]>('SELECT id FROM activities WHERE id=? LIMIT 1', [activityId]);
+  if (!activities.length) return false;
+  if (saved) {
+    await database.query(
+      'INSERT IGNORE INTO favorites (user_id,activity_id,created_at) VALUES (?,?,?)',
+      [userId, activityId, toMysqlDateTime()],
+    );
+  } else {
+    await database.query('DELETE FROM favorites WHERE user_id=? AND activity_id=?', [userId, activityId]);
+  }
+  return true;
+}
+
+export type JoinActivityResult =
+  | { kind: 'missing' }
+  | { kind: 'full' }
+  | { kind: 'ok'; thread: MessageThread | null };
+
+export async function joinActivity(database: QiahaoDatabase, userId: string, activityId: string): Promise<JoinActivityResult> {
+  const result = await database.transaction(async (connection) => {
+    const activities = await connection.query<ActivityRow[]>(
+      'SELECT id,title,host_id,capacity,image FROM activities WHERE id=? FOR UPDATE',
+      [activityId],
+    );
+    const activity = activities[0];
+    if (!activity) return { kind: 'missing' as const };
+
+    const existing = await connection.query<RowDataPacket[]>(
+      'SELECT 1 FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1',
+      [userId, activityId],
+    );
+    const threadId = `thread-${activityId}`;
+    if (existing.length) return { kind: 'ok' as const, thread: await readThread(connection, threadId, userId) };
+
+    const countRows = await connection.query<Array<RowDataPacket & { count: number | string }>>(
+      `SELECT COUNT(*) AS count
+         FROM activity_members
+        WHERE activity_id=? AND status='joined'`,
+      [activityId],
+    );
+    if (Number(countRows[0]?.count ?? 0) >= Number(activity.capacity)) return { kind: 'full' as const };
+
+    const now = toMysqlDateTime();
+    await connection.query(
+      'INSERT INTO activity_members (user_id,activity_id,status,created_at) VALUES (?,?,?,?)',
+      [userId, activityId, 'joined', now],
+    );
+    await connection.query(
+      `INSERT INTO threads (id,activity_id,title,system,image,created_at)
+       VALUES (?,?,?,?,?,?)
+       ON DUPLICATE KEY UPDATE title=VALUES(title),image=VALUES(image)`,
+      [threadId, activityId, `${activity.title}群聊`, 0, activity.image, now],
+    );
+    await connection.query(
+      `INSERT INTO thread_members (thread_id,user_id,unread)
+       VALUES (?,?,1)
+       ON DUPLICATE KEY UPDATE unread=unread`,
+      [threadId, userId],
+    );
+    await connection.query(
+      `INSERT INTO thread_members (thread_id,user_id,unread)
+       VALUES (?,?,0)
+       ON DUPLICATE KEY UPDATE unread=unread`,
+      [threadId, activity.host_id],
+    );
+    await connection.query(
+      'INSERT INTO messages (id,thread_id,sender_id,body,created_at) VALUES (?,?,?,?,?)',
+      [randomUUID(), threadId, activity.host_id, '欢迎加入，出发前会在这里同步集合信息。', now],
+    );
+    return { kind: 'ok' as const, thread: await readThread(connection, threadId, userId) };
+  });
+  return result;
+}
+
+async function readThread(connection: QiahaoDatabase | QiahaoConnection, id: string, userId?: string): Promise<MessageThread | null> {
+  const rows = await connection.query<ThreadRow[]>(
+    `SELECT t.id,t.activity_id,t.title,t.image,t.system,
+            latest.body AS last_message,latest.created_at AS message_created_at,
+            tm.unread
+       FROM threads t
+       JOIN thread_members tm ON tm.thread_id=t.id
+       LEFT JOIN messages latest
+         ON latest.id=(SELECT m.id FROM messages m WHERE m.thread_id=t.id ORDER BY m.created_at DESC,m.id DESC LIMIT 1)
+      WHERE t.id=? ${userId ? 'AND tm.user_id=?' : ''}
+      LIMIT 1`,
+    userId ? [id, userId] : [id],
+  );
+  const row = rows[0];
+  return row ? {
+    id: row.id,
+    activityId: row.activity_id ?? undefined,
+    title: row.title,
+    lastMessage: row.last_message ?? '',
+    time: row.message_created_at ?? '',
+    unread: Number(row.unread),
+    image: row.image ?? undefined,
+    system: Boolean(row.system),
+  } : null;
+}
+
+export async function listThreads(database: QiahaoDatabase, userId: string): Promise<MessageThread[]> {
+  const rows = await database.query<Array<RowDataPacket & { id: string }>>(
+    `SELECT t.id
+       FROM threads t
+       JOIN thread_members tm ON tm.thread_id=t.id
+      WHERE tm.user_id=?
+      ORDER BY t.created_at DESC`,
+    [userId],
+  );
+  const threads = await Promise.all(rows.map((row) => readThread(database, row.id, userId)));
+  return threads.filter((thread): thread is MessageThread => thread !== null);
+}
+
+export async function listMessages(database: QiahaoDatabase, userId: string, threadId: string) {
+  const exists = await database.query<RowDataPacket[]>('SELECT 1 FROM threads WHERE id=? LIMIT 1', [threadId]);
+  if (!exists.length) return { kind: 'missing' as const };
+  const member = await database.query<RowDataPacket[]>(
+    'SELECT 1 FROM thread_members WHERE thread_id=? AND user_id=? LIMIT 1',
+    [threadId, userId],
+  );
+  if (!member.length) return { kind: 'forbidden' as const };
+  const messages = await database.query(
+    `SELECT id,thread_id AS threadId,sender_id AS senderId,body,created_at AS createdAt
+       FROM messages
+      WHERE thread_id=?
+      ORDER BY created_at,messages.id`,
+    [threadId],
+  );
+  return { kind: 'ok' as const, messages };
+}
