@@ -1,4 +1,4 @@
-import { ArrowUpRight, MapPin, UsersRound } from 'lucide-react';
+import { ArrowUpRight, MapPin, MessageCircle, UsersRound } from 'lucide-react';
 import type { ClubActivity } from '../club/types';
 
 export function ClubActivityCard({
@@ -9,17 +9,17 @@ export function ClubActivityCard({
   activity: ClubActivity;
   /** 推荐引擎动态匹配标签；缺省用活动自身 matchLabel */
   matchLabel?: string;
-  onOpen?: (activity: ClubActivity) => void;
+  onOpen?: (activity: ClubActivity, focusComments?: boolean) => void;
 }) {
-  function open() {
-    onOpen?.(activity);
+  function open(focusComments = false) {
+    onOpen?.(activity, focusComments);
   }
 
   const badge = matchLabel ?? activity.matchLabel;
 
   return (
     <article className="club-activity-card">
-      <button type="button" className="club-activity-media" onClick={open} aria-label={`打开${activity.title}`}>
+      <button type="button" className="club-activity-media" onClick={() => open()} aria-label={`打开${activity.title}`}>
         <img src={activity.image} alt="" />
         <span>{activity.status}</span>
       </button>
@@ -33,7 +33,7 @@ export function ClubActivityCard({
         <button
           type="button"
           className="club-activity-title"
-          onClick={open}
+          onClick={() => open()}
           aria-label={`查看${activity.title}详情`}
         >
           <h3>{activity.title}</h3>
@@ -51,6 +51,10 @@ export function ClubActivityCard({
           </span>
           <strong>{activity.fee}</strong>
         </div>
+        <button type="button" className="club-activity-comment-link" onClick={() => open(true)} aria-label={`查看${activity.title}评论`}>
+          <MessageCircle size={15} aria-hidden />
+          评论
+        </button>
       </div>
     </article>
   );

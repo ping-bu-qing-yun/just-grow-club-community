@@ -45,6 +45,7 @@ function QiahaoApp() {
   const [selectedClubActivity, setSelectedClubActivity] = useState<ClubActivity | null>(() =>
     getClubActivityById(readActivityIdFromLocation()),
   );
+  const [activityFocusComments, setActivityFocusComments] = useState(false);
   const [feedbackActivity, setFeedbackActivity] = useState<ClubActivity | null>(null);
   const [notificationSubview, setNotificationSubview] = useState<'center' | 'detail' | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
@@ -64,6 +65,7 @@ function QiahaoApp() {
       setNotificationSubview(null);
       setSelectedNotification(null);
       setSelectedClubActivity(activity);
+      setActivityFocusComments(false);
       writeActivityIdToLocation(activity.id);
     }
     setDeepLinkReady(true);
@@ -91,6 +93,7 @@ function QiahaoApp() {
     setSelectedLifePost(null);
     setLifeFocusComments(false);
     setSelectedClubActivity(null);
+    setActivityFocusComments(false);
     setFeedbackActivity(null);
     setNotificationSubview(null);
     setSelectedNotification(null);
@@ -115,6 +118,7 @@ function QiahaoApp() {
     setSelectedNeed(null);
     setNeedFocusComments(false);
     setSelectedClubActivity(null);
+    setActivityFocusComments(false);
     setSelectedLifePost(null);
     setLifeFocusComments(false);
     writeActivityIdToLocation(null);
@@ -124,13 +128,14 @@ function QiahaoApp() {
     window.scrollTo({ top: 0 });
   }
 
-  function openClubActivity(activity: ClubActivity) {
+  function openClubActivity(activity: ClubActivity, focusComments = false) {
     setSelectedNeed(null);
     setNeedFocusComments(false);
     setSelectedLifePost(null);
     setLifeFocusComments(false);
     setFeedbackActivity(null);
     setSelectedClubActivity(activity);
+    setActivityFocusComments(focusComments);
     setPublishOpen(false);
     writeActivityIdToLocation(activity.id);
     window.scrollTo({ top: 0 });
@@ -138,6 +143,7 @@ function QiahaoApp() {
 
   function closeClubActivity() {
     setSelectedClubActivity(null);
+    setActivityFocusComments(false);
     writeActivityIdToLocation(null);
   }
 
@@ -145,6 +151,7 @@ function QiahaoApp() {
     setSelectedLifePost(null);
     setLifeFocusComments(false);
     setSelectedClubActivity(null);
+    setActivityFocusComments(false);
     setFeedbackActivity(null);
     setNeedFocusComments(focusComments);
     setSelectedNeed(need);
@@ -157,6 +164,7 @@ function QiahaoApp() {
     setSelectedNeed(null);
     setNeedFocusComments(false);
     setSelectedClubActivity(null);
+    setActivityFocusComments(false);
     setFeedbackActivity(null);
     setLifeFocusComments(focusComments);
     setSelectedLifePost(post);
@@ -256,6 +264,7 @@ function QiahaoApp() {
         activity={selectedClubActivity}
         onBack={closeClubActivity}
         onNotice={setToast}
+        focusComments={activityFocusComments}
       />
     );
   } else if (subview === 'editor') content = <ProfileEditorPage onBack={() => setSubview(null)} />;

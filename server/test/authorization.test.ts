@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { requireCommentOwnerOrOperator, requireContentOwnerOrAdmin, requireRole, AuthorizationError } from '../authorization';
+import { requireCommentOwnerOrAdmin, requireContentOwnerOrAdmin, requireRole, AuthorizationError } from '../authorization';
 import type { AuthenticatedUser } from '../auth';
 
 const user = (role: 'admin' | 'user', id = 'u1'): AuthenticatedUser => ({
@@ -25,7 +25,7 @@ describe('server authorization helpers', () => {
   });
 
   it('keeps comment deletion compatible with the new admin role', () => {
-    expect(() => requireCommentOwnerOrOperator(user('admin'), { authorId: 'u2' })).not.toThrow();
-    expect(() => requireCommentOwnerOrOperator(user('user'), { authorId: 'u2' })).toThrowError(AuthorizationError);
+    expect(() => requireCommentOwnerOrAdmin(user('admin'), { authorId: 'u2' })).not.toThrow();
+    expect(() => requireCommentOwnerOrAdmin(user('user'), { authorId: 'u2' })).toThrowError(AuthorizationError);
   });
 });

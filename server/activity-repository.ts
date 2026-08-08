@@ -117,9 +117,11 @@ export async function getActivity(database: QiahaoDatabase, userId: string, id: 
 }
 
 export function validateActivity(input: Partial<CreateActivityInput>) {
-  if (!input.title?.trim() || !input.description?.trim() || !input.location?.trim() || !input.dateLabel?.trim() || !input.time?.trim()) return '请完整填写活动信息';
+  const textFields = [input.title, input.description, input.location, input.dateLabel, input.time];
+  if (textFields.some((value) => typeof value !== 'string' || !value.trim())) return '请完整填写活动信息';
+  if (input.title!.length > 255 || input.location!.length > 255 || input.dateLabel!.length > 120 || input.description!.length > 20000) return '活动文字内容过长';
   if (!categories.has(input.category as ActivityCategory)) return '活动类型无效';
-  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(input.time)) return '时间格式无效';
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(input.time!)) return '时间格式无效';
   if (!Number.isInteger(input.capacity) || input.capacity! < 2 || input.capacity! > 50) return '人数需在 2 至 50 人之间';
   if (!Number.isInteger(input.price) || input.price! < 0) return '费用不能为负数';
   return null;
