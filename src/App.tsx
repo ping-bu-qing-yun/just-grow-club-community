@@ -113,7 +113,7 @@ function QiahaoApp() {
   } else if (activeTab === 'explore') content = <ExplorePage />;
   else if (activeTab === 'needs') content = <NeedsPage onOpenNeed={setSelectedNeed} />;
   else if (activeTab === 'profile') content = <ProfilePage onNotice={setToast} onNavigate={profileNavigate} />;
-  else content = <ActivitiesHomePage onExplore={() => changeTab('explore')} onNeeds={() => changeTab('needs')} />;
+  else content = <ActivitiesHomePage onNeeds={() => changeTab('needs')} />;
 
   return (
     <AppShell activeTab={activeTab} onTabChange={changeTab} onPublish={openPublish}>
