@@ -9,7 +9,7 @@ it('uses four club tabs plus central publish and shows portrait recommendations'
     <>
       <BottomNav activeTab="activities" onChange={vi.fn()} onPublish={vi.fn()} />
       <ClubProvider>
-        <ActivitiesHomePage onExplore={vi.fn()} onNeeds={vi.fn()} />
+        <ActivitiesHomePage onNeeds={vi.fn()} />
       </ClubProvider>
     </>,
   );
@@ -20,4 +20,6 @@ it('uses four club tabs plus central publish and shows portrait recommendations'
   expect(screen.getByRole('button', { name: '发布' })).toBeInTheDocument();
   expect(screen.getByText('给你的见面')).toBeInTheDocument();
   expect(screen.getByText('你更适合，慢一点认识的场景')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /查看全部/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '发布活动' })).not.toBeInTheDocument();
 });

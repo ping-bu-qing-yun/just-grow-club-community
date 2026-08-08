@@ -4,10 +4,8 @@ import { useClub } from '../club/ClubContext';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 
 export function ActivitiesHomePage({
-  onExplore,
   onNeeds,
 }: {
-  onExplore: () => void;
   onNeeds: () => void;
 }) {
   const { state } = useClub();
@@ -56,10 +54,6 @@ export function ActivitiesHomePage({
             <span>FOR YOU</span>
             <h2>给你的见面</h2>
           </div>
-          <button onClick={onExplore}>
-            查看全部
-            <ArrowRight size={15} />
-          </button>
         </header>
         <div className="club-card-list">
           {clubActivities.slice(1, 4).map((activity) => (
@@ -74,7 +68,7 @@ export function ActivitiesHomePage({
           <small>需求广场 · 72人共鸣</small>
           <h2>不想尴尬交换微信，但想认真认识人</h2>
           <p>如果暂时没有合适活动，可以先看见同频的人。</p>
-          <button>
+          <button type="button">
             去看看
             <ArrowRight size={15} />
           </button>
