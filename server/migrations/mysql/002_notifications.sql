@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at DATETIME(3) NOT NULL,
   CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_notifications_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL,
+  CONSTRAINT chk_notifications_target CHECK (target_type <> 'none' OR target_id IS NULL),
   INDEX idx_notifications_user_state (user_id, archived_at, created_at DESC),
   INDEX idx_notifications_user_unread (user_id, read_at, archived_at)
 );
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS notification_outbox (
   payload JSON NOT NULL,
   published_at DATETIME(3),
   created_at DATETIME(3) NOT NULL,
+  CONSTRAINT fk_notification_outbox_notification FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE,
   INDEX idx_notification_outbox_pending (published_at, created_at),
-  CONSTRAINT fk_notification_outbox_notification FOREIGN KEY (notification_id) REFERENCES notifications(id) ON DELETE CASCADE
+  INDEX idx_notification_outbox_user (user_id, created_at)
 );

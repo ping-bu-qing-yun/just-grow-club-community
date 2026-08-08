@@ -19,20 +19,17 @@ function renderDetail(onNotice = vi.fn()) {
   return onNotice;
 }
 
-it('opens consider reasons and records the selected reason', async () => {
+it('records consider without opening a reason sheet', async () => {
   const user = userEvent.setup();
   const onNotice = renderDetail();
 
   await user.click(screen.getByRole('button', { name: '考虑' }));
-  const sheet = screen.getByRole('dialog', { name: '选择考虑原因' });
-  expect(within(sheet).getByRole('heading', { name: '你为什么还想考虑？' })).toBeInTheDocument();
-
-  await user.click(within(sheet).getByRole('button', { name: '时间不合适' }));
-  expect(onNotice).toHaveBeenCalledWith('已记下：时间不合适');
+  expect(onNotice).toHaveBeenCalledWith('已记下你的考虑，稍后可在消息里提醒你');
+  expect(screen.queryByRole('dialog', { name: '选择不考虑原因' })).not.toBeInTheDocument();
   expect(screen.queryByRole('dialog', { name: '选择考虑原因' })).not.toBeInTheDocument();
 });
 
-it('asks for dislike reason only from the fourth 不考虑 tap', async () => {
+it('opens dislike reason sheet only on the fourth 不考虑 tap', async () => {
   const user = userEvent.setup();
   const onNotice = renderDetail();
 
@@ -43,11 +40,16 @@ it('asks for dislike reason only from the fourth 不考虑 tap', async () => {
   await user.click(screen.getByRole('button', { name: '不考虑' }));
   await user.click(screen.getByRole('button', { name: '不考虑' }));
   expect(onNotice).toHaveBeenLastCalledWith('已记下不考虑（3/3），会少推相似活动');
+  expect(screen.queryByRole('dialog', { name: '选择不考虑原因' })).not.toBeInTheDocument();
 
   await user.click(screen.getByRole('button', { name: '不考虑' }));
   const sheet = screen.getByRole('dialog', { name: '选择不考虑原因' });
   expect(within(sheet).getByRole('heading', { name: '你为什么不考虑？' })).toBeInTheDocument();
+  for (const reason of ['想看看来的人', '怕太像相亲', '时间不合适', '地点有点远', '人数有顾虑', '话题没击中']) {
+    expect(within(sheet).getByRole('button', { name: reason })).toBeInTheDocument();
+  }
 
   await user.click(within(sheet).getByRole('button', { name: '地点有点远' }));
   expect(onNotice).toHaveBeenLastCalledWith('已记下不考虑：地点有点远');
+  expect(screen.queryByRole('dialog', { name: '选择不考虑原因' })).not.toBeInTheDocument();
 });

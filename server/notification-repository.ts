@@ -1,7 +1,9 @@
+import type { RowDataPacket } from 'mysql2/promise';
 import type { AppNotification, NotificationCategory, NotificationTargetType } from '../src/notifications/types';
+import { toIsoTimestamp, toMysqlDateTime } from './db';
 import type { QiahaoDatabase } from './db';
 
-type NotificationRow = {
+type NotificationRow = RowDataPacket & {
   id: string;
   user_id: string;
   category: NotificationCategory;
@@ -18,18 +20,28 @@ type NotificationRow = {
   created_at: string;
 };
 
+function optionalTimestamp(value: string | null): string | null {
+  return value === null ? null : toIsoTimestamp(value);
+}
+
 function toNotification(row: NotificationRow): AppNotification {
   return {
     id: row.id,
     category: row.category,
     title: row.title,
     body: row.body,
-    createdAt: row.created_at,
-    read: Boolean(row.read_at),
-    readAt: row.read_at,
-    archivedAt: row.archived_at,
-    actor: row.actor_id ? { id: row.actor_id, name: row.actor_name ?? '', avatar: row.actor_avatar ?? undefined } : undefined,
-    target: { type: row.target_type, id: row.target_id ?? undefined, label: row.target_label ?? undefined },
+    createdAt: toIsoTimestamp(row.created_at),
+    read: row.read_at !== null,
+    readAt: optionalTimestamp(row.read_at),
+    archivedAt: optionalTimestamp(row.archived_at),
+    actor: row.actor_id
+      ? { id: row.actor_id, name: row.actor_name ?? '', avatar: row.actor_avatar ?? undefined }
+      : undefined,
+    target: {
+      type: row.target_type,
+      id: row.target_id ?? undefined,
+      label: row.target_label ?? undefined,
+    },
   };
 }
 
@@ -37,33 +49,51 @@ const selectNotification = `
   SELECT n.id,n.user_id,n.category,n.title,n.body,n.actor_id,
          actor.name AS actor_name,actor.avatar AS actor_avatar,
          n.target_type,n.target_id,n.target_label,n.read_at,n.archived_at,n.created_at
-  FROM notifications n
-  LEFT JOIN users actor ON actor.id=n.actor_id`;
+    FROM notifications n
+    LEFT JOIN users actor ON actor.id=n.actor_id`;
 
-export function listNotifications(database: QiahaoDatabase, userId: string): AppNotification[] {
-  const rows = database.raw.prepare(`${selectNotification}
-    WHERE n.user_id=? AND n.archived_at IS NULL
-    ORDER BY n.created_at DESC,n.id DESC`).all(userId) as NotificationRow[];
+export async function listNotifications(database: QiahaoDatabase, userId: string): Promise<AppNotification[]> {
+  const rows = await database.query<NotificationRow[]>(
+    `${selectNotification}
+      WHERE n.user_id=? AND n.archived_at IS NULL
+      ORDER BY n.created_at DESC,n.id DESC`,
+    [userId],
+  );
   return rows.map(toNotification);
 }
 
-export function getNotification(database: QiahaoDatabase, userId: string, id: string): AppNotification | null {
-  const row = database.raw.prepare(`${selectNotification} WHERE n.user_id=? AND n.id=? AND n.archived_at IS NULL`).get(userId, id) as NotificationRow | undefined;
-  return row ? toNotification(row) : null;
+export async function getNotification(database: QiahaoDatabase, userId: string, id: string): Promise<AppNotification | null> {
+  const rows = await database.query<NotificationRow[]>(
+    `${selectNotification} WHERE n.user_id=? AND n.id=? AND n.archived_at IS NULL LIMIT 1`,
+    [userId, id],
+  );
+  return rows[0] ? toNotification(rows[0]) : null;
 }
 
-export function markNotificationRead(database: QiahaoDatabase, userId: string, id: string): AppNotification | null {
-  const now = new Date().toISOString();
-  const result = database.raw.prepare(`UPDATE notifications SET read_at=COALESCE(read_at,?) WHERE user_id=? AND id=? AND archived_at IS NULL`).run(now, userId, id);
-  if (!result.changes) return getNotification(database, userId, id);
+export async function markNotificationRead(database: QiahaoDatabase, userId: string, id: string): Promise<AppNotification | null> {
+  await database.query(
+    `UPDATE notifications
+        SET read_at=COALESCE(read_at,?)
+      WHERE user_id=? AND id=? AND archived_at IS NULL`,
+    [toMysqlDateTime(), userId, id],
+  );
   return getNotification(database, userId, id);
 }
 
-export function archiveReadNotifications(database: QiahaoDatabase, userId: string): string[] {
-  const rows = database.raw.prepare(`SELECT id FROM notifications WHERE user_id=? AND read_at IS NOT NULL AND archived_at IS NULL`).all(userId) as Array<{ id: string }>;
+export async function archiveReadNotifications(database: QiahaoDatabase, userId: string): Promise<string[]> {
+  const rows = await database.query<Array<RowDataPacket & { id: string }>>(
+    `SELECT id
+       FROM notifications
+      WHERE user_id=? AND read_at IS NOT NULL AND archived_at IS NULL`,
+    [userId],
+  );
   if (!rows.length) return [];
-  const now = new Date().toISOString();
-  database.raw.prepare(`UPDATE notifications SET archived_at=? WHERE user_id=? AND read_at IS NOT NULL AND archived_at IS NULL`).run(now, userId);
+  await database.query(
+    `UPDATE notifications
+        SET archived_at=?
+      WHERE user_id=? AND read_at IS NOT NULL AND archived_at IS NULL`,
+    [toMysqlDateTime(), userId],
+  );
   return rows.map((row) => row.id);
 }
 
@@ -80,25 +110,56 @@ export interface CreateNotificationInput {
   createdAt?: string;
 }
 
-export function createNotification(database: QiahaoDatabase, input: CreateNotificationInput): AppNotification {
+export async function createNotification(database: QiahaoDatabase, input: CreateNotificationInput): Promise<AppNotification> {
   const targetType = input.targetType ?? 'none';
   if (targetType === 'none' && input.targetId) throw new Error('通知目标类型为 none 时不能提供目标 ID');
-  const now = input.createdAt ?? new Date().toISOString();
-  database.raw.prepare(`INSERT INTO notifications
-    (id,user_id,category,title,body,actor_id,target_type,target_id,target_label,created_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?)`).run(
-    input.id,input.userId,input.category,input.title.trim(),input.body.trim(),input.actorId ?? null,
-    targetType,input.targetId ?? null,input.targetLabel ?? null,now,
+  await database.query(
+    `INSERT INTO notifications
+      (id,user_id,category,title,body,actor_id,target_type,target_id,target_label,created_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    [
+      input.id,
+      input.userId,
+      input.category,
+      input.title.trim(),
+      input.body.trim(),
+      input.actorId ?? null,
+      targetType,
+      input.targetId ?? null,
+      input.targetLabel ?? null,
+      toMysqlDateTime(input.createdAt ?? new Date()),
+    ],
   );
-  return getNotification(database, input.userId, input.id)!;
+  const notification = await getNotification(database, input.userId, input.id);
+  if (!notification) throw new Error('通知创建后无法读取');
+  return notification;
 }
 
-export function seedNotifications(database: QiahaoDatabase): void {
-  const insert = database.raw.prepare(`INSERT OR IGNORE INTO notifications
-    (id,user_id,category,title,body,actor_id,target_type,target_id,target_label,read_at,created_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)`);
-  insert.run('notice-weekend-activities','me','announcement','本周活动上新','周末轻聊天晚餐局和滨江轻徒步已开放报名，先看看有没有适合你的见面。',null,'activity','club-dinner','查看活动',null,'2026-08-08T09:30:00.000Z');
-  insert.run('notice-safety','me','system','恰好安全提醒','第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。',null,'none',null,null,null,'2026-08-08T08:15:00.000Z');
-  insert.run('notice-like-need','me','like','有人赞了你的需求','清和赞了你的需求：不想尴尬交换微信，但想认真认识人。','u2','need','d1','查看需求',null,'2026-08-07T20:40:00.000Z');
-  insert.run('notice-comment-activity','me','comment','收到一条评论回复','阿岚回复你：集合前我会在活动群里发准确位置，路上见。','u1','messages','system-safety','查看会话','2026-08-07T18:20:00.000Z','2026-08-07T18:20:00.000Z');
+export async function seedNotifications(database: QiahaoDatabase): Promise<void> {
+  const notices = [
+    ['notice-weekend-activities', 'me', 'announcement', '本周活动上新', '周末轻聊天晚餐局和滨江轻徒步已开放报名，先看看有没有适合你的见面。', null, 'activity', 'club-dinner', '查看活动', null, '2026-08-08T09:30:00.000Z'],
+    ['notice-safety', 'me', 'system', '恰好安全提醒', '第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。', null, 'none', null, null, null, '2026-08-08T08:15:00.000Z'],
+    ['notice-like-need', 'me', 'like', '有人赞了你的需求', '清和赞了你的需求：不想尴尬交换微信，但想认真认识人。', 'u2', 'need', 'd1', '查看需求', null, '2026-08-07T20:40:00.000Z'],
+    ['notice-comment-activity', 'me', 'comment', '收到一条评论回复', '阿岚回复你：集合前我会在活动群里发准确位置，路上见。', 'u1', 'messages', 'system-safety', '查看会话', '2026-08-07T18:20:00.000Z', '2026-08-07T18:20:00.000Z'],
+  ] as const;
+  for (const notice of notices) {
+    await database.query(
+      `INSERT IGNORE INTO notifications
+        (id,user_id,category,title,body,actor_id,target_type,target_id,target_label,read_at,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        notice[0],
+        notice[1],
+        notice[2],
+        notice[3],
+        notice[4],
+        notice[5],
+        notice[6],
+        notice[7],
+        notice[8],
+        notice[9] ? toMysqlDateTime(notice[9]) : null,
+        toMysqlDateTime(notice[10]),
+      ],
+    );
+  }
 }
