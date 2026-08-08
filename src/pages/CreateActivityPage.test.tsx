@@ -5,11 +5,11 @@ import App from '../App';
 
 beforeEach(() => window.localStorage.clear());
 
-it('validates required fields and publishes an activity to discovery', async () => {
+it('validates required fields and publishes from the activities shortcut', async () => {
   const user = userEvent.setup();
   render(<App />);
 
-  await user.click(screen.getByRole('button', { name: '发布' }));
+  await user.click(screen.getByRole('button', { name: '发布活动' }));
   expect(screen.getByRole('heading', { name: '发起一次恰好的见面' })).toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '确认发布' }));
   expect(screen.getByText('请填写活动标题')).toBeInTheDocument();
@@ -23,10 +23,10 @@ it('validates required fields and publishes an activity to discovery', async () 
   await user.click(screen.getByRole('button', { name: '确认发布' }));
 
   expect(screen.getByRole('status')).toHaveTextContent('活动已发布');
-  expect(screen.getByRole('heading', { name: '周日城市散步' })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: '恰好' })).toBeInTheDocument();
 });
 
-it('shows the profile identity and activity statistics', async () => {
+it('shows the club identity, trust state, and activity statistics', async () => {
   const user = userEvent.setup();
   render(<App />);
 
@@ -34,6 +34,6 @@ it('shows the profile identity and activity statistics', async () => {
 
   expect(screen.getByRole('heading', { name: '小恰' })).toBeInTheDocument();
   expect(screen.getByText('已实名')).toBeInTheDocument();
-  expect(screen.getByText('参与 0 次')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: /我发起的/ })).toBeInTheDocument();
+  expect(screen.getByText('参与活动')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /活动收藏/ })).toBeInTheDocument();
 });
