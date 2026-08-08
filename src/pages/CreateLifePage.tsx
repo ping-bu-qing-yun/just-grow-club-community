@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
-import { useClub } from '../club/ClubContext';
 import { useQiahao } from '../state/QiahaoContext';
 
 export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; onPublished: () => void }) {
   const { createLifePost, localMode } = useQiahao();
-  const { publishLife } = useClub();
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -18,15 +16,10 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
     setPending(true);
     setError('');
     try {
-      if (localMode) {
-        publishLife(text.trim());
-        await createLifePost(text.trim());
-      } else {
-        await createLifePost(text.trim());
-      }
+      await createLifePost(text.trim());
       onPublished();
     } catch (reason) {
-      // localMode：Club 已写入则仍视为成功
+      // 本地预览写入内存状态后即视为成功。
       if (localMode) {
         onPublished();
       } else {

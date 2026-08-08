@@ -9,11 +9,18 @@ import type { CreateActivityInput, UserRole } from '../src/domain/types';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
 import { NotificationHub } from './notification-hub';
-import { AuthorizationError, requireAuthenticatedUser, requireContentOwnerOrAdmin, requireRole } from './authorization';
+import { AuthorizationError, requireAuthenticatedUser, requireCommentOwnerOrOperator, requireContentOwnerOrAdmin, requireRole } from './authorization';
 import { ContentRepositoryError, archiveContent, changeModerationStatus, createContentTag, listAdminContent, listContentTags, requireContent, updateContentTag } from './content-repository';
 import { createNeed, getNeed, listNeeds, updateNeed } from './need-repository';
 import { createLifePost, getLifePost, listLifePosts, updateLifePost } from './life-post-repository';
-import { absoluteUrl, getShareActivity, renderActivityShareHtml } from './share-catalog';
+import { CommentRepositoryError, createComment, deleteComment, getComment, listComments } from './comment-repository';
+import {
+  absoluteUrl,
+  getShareActivity,
+  renderActivityShareHtml,
+  resolveFrontendOrigin,
+  resolveShareImageUrl,
+} from './share-catalog';
 
 type Options = { database: QiahaoDatabase; notificationHub?: NotificationHub };
 type ErrorReply = { code: (status: number) => { send: (body: unknown) => unknown } };
@@ -32,6 +39,19 @@ function fail(reply: ErrorReply, status: number, code: string, message: string) 
   return reply.code(status).send({ error: { code, message } });
 }
 
+function parseTagRefs(value: unknown): string[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 20 || value.some((item) => typeof item !== 'string' || item.length > 120)) return null;
+  return value;
+}
+
+function parseOptionalImage(value: unknown): string | undefined | null {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value !== 'string' || value.length > 512) return null;
+  const image = value.trim();
+  return image || undefined;
+}
+
 async function userFrom(request: FastifyRequest, database: QiahaoDatabase) {
   return authenticateToken(database, request.headers.authorization);
 }
@@ -42,6 +62,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof AuthorizationError) return fail(reply, error.status, error.code, error.message);
     if (error instanceof ContentRepositoryError) return fail(reply, error.status, error.code, error.message);
+    if (error instanceof CommentRepositoryError) return fail(reply, error.status, error.code, error.message);
     throw error;
   });
 
@@ -153,7 +174,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const user = await requireAuthenticatedUser(request, database);
     const body = request.body?.body?.trim();
     if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
-    const need = await createNeed(database, user.id, body, request.body?.tags ?? []);
+    const tags = parseTagRefs(request.body?.tags);
+    if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
+    const need = await createNeed(database, user.id, body, tags);
     return reply.code(201).send({ data: { need } });
   });
 
@@ -165,7 +188,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
     const body = request.body?.body?.trim();
     if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
-    const need = await updateNeed(database, request.params.id, body, request.body?.tags ?? []);
+    const tags = parseTagRefs(request.body?.tags);
+    if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
+    const need = await updateNeed(database, request.params.id, body, tags);
     return { data: { need } };
   });
 
@@ -196,7 +221,10 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const user = await requireAuthenticatedUser(request, database);
     const body = request.body?.body?.trim();
     if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
-    const lifePost = await createLifePost(database, user.id, body, request.body?.image, request.body?.tags ?? []);
+    const image = parseOptionalImage(request.body?.image);
+    const tags = parseTagRefs(request.body?.tags);
+    if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
+    const lifePost = await createLifePost(database, user.id, body, image, tags);
     return reply.code(201).send({ data: { lifePost } });
   });
 
@@ -208,7 +236,10 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
     const body = request.body?.body?.trim();
     if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
-    const lifePost = await updateLifePost(database, request.params.id, body, request.body?.image, request.body?.tags ?? []);
+    const image = parseOptionalImage(request.body?.image);
+    const tags = parseTagRefs(request.body?.tags);
+    if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
+    const lifePost = await updateLifePost(database, request.params.id, body, image, tags);
     return { data: { lifePost } };
   });
 
@@ -218,6 +249,35 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
     requireContentOwnerOrAdmin(user, current);
     await archiveContent(database, current.id, user.id, request.body?.reason);
+    return reply.code(204).send();
+  });
+
+  app.get<{ Querystring: { contentType?: string; contentId?: string; limit?: string; cursor?: string } }>('/api/comments', async (request, reply) => {
+    const contentType = request.query.contentType?.trim() ?? '';
+    const contentId = request.query.contentId?.trim() ?? '';
+    const rawLimit = request.query.limit === undefined ? 5 : Number(request.query.limit);
+    if (!Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 100) {
+      return fail(reply, 400, 'VALIDATION_ERROR', '评论分页数量必须在 1 至 100 之间');
+    }
+    const page = await listComments(database, { contentType, contentId, limit: rawLimit, cursor: request.query.cursor });
+    return { data: page };
+  });
+
+  app.post<{ Body: { contentType?: string; contentId?: string; body?: string } }>('/api/comments', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const contentType = request.body?.contentType?.trim() ?? '';
+    const contentId = request.body?.contentId?.trim() ?? '';
+    const body = request.body?.body ?? '';
+    const comment = await createComment(database, { contentType, contentId, authorId: user.id, body });
+    return reply.code(201).send({ data: { comment } });
+  });
+
+  app.delete<{ Params: { commentId: string } }>('/api/comments/:commentId', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const current = await getComment(database, request.params.commentId);
+    if (!current) return fail(reply, 404, 'COMMENT_NOT_FOUND', '评论不存在');
+    requireCommentOwnerOrOperator(user, current);
+    await deleteComment(database, request.params.commentId);
     return reply.code(204).send();
   });
 
@@ -365,10 +425,10 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
       || (request.protocol ?? 'http');
     const host = request.headers['x-forwarded-host'] || request.headers.host || '127.0.0.1:3001';
     const origin = `${proto}://${host}`;
-    const frontendOrigin = process.env.QIAHAO_WEB_ORIGIN?.replace(/\/$/, '') || 'http://127.0.0.1:5174';
+    const frontendOrigin = resolveFrontendOrigin('http://127.0.0.1:5174');
     const pageUrl = absoluteUrl(origin, `/api/share/activity/${encodeURIComponent(activity.id)}`);
     const appUrl = `${frontendOrigin}/?activity=${encodeURIComponent(activity.id)}`;
-    const imageUrl = absoluteUrl(frontendOrigin, activity.image);
+    const imageUrl = resolveShareImageUrl(activity.image, frontendOrigin);
 
     reply
       .type('text/html; charset=utf-8')

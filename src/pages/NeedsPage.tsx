@@ -1,12 +1,18 @@
 import { useMemo, useState } from 'react';
 import { lifePosts, seedNeeds } from '../club/seed';
-import type { Need } from '../club/types';
+import type { LifePost, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { useQiahaoOptional } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { LifePostCard } from '../components/LifePostCard';
 
-export function NeedsPage({ onOpenNeed }: { onOpenNeed: (need: Need) => void }) {
+export function NeedsPage({
+  onOpenNeed,
+  onOpenLifePost,
+}: {
+  onOpenNeed: (need: Need, focusComments?: boolean) => void;
+  onOpenLifePost?: (post: LifePost, focusComments?: boolean) => void;
+}) {
   const { state } = useClub();
   const qiahao = useQiahaoOptional();
   const [mode, setMode] = useState<'needs' | 'life'>('needs');
@@ -75,7 +81,7 @@ export function NeedsPage({ onOpenNeed }: { onOpenNeed: (need: Need) => void }) 
           </header>
           <div className="life-feed">
             {lifeFeed.map((post) => (
-              <LifePostCard post={post} key={post.id} />
+              <LifePostCard post={post} key={post.id} onOpen={onOpenLifePost} />
             ))}
           </div>
         </>

@@ -89,6 +89,9 @@ it('hydrates an existing session before loading remote data', async () => {
     favorite: vi.fn(),
     join: vi.fn(),
     threads: vi.fn().mockResolvedValue({ threads: [] }),
+    listComments: vi.fn(),
+    createComment: vi.fn(),
+    deleteComment: vi.fn(),
   };
   localStorage.setItem('qiahao-auth-token', 'existing-token');
   function Probe() { const store = useQiahao(); return <output data-testid="remote-status">{store.status}</output>; }

@@ -1,10 +1,11 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, expect, it } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import App from './App';
 
 beforeEach(() => {
   localStorage.clear();
+  window.history.replaceState({}, '', '/');
 });
 
 it('renders four primary tabs and a central publish entry', () => {
@@ -61,4 +62,31 @@ it('routes activity feedback notifications to the feedback form', async () => {
   await user.click(screen.getByRole('button', { name: '舒服自然' }));
   await user.click(screen.getByRole('button', { name: '提交反馈' }));
   expect(screen.getByRole('status')).toHaveTextContent('反馈已提交');
+});
+
+it('opens activity detail from deep link query and can share a link', async () => {
+  const user = userEvent.setup();
+  window.history.replaceState({}, '', '/?activity=club-dinner');
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, 'clipboard', {
+    configurable: true,
+    value: { writeText },
+  });
+  Object.defineProperty(navigator, 'share', {
+    configurable: true,
+    value: undefined,
+  });
+
+  render(<App />);
+
+  expect(screen.getByRole('heading', { name: '周五轻聊天晚餐局' })).toBeInTheDocument();
+  expect(window.location.search).toContain('activity=club-dinner');
+
+  await user.click(screen.getByRole('button', { name: /分享周五轻聊天晚餐局/ }));
+  expect(writeText).toHaveBeenCalled();
+  expect(String(writeText.mock.calls[0][0])).toContain('/api/share/activity/club-dinner');
+  expect(screen.getByRole('status')).toHaveTextContent('分享链接已复制');
+
+  await user.click(screen.getByRole('button', { name: '返回' }));
+  expect(window.location.search).not.toContain('activity=');
 });

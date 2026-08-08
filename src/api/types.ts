@@ -1,10 +1,19 @@
 import type { Activity, CreateActivityInput, MessageThread, UserRole, UserSummary } from '../domain/types';
 
 export type ContentType = 'activity' | 'need' | 'life';
+export type CommentContentType = ContentType;
 export type ContentStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
 export interface ApiContentTag { id: string; contentType: ContentType; slug: string; label: string; enabled: boolean; }
 export interface ApiUser extends UserSummary { phone: string; role: UserRole; }
-export interface ApiActivity extends Activity { saved: boolean; joined: boolean; status?: ContentStatus; tags?: ApiContentTag[]; }
+export interface ApiActivity extends Activity {
+  saved: boolean;
+  joined: boolean;
+  status?: ContentStatus;
+  tags?: ApiContentTag[];
+  /** 评论总数由服务端按未删除评论计算。旧响应缺失时按 0 兼容。 */
+  commentCount?: number;
+  comments?: number;
+}
 export interface ApiNeed {
   id: string;
   body: string;
@@ -15,6 +24,8 @@ export interface ApiNeed {
   reviewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  commentCount?: number;
+  comments?: number;
 }
 export interface ApiLifePost {
   id: string;
@@ -27,6 +38,24 @@ export interface ApiLifePost {
   reviewedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  commentCount?: number;
+  comments?: number;
+}
+
+export interface ApiComment {
+  id: string;
+  contentType: CommentContentType;
+  contentId: string;
+  author: UserSummary;
+  body: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CommentPage {
+  comments: ApiComment[];
+  total: number;
+  nextCursor: string | null;
 }
 export interface AdminContentItem {
   id: string;
@@ -67,4 +96,7 @@ export interface QiahaoApi {
   favorite(id: string, saved: boolean): Promise<{ saved: boolean }>;
   join(id: string): Promise<{ thread: ApiThread }>;
   threads(): Promise<{ threads: ApiThread[] }>;
+  listComments(input: { contentType: CommentContentType; contentId: string; limit?: number; cursor?: string | null }): Promise<CommentPage>;
+  createComment(input: { contentType: CommentContentType; contentId: string; body: string }): Promise<{ comment: ApiComment }>;
+  deleteComment(commentId: string): Promise<void>;
 }

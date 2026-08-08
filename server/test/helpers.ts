@@ -14,12 +14,17 @@ export async function resetTestDatabase(database: QiahaoDatabase): Promise<void>
     for (const table of [
       'notification_outbox',
       'notifications',
+      'comments',
       'messages',
       'thread_members',
       'threads',
       'activity_members',
       'favorites',
       'activities',
+      'life_posts',
+      'needs',
+      'content_item_tags',
+      'content_items',
       'sessions',
       'users',
     ]) {
