@@ -141,6 +141,7 @@ export async function seedNotifications(database: QiahaoDatabase): Promise<void>
     ['notice-safety', 'me', 'system', '恰好安全提醒', '第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。', null, 'none', null, null, null, '2026-08-08T08:15:00.000Z'],
     ['notice-like-need', 'me', 'like', '有人赞了你的需求', '清和赞了你的需求：不想尴尬交换微信，但想认真认识人。', 'u2', 'need', 'd1', '查看需求', null, '2026-08-07T20:40:00.000Z'],
     ['notice-comment-activity', 'me', 'comment', '收到一条评论回复', '阿岚回复你：集合前我会在活动群里发准确位置，路上见。', 'u1', 'messages', 'system-safety', '查看会话', '2026-08-07T18:20:00.000Z', '2026-08-07T18:20:00.000Z'],
+    ['notice-activity-feedback', 'me', 'feedback', '填写活动反馈', '你参加的「周五轻聊天晚餐局」已结束，花 1 分钟写下感受，会让下次推荐更准。', null, 'activity', 'club-dinner', '去填写反馈', null, '2026-08-07T12:00:00.000Z'],
   ] as const;
   for (const notice of notices) {
     await database.query(

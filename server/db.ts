@@ -11,7 +11,13 @@ import mysql, {
 type QueryResult = RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader;
 export type DatabaseRows<T extends RowDataPacket = RowDataPacket> = T[];
 
-export const REQUIRED_MIGRATIONS = ['001_initial.sql', '002_notifications.sql'] as const;
+export const REQUIRED_MIGRATIONS = [
+  '001_initial.sql',
+  '002_notifications.sql',
+  '003_notification_feedback_category.sql',
+  '004_roles_content.sql',
+  '005_content_tags.sql',
+] as const;
 
 export function toMysqlDateTime(value: Date | string = new Date()): string {
   const date = value instanceof Date ? value : new Date(value);

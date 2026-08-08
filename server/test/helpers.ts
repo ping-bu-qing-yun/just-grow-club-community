@@ -2,9 +2,11 @@ import { buildApp } from '../app';
 import { createDatabase, type QiahaoDatabase } from '../db';
 import { applyMigrations } from '../migrations/service';
 import { seedDatabase } from '../seed';
+import { it } from 'vitest';
 
 const testConfigKeys = ['MYSQL_TEST_HOST', 'MYSQL_TEST_USER', 'MYSQL_TEST_PASSWORD', 'MYSQL_TEST_DATABASE'];
 export const hasTestDatabaseConfig = testConfigKeys.every((key) => process.env[key] !== undefined && process.env[key] !== '');
+export const mysqlIt = hasTestDatabaseConfig ? it : it.skip;
 
 export async function resetTestDatabase(database: QiahaoDatabase): Promise<void> {
   await database.query('SET FOREIGN_KEY_CHECKS=0');

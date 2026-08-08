@@ -39,4 +39,13 @@ export const seedNotifications: AppNotification[] = [
     actor: { id: 'u1', name: '阿岚', avatar: '/assets/avatar-1.jpg' },
     target: { type: 'messages', label: '查看会话' },
   },
+  {
+    id: 'notice-activity-feedback',
+    category: 'feedback',
+    title: '填写活动反馈',
+    body: '你参加的「周五轻聊天晚餐局」已结束，花 1 分钟写下感受，会让下次推荐更准。',
+    createdAt: '2026-08-07T12:00:00.000Z',
+    read: false,
+    target: { type: 'activity', id: 'club-dinner', label: '去填写反馈' },
+  },
 ];

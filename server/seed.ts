@@ -28,24 +28,37 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
   const now = toMysqlDateTime(seedTime);
   await database.query(
     `INSERT IGNORE INTO users
-      (id,phone,password_hash,name,avatar,bio,verified,created_at,updated_at)
-     VALUES (?,?,?,?,?,?,?,?,?)`,
-    ['me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, now, now],
+      (id,phone,password_hash,name,avatar,bio,verified,role,created_at,updated_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    ['me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, 'admin', now, now],
   );
   for (const [id, phone, name, avatar, bio, verified] of users) {
     await database.query(
       `INSERT IGNORE INTO users
-        (id,phone,password_hash,name,avatar,bio,verified,created_at,updated_at)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-      [id, phone, passwordHash, name, avatar, bio, verified, now, now],
+        (id,phone,password_hash,name,avatar,bio,verified,role,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [id, phone, passwordHash, name, avatar, bio, verified, 'user', now, now],
     );
   }
+  await database.query("UPDATE users SET role='admin' WHERE id='me'");
+  await database.query("UPDATE users SET role='user' WHERE id IN ('u1','u2','u3','u4','u5','u6')");
   for (const activity of activities) {
+    await database.query(
+      `INSERT IGNORE INTO content_items
+        (id,author_id,content_type,status,published_at,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?)`,
+      [activity[0], activity[1], 'activity', 'approved', now, now, now],
+    );
     await database.query(
       `INSERT IGNORE INTO activities
         (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,created_at)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [...activity, '', now],
+    );
+    await database.query(
+      `INSERT IGNORE INTO content_item_tags (content_id,tag_id,content_type)
+       SELECT ?,id,'activity' FROM content_tags WHERE content_type='activity' AND label=? LIMIT 1`,
+      [activity[0], activity[3]],
     );
   }
   await database.query(

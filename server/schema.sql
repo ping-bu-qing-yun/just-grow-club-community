@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_thread ON messages(thread_id, created_at
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category TEXT NOT NULL CHECK (category IN ('announcement','system','like','comment')),
+  category TEXT NOT NULL CHECK (category IN ('announcement','system','like','comment','feedback')),
   title TEXT NOT NULL,
   body TEXT NOT NULL,
   actor_id TEXT REFERENCES users(id) ON DELETE SET NULL,

@@ -5,10 +5,14 @@ import { authenticateToken, createSession, revokeSession, verifyPassword } from 
 import type { QiahaoDatabase } from './db';
 import { seedDatabase } from './seed';
 import { createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
-import type { CreateActivityInput } from '../src/domain/types';
+import type { CreateActivityInput, UserRole } from '../src/domain/types';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
 import { NotificationHub } from './notification-hub';
+import { AuthorizationError, requireAuthenticatedUser, requireContentOwnerOrAdmin, requireRole } from './authorization';
+import { ContentRepositoryError, archiveContent, changeModerationStatus, createContentTag, listAdminContent, listContentTags, requireContent, updateContentTag } from './content-repository';
+import { createNeed, getNeed, listNeeds, updateNeed } from './need-repository';
+import { createLifePost, getLifePost, listLifePosts, updateLifePost } from './life-post-repository';
 
 type Options = { database: QiahaoDatabase; notificationHub?: NotificationHub };
 type ErrorReply = { code: (status: number) => { send: (body: unknown) => unknown } };
@@ -19,6 +23,7 @@ type LoginRow = RowDataPacket & {
   avatar: string;
   bio: string;
   verified: number | boolean;
+  role: UserRole | string;
   password_hash: string;
 };
 
@@ -33,6 +38,11 @@ async function userFrom(request: FastifyRequest, database: QiahaoDatabase) {
 export function buildApp({ database, notificationHub = new NotificationHub() }: Options): FastifyInstance {
   const app = Fastify({ logger: false });
   app.register(cors, { origin: ['http://127.0.0.1:5174', 'http://localhost:5174'] });
+  app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof AuthorizationError) return fail(reply, error.status, error.code, error.message);
+    if (error instanceof ContentRepositoryError) return fail(reply, error.status, error.code, error.message);
+    throw error;
+  });
 
   app.get('/api/health', async (_request, reply) => {
     try {
@@ -64,6 +74,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
           avatar: row.avatar,
           bio: row.bio,
           verified: Boolean(row.verified),
+          role: row.role === 'admin' ? 'admin' : 'user',
         },
       },
     };
@@ -114,12 +125,144 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   app.post<{ Body: Partial<CreateActivityInput> }>('/api/activities', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    if (user.role !== 'admin') return fail(reply, 403, 'FORBIDDEN', '只有管理员可以发布活动');
     const input = request.body ?? {};
     const message = validateActivity(input);
     if (message) return fail(reply, 400, 'VALIDATION_ERROR', message);
     const item = await createActivity(database, user.id, input as CreateActivityInput);
     if (!item) return fail(reply, 500, 'PERSISTENCE_ERROR', '活动创建失败');
     return reply.code(201).send({ data: { activity: item } });
+  });
+
+  app.get('/api/needs', async (request, reply) => {
+    const user = await userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    return { data: { needs: await listNeeds(database) } };
+  });
+
+  app.get<{ Params: { id: string } }>('/api/needs/:id', async (request, reply) => {
+    const user = await userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    const need = await getNeed(database, request.params.id);
+    if (!need) return fail(reply, 404, 'NOT_FOUND', '需求不存在');
+    return { data: { need } };
+  });
+
+  app.post<{ Body: { body?: string; tags?: string[] } }>('/api/needs', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const body = request.body?.body?.trim();
+    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
+    const need = await createNeed(database, user.id, body, request.body?.tags ?? []);
+    return reply.code(201).send({ data: { need } });
+  });
+
+  app.patch<{ Params: { id: string }; Body: { body?: string; tags?: string[] } }>('/api/needs/:id', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const current = await requireContent(database, request.params.id);
+    if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
+    requireContentOwnerOrAdmin(user, current);
+    if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
+    const body = request.body?.body?.trim();
+    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
+    const need = await updateNeed(database, request.params.id, body, request.body?.tags ?? []);
+    return { data: { need } };
+  });
+
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/needs/:id', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const current = await requireContent(database, request.params.id);
+    if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
+    requireContentOwnerOrAdmin(user, current);
+    await archiveContent(database, current.id, user.id, request.body?.reason);
+    return reply.code(204).send();
+  });
+
+  app.get('/api/life-posts', async (request, reply) => {
+    const user = await userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    return { data: { lifePosts: await listLifePosts(database) } };
+  });
+
+  app.get<{ Params: { id: string } }>('/api/life-posts/:id', async (request, reply) => {
+    const user = await userFrom(request, database);
+    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
+    const lifePost = await getLifePost(database, request.params.id);
+    if (!lifePost) return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
+    return { data: { lifePost } };
+  });
+
+  app.post<{ Body: { body?: string; image?: string; tags?: string[] } }>('/api/life-posts', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const body = request.body?.body?.trim();
+    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
+    const lifePost = await createLifePost(database, user.id, body, request.body?.image, request.body?.tags ?? []);
+    return reply.code(201).send({ data: { lifePost } });
+  });
+
+  app.patch<{ Params: { id: string }; Body: { body?: string; image?: string; tags?: string[] } }>('/api/life-posts/:id', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const current = await requireContent(database, request.params.id);
+    if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
+    requireContentOwnerOrAdmin(user, current);
+    if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
+    const body = request.body?.body?.trim();
+    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
+    const lifePost = await updateLifePost(database, request.params.id, body, request.body?.image, request.body?.tags ?? []);
+    return { data: { lifePost } };
+  });
+
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/life-posts/:id', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    const current = await requireContent(database, request.params.id);
+    if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
+    requireContentOwnerOrAdmin(user, current);
+    await archiveContent(database, current.id, user.id, request.body?.reason);
+    return reply.code(204).send();
+  });
+
+  app.get<{ Querystring: { type?: string; status?: string; tag?: string } }>('/api/admin/content', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'admin');
+    const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
+    const status = request.query.status as 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | undefined;
+    if (type && !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    if (status && !['draft', 'pending', 'approved', 'rejected', 'archived'].includes(status)) return fail(reply, 400, 'VALIDATION_ERROR', '审核状态无效');
+    return { data: { items: await listAdminContent(database, { type, status, tag: request.query.tag?.trim() || undefined }) } };
+  });
+
+  app.patch<{ Params: { id: string }; Body: { status?: 'approved' | 'rejected' | 'archived' | 'pending'; reason?: string } }>('/api/admin/content/:id/status', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'admin');
+    const status = request.body?.status;
+    if (!status || !['approved', 'rejected', 'archived', 'pending'].includes(status)) return fail(reply, 400, 'VALIDATION_ERROR', '审核状态无效');
+    const item = await changeModerationStatus(database, request.params.id, status, user.id, request.body?.reason);
+    const items = await listAdminContent(database, { type: item.contentType, status: item.status });
+    const updated = items.find((candidate) => candidate.id === item.id);
+    return { data: { item: updated ?? item } };
+  });
+
+  app.get<{ Querystring: { type?: string } }>('/api/admin/tags', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'admin');
+    const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
+    if (type && !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    return { data: { tags: await listContentTags(database, type) } };
+  });
+
+  app.post<{ Body: { type?: 'activity' | 'need' | 'life'; slug?: string; label?: string } }>('/api/admin/tags', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'admin');
+    const { type, slug, label } = request.body ?? {};
+    if (!type || !slug || !label || !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '标签信息不完整');
+    const tag = await createContentTag(database, { contentType: type, slug, label });
+    return reply.code(201).send({ data: { tag } });
+  });
+
+  app.patch<{ Params: { id: string }; Body: { slug?: string; label?: string; enabled?: boolean } }>('/api/admin/tags/:id', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'admin');
+    const tag = await updateContentTag(database, request.params.id, request.body ?? {});
+    return { data: { tag } };
   });
 
   app.put<{ Params: { id: string } }>('/api/activities/:id/favorite', async (request, reply) => {

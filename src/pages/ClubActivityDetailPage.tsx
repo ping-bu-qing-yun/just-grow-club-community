@@ -1,6 +1,7 @@
 import { ArrowLeft, Heart, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
+import { useClub } from '../club/ClubContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
 
 const DISLIKE_COUNT_KEY = 'qiahao-dislike-count';
@@ -34,8 +35,9 @@ export function ClubActivityDetailPage({
   onBack: () => void;
   onNotice?: (message: string) => void;
 }) {
-  const [saved, setSaved] = useState(false);
-  const [joined, setJoined] = useState(false);
+  const { isClubActivitySaved, isClubActivityJoined, toggleClubActivitySaved, joinClubActivity } = useClub();
+  const saved = isClubActivitySaved(activity.id);
+  const joined = isClubActivityJoined(activity.id);
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [feedback, setFeedback] = useState<'consider' | 'dislike' | null>(null);
   const [showDislikeReasons, setShowDislikeReasons] = useState(false);
@@ -53,7 +55,6 @@ export function ClubActivityDetailPage({
     const nextCount = readDislikeCount() + 1;
     writeDislikeCount(nextCount);
 
-    // 仅第 4 次及之后弹出原因选择；前 3 次不弹窗
     if (nextCount >= DISLIKE_REASON_THRESHOLD) {
       setShowDislikeReasons(true);
       return;
@@ -82,7 +83,7 @@ export function ClubActivityDetailPage({
             className={`icon-button floating-button${saved ? ' is-active' : ''}`}
             aria-label={`${saved ? '取消收藏' : '收藏'}${activity.title}`}
             onClick={() => {
-              setSaved((value) => !value);
+              toggleClubActivitySaved(activity.id);
               onNotice?.(saved ? '已取消收藏' : '已收藏活动');
             }}
           >
@@ -215,7 +216,7 @@ export function ClubActivityDetailPage({
               type="button"
               className="primary-button primary-button--wide"
               onClick={() => {
-                setJoined(true);
+                joinClubActivity(activity.id);
                 setShowJoinSheet(false);
                 onNotice?.(activity.status === '预活动' ? '已记下你的兴趣' : '报名成功，可在「我的」查看');
               }}

@@ -2,17 +2,25 @@ import { useMemo, useState } from 'react';
 import { lifePosts, seedNeeds } from '../club/seed';
 import type { Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
+import { useQiahaoOptional } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { LifePostCard } from '../components/LifePostCard';
 
 export function NeedsPage({ onOpenNeed }: { onOpenNeed: (need: Need) => void }) {
   const { state } = useClub();
+  const qiahao = useQiahaoOptional();
   const [mode, setMode] = useState<'needs' | 'life'>('needs');
   const [filter, setFilter] = useState('all');
-  const needs = useMemo(
-    () => [...state.publishedNeeds, ...seedNeeds].filter((item) => filter !== 'similar' || item.similar),
-    [state.publishedNeeds, filter],
-  );
+  const needs = useMemo(() => {
+    const source = qiahao?.needs ?? [...state.publishedNeeds, ...seedNeeds];
+    return [...new Map(source.map((item) => [item.id, item])).values()].filter((item) => filter !== 'similar' || item.similar);
+  }, [filter, qiahao?.needs, state.publishedNeeds]);
+  const lifeFeed = useMemo(() => {
+    const remote = qiahao?.lifePosts ?? [];
+    const localPublished = state.publishedLifePosts ?? [];
+    const base = remote.length ? remote : lifePosts;
+    return [...new Map([...localPublished, ...base].map((item) => [item.id, item])).values()];
+  }, [qiahao?.lifePosts, state.publishedLifePosts]);
 
   return (
     <main className="needs-page page">
@@ -66,7 +74,7 @@ export function NeedsPage({ onOpenNeed }: { onOpenNeed: (need: Need) => void }) 
             </div>
           </header>
           <div className="life-feed">
-            {lifePosts.map((post) => (
+            {lifeFeed.map((post) => (
               <LifePostCard post={post} key={post.id} />
             ))}
           </div>

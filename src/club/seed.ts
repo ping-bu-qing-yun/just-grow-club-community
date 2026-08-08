@@ -216,12 +216,12 @@ export const clubActivities: ClubActivity[] = [
 ];
 
 export const seedNeeds: Need[] = [
-  { id: 'd1', author: '林 · 2小时前', subtitle: '正在寻找低压力的认识方式', tags: ['想认识靠谱的人', '少人数'], title: '不想尴尬交换微信，但想认真认识人', copy: '如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。', image: pics[1], resonance: 72, comments: 38, response: '主理人正在准备低压力小桌局', similar: true },
-  { id: 'd2', author: 'Mei · 昨天', subtitle: '想重新感受到关系里的松弛', tags: ['关系困惑', '慢慢了解'], title: '不是不想恋爱，是越来越难进入关系', copy: '希望有一场聊“心动变难”的局，不急着定义关系。', image: pics[4], resonance: 45, comments: 22, response: '关系主题预活动准备中' },
-  { id: 'd3', author: '阿南 · 3天前', subtitle: '想找到能认真聊天的同频朋友', tags: ['deep talk', '价值观'], title: '想找能聊价值观的人，而不是只聊工作', copy: '6个人的小型夜谈，可能比一场大活动更适合认真认识。', image: pics[5], resonance: 28, comments: 8, response: '深度对谈预活动收集中' },
-  { id: 'd4', author: '小满 · 6小时前', subtitle: '住同一片，却从没聊过天', tags: ['附近', '周末', '散步'], title: '周末想找同小区附近的人，一起散步遛狗', copy: '住得近，却从没好好说过话。想先从散步开始认识。', image: pics[2], resonance: 33, comments: 12, response: '散步局已有3人感兴趣', similar: true },
-  { id: 'd5', author: '圆圆 · 昨天', subtitle: '怕尴尬、想慢慢来', tags: ['怕尴尬', '少人数'], title: '第一次见面能不能不交换微信', copy: '先认识，不急着留联系方式，舒服了再交换。', image: pics[1], resonance: 51, comments: 20, response: '低压力小桌局回应中', similar: true },
-  { id: 'd6', author: '阿May · 今天', subtitle: '喜欢看展、慢节奏', tags: ['看展', '文艺', '轻社交'], title: '想找人一起看展，然后随便聊聊', copy: '看完展不用硬聊，舒服就好。', image: pics[3], resonance: 17, comments: 5, response: '看展局已有2人报名' },
+  { id: 'd1', author: '林 · 2小时前', subtitle: '正在寻找低压力的认识方式', tags: ['想认识靠谱的人', '少人数'], title: '不想尴尬交换微信，但想认真认识人', copy: '如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。', image: pics[1], resonance: 72, comments: 38, response: '主理人正在准备低压力小桌局', responseActivityId: 'club-dinner', similar: true },
+  { id: 'd2', author: 'Mei · 昨天', subtitle: '想重新感受到关系里的松弛', tags: ['关系困惑', '慢慢了解'], title: '不是不想恋爱，是越来越难进入关系', copy: '希望有一场聊“心动变难”的局，不急着定义关系。', image: pics[4], resonance: 45, comments: 22, response: '关系主题预活动准备中', responseActivityId: 'club-workshop' },
+  { id: 'd3', author: '阿南 · 3天前', subtitle: '想找到能认真聊天的同频朋友', tags: ['deep talk', '价值观'], title: '想找能聊价值观的人，而不是只聊工作', copy: '6个人的小型夜谈，可能比一场大活动更适合认真认识。', image: pics[5], resonance: 28, comments: 8, response: '深度对谈预活动收集中', responseActivityId: 'club-night' },
+  { id: 'd4', author: '小满 · 6小时前', subtitle: '住同一片，却从没聊过天', tags: ['附近', '周末', '散步'], title: '周末想找同小区附近的人，一起散步遛狗', copy: '住得近，却从没好好说过话。想先从散步开始认识。', image: pics[2], resonance: 33, comments: 12, response: '散步局已有3人感兴趣', responseActivityId: 'club-walk', similar: true },
+  { id: 'd5', author: '圆圆 · 昨天', subtitle: '怕尴尬、想慢慢来', tags: ['怕尴尬', '少人数'], title: '第一次见面能不能不交换微信', copy: '先认识，不急着留联系方式，舒服了再交换。', image: pics[1], resonance: 51, comments: 20, response: '低压力小桌局回应中', responseActivityId: 'club-dinner', similar: true },
+  { id: 'd6', author: '阿May · 今天', subtitle: '喜欢看展、慢节奏', tags: ['看展', '文艺', '轻社交'], title: '想找人一起看展，然后随便聊聊', copy: '看完展不用硬聊，舒服就好。', image: pics[3], resonance: 17, comments: 5, response: '看展局已有2人报名', responseActivityId: 'club-exhibit' },
 ];
 
 export const lifePosts: LifePost[] = [

@@ -24,7 +24,12 @@ type ThreadRow = RowDataPacket & {
 };
 
 export async function setFavorite(database: QiahaoDatabase, userId: string, activityId: string, saved: boolean): Promise<boolean> {
-  const activities = await database.query<RowDataPacket[]>('SELECT id FROM activities WHERE id=? LIMIT 1', [activityId]);
+  const activities = await database.query<RowDataPacket[]>(
+    `SELECT a.id FROM activities a
+      JOIN content_items ci ON ci.id=a.id AND ci.content_type='activity' AND ci.status='approved'
+      WHERE a.id=? LIMIT 1`,
+    [activityId],
+  );
   if (!activities.length) return false;
   if (saved) {
     await database.query(
@@ -45,7 +50,10 @@ export type JoinActivityResult =
 export async function joinActivity(database: QiahaoDatabase, userId: string, activityId: string): Promise<JoinActivityResult> {
   const result = await database.transaction(async (connection) => {
     const activities = await connection.query<ActivityRow[]>(
-      'SELECT id,title,host_id,capacity,image FROM activities WHERE id=? FOR UPDATE',
+      `SELECT a.id,a.title,a.host_id,a.capacity,a.image
+         FROM activities a
+         JOIN content_items ci ON ci.id=a.id AND ci.content_type='activity' AND ci.status='approved'
+        WHERE a.id=? FOR UPDATE`,
       [activityId],
     );
     const activity = activities[0];

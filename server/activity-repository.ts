@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { RowDataPacket } from 'mysql2/promise';
 import type { ActivityCategory, CreateActivityInput } from '../src/domain/types';
 import { toMysqlDateTime } from './db';
-import type { QiahaoDatabase } from './db';
+import type { QiahaoConnection, QiahaoDatabase } from './db';
+import { createContent, listTagsForContent } from './content-repository';
 
 const categories = new Set<ActivityCategory>(['饭搭子', '咖啡', '运动', '徒步', '看展', '桌游']);
 
@@ -33,6 +34,7 @@ type ActivityRow = RowDataPacket & {
   host_avatar: string;
   host_verified: number | boolean;
   host_bio: string;
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
 };
 
 function toUser(row: UserRow | { id: string; name: string; avatar: string; verified: number | boolean; bio: string }) {
@@ -46,7 +48,7 @@ function toUser(row: UserRow | { id: string; name: string; avatar: string; verif
 }
 
 async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: string) {
-  const [participants, savedRows, joinedRows] = await Promise.all([
+  const [participants, savedRows, joinedRows, tags] = await Promise.all([
     database.query<UserRow[]>(
       `SELECT u.id,u.name,u.avatar,u.verified,u.bio
          FROM activity_members m
@@ -57,6 +59,7 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     ),
     database.query<RowDataPacket[]>('SELECT 1 FROM favorites WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
     database.query<RowDataPacket[]>('SELECT 1 FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
+    listTagsForContent(database, row.id),
   ]);
   return {
     id: row.id,
@@ -80,15 +83,18 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     price: Number(row.price),
     featured: Boolean(row.featured),
     note: row.note,
+    status: row.status,
+    tags,
     saved: savedRows.length > 0,
     joined: joinedRows.length > 0,
   };
 }
 
 const activityWithHost = `
-  SELECT a.*,u.id AS host_user_id,u.name AS host_name,u.avatar AS host_avatar,
+  SELECT a.*,ci.status,u.id AS host_user_id,u.name AS host_name,u.avatar AS host_avatar,
          u.verified AS host_verified,u.bio AS host_bio
     FROM activities a
+    JOIN content_items ci ON ci.id=a.id AND ci.content_type='activity' AND ci.status='approved'
     JOIN users u ON u.id=a.host_id`;
 
 export async function listActivities(database: QiahaoDatabase, userId: string) {
@@ -125,27 +131,38 @@ export async function createActivity(database: QiahaoDatabase, userId: string, i
     '看展': '/assets/art.jpg',
     '桌游': '/assets/board.jpg',
   };
-  await database.query(
-    `INSERT INTO activities
-      (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,created_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [
+  await database.transaction(async (connection: QiahaoConnection) => {
+    const now = toMysqlDateTime();
+    await createContent(connection, {
       id,
-      userId,
-      input.title.trim(),
-      input.category,
-      images[input.category],
-      input.dateLabel.trim(),
-      input.time,
-      input.location.trim(),
-      '由你发起',
-      input.description.trim(),
-      input.capacity,
-      input.price,
-      0,
-      '请在活动开始前与参与者确认集合信息。',
-      toMysqlDateTime(),
-    ],
-  );
+      authorId: userId,
+      contentType: 'activity',
+      status: 'approved',
+      tagRefs: [input.category],
+      now,
+    });
+    await connection.query(
+      `INSERT INTO activities
+        (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        id,
+        userId,
+        input.title.trim(),
+        input.category,
+        images[input.category],
+        input.dateLabel.trim(),
+        input.time,
+        input.location.trim(),
+        '由你发起',
+        input.description.trim(),
+        input.capacity,
+        input.price,
+        0,
+        '请在活动开始前与参与者确认集合信息。',
+        now,
+      ],
+    );
+  });
   return getActivity(database, userId, id);
 }

@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { ClubProvider } from '../club/ClubContext';
 import { clubActivities } from '../club/seed';
 import { ClubActivityDetailPage } from './ClubActivityDetailPage';
 
@@ -10,11 +11,13 @@ beforeEach(() => {
 
 function renderDetail(onNotice = vi.fn()) {
   render(
-    <ClubActivityDetailPage
-      activity={clubActivities[0]}
-      onBack={vi.fn()}
-      onNotice={onNotice}
-    />,
+    <ClubProvider>
+      <ClubActivityDetailPage
+        activity={clubActivities[0]}
+        onBack={vi.fn()}
+        onNotice={onNotice}
+      />
+    </ClubProvider>,
   );
   return onNotice;
 }
