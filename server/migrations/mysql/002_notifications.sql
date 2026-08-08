@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(128) PRIMARY KEY,
   user_id VARCHAR(64) NOT NULL,
-  category ENUM('announcement','system','like','comment') NOT NULL,
+  category ENUM('announcement','system','like','comment','feedback') NOT NULL,
   title VARCHAR(255) NOT NULL,
   body TEXT NOT NULL,
   actor_id VARCHAR(64),

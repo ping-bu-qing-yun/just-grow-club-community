@@ -1,4 +1,4 @@
-export const notificationCategories = ['announcement', 'system', 'like', 'comment'] as const;
+export const notificationCategories = ['announcement', 'system', 'like', 'comment', 'feedback'] as const;
 
 export type NotificationCategory = (typeof notificationCategories)[number];
 export type NotificationTargetType = 'activity' | 'need' | 'messages' | 'none';

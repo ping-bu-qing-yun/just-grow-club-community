@@ -3,6 +3,7 @@ import { promisify } from 'node:util';
 import type { RowDataPacket } from 'mysql2/promise';
 import type { QiahaoDatabase } from './db';
 import { toMysqlDateTime } from './db';
+import type { UserRole } from '../src/domain/types';
 
 const scrypt = promisify(scryptCallback);
 
@@ -13,6 +14,7 @@ export interface AuthenticatedUser {
   avatar: string;
   bio: string;
   verified: boolean;
+  role: UserRole;
 }
 
 type UserRow = RowDataPacket & {
@@ -22,6 +24,7 @@ type UserRow = RowDataPacket & {
   avatar: string;
   bio: string;
   verified: number | boolean;
+  role: UserRole | string;
   password_hash?: string;
   expires_at?: string;
 };
@@ -64,7 +67,7 @@ export async function authenticateToken(database: QiahaoDatabase, header?: strin
   const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) return null;
   const rows = await database.query<UserRow[]>(
-    `SELECT u.id,u.phone,u.name,u.avatar,u.bio,u.verified,s.expires_at
+    `SELECT u.id,u.phone,u.name,u.avatar,u.bio,u.verified,u.role,s.expires_at
        FROM sessions s
        JOIN users u ON u.id=s.user_id
       WHERE s.token_hash=?
@@ -80,6 +83,7 @@ export async function authenticateToken(database: QiahaoDatabase, header?: strin
     avatar: row.avatar,
     bio: row.bio,
     verified: Boolean(row.verified),
+    role: row.role === 'admin' ? 'admin' : 'user',
   };
 }
 

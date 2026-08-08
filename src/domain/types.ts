@@ -1,4 +1,5 @@
 export type ActivityCategory = '饭搭子' | '咖啡' | '运动' | '徒步' | '看展' | '桌游';
+export type UserRole = 'admin' | 'user';
 
 export interface UserSummary {
   id: string;
@@ -6,6 +7,7 @@ export interface UserSummary {
   avatar: string;
   verified?: boolean;
   bio?: string;
+  role?: UserRole;
 }
 
 export interface Activity {
@@ -46,6 +48,32 @@ export interface MessageThread {
   unread?: number;
   image?: string;
   system?: boolean;
+}
+
+export interface Need {
+  id: string;
+  author: string;
+  subtitle: string;
+  tags: string[];
+  title: string;
+  copy: string;
+  image: string;
+  resonance: number;
+  comments: number;
+  response: string;
+  similar?: boolean;
+}
+
+export interface LifePost {
+  id: string;
+  author: string;
+  meta: string;
+  kind: string;
+  text: string;
+  images: string[];
+  tag: string;
+  comments: number;
+  resonance: number;
 }
 
 export interface PersistedState {

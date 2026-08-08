@@ -35,9 +35,10 @@ it('opens notification details and routes to the referenced activity', async () 
   const user = userEvent.setup();
   render(<App />);
 
-  await user.click(screen.getByRole('button', { name: /通知，有3条未读/ }));
+  await user.click(screen.getByRole('button', { name: /通知，有4条未读/ }));
   expect(screen.getByRole('heading', { name: '通知' })).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '活动' })).not.toBeInTheDocument();
+  expect(screen.getByText('填写活动反馈')).toBeInTheDocument();
 
   await user.click(screen.getByRole('button', { name: /本周活动上新/ }));
   expect(screen.getByRole('heading', { name: '本周活动上新' })).toBeInTheDocument();
@@ -45,4 +46,19 @@ it('opens notification details and routes to the referenced activity', async () 
   await user.click(screen.getByRole('button', { name: '查看活动' }));
   expect(screen.getByRole('heading', { name: '周五轻聊天晚餐局' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: '报名' })).toBeInTheDocument();
+});
+
+it('routes activity feedback notifications to the feedback form', async () => {
+  const user = userEvent.setup();
+  render(<App />);
+
+  await user.click(screen.getByRole('button', { name: /通知，有4条未读/ }));
+  await user.click(screen.getByRole('button', { name: '反馈' }));
+  await user.click(screen.getByRole('button', { name: /填写活动反馈/ }));
+  await user.click(screen.getByRole('button', { name: '去填写反馈' }));
+
+  expect(screen.getByRole('heading', { name: '这场见面怎么样？' })).toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: '舒服自然' }));
+  await user.click(screen.getByRole('button', { name: '提交反馈' }));
+  expect(screen.getByRole('status')).toHaveTextContent('反馈已提交');
 });

@@ -70,9 +70,24 @@ it('creates an activity at the top and restores persisted state', () => {
 it('hydrates an existing session before loading remote data', async () => {
   const remoteApi: QiahaoApi = {
     login: vi.fn(), logout: vi.fn(),
-    me: vi.fn().mockResolvedValue({ user: { id: 'me', phone: '13800000000', name: '小恰', avatar: '/avatar.jpg', bio: '', verified: true } }),
+    me: vi.fn().mockResolvedValue({ user: { id: 'me', phone: '13800000000', name: '小恰', avatar: '/avatar.jpg', bio: '', verified: true, role: 'user' } }),
     activities: vi.fn().mockResolvedValue({ activities: [] }),
-    createActivity: vi.fn(), favorite: vi.fn(), join: vi.fn(),
+    createActivity: vi.fn(),
+    needs: vi.fn().mockResolvedValue({ needs: [] }),
+    createNeed: vi.fn(),
+    updateNeed: vi.fn(),
+    archiveNeed: vi.fn(),
+    lifePosts: vi.fn().mockResolvedValue({ lifePosts: [] }),
+    createLifePost: vi.fn(),
+    updateLifePost: vi.fn(),
+    archiveLifePost: vi.fn(),
+    adminContent: vi.fn().mockResolvedValue({ items: [] }),
+    updateContentStatus: vi.fn(),
+    adminTags: vi.fn().mockResolvedValue({ tags: [] }),
+    createTag: vi.fn(),
+    updateTag: vi.fn(),
+    favorite: vi.fn(),
+    join: vi.fn(),
     threads: vi.fn().mockResolvedValue({ threads: [] }),
   };
   localStorage.setItem('qiahao-auth-token', 'existing-token');

@@ -1,5 +1,16 @@
 import type { CreateActivityInput } from '../domain/types';
-import type { ApiActivity, ApiThread, ApiUser, QiahaoApi } from './types';
+import type {
+  AdminContentItem,
+  ApiActivity,
+  ApiContentTag,
+  ApiLifePost,
+  ApiNeed,
+  ApiThread,
+  ApiUser,
+  ContentStatus,
+  ContentType,
+  QiahaoApi,
+} from './types';
 
 export const AUTH_TOKEN_KEY = 'qiahao-auth-token';
 export class ApiError extends Error { constructor(public status: number, public code: string, message: string) { super(message); this.name = 'ApiError'; } }
@@ -18,6 +29,25 @@ export const api: QiahaoApi = {
   me: () => request<{ user: ApiUser }>('/me'),
   activities: () => request<{ activities: ApiActivity[] }>('/activities'),
   createActivity: (input: CreateActivityInput) => request<{ activity: ApiActivity }>('/activities', { method: 'POST', body: JSON.stringify(input) }),
+  needs: () => request<{ needs: ApiNeed[] }>('/needs'),
+  createNeed: (body, tags = []) => request<{ need: ApiNeed }>('/needs', { method: 'POST', body: JSON.stringify({ body, tags }) }),
+  updateNeed: (id, body, tags = []) => request<{ need: ApiNeed }>(`/needs/${id}`, { method: 'PATCH', body: JSON.stringify({ body, tags }) }),
+  archiveNeed: (id) => request<void>(`/needs/${id}`, { method: 'DELETE' }),
+  lifePosts: () => request<{ lifePosts: ApiLifePost[] }>('/life-posts'),
+  createLifePost: (body, image, tags = []) => request<{ lifePost: ApiLifePost }>('/life-posts', { method: 'POST', body: JSON.stringify({ body, image, tags }) }),
+  updateLifePost: (id, body, image, tags = []) => request<{ lifePost: ApiLifePost }>(`/life-posts/${id}`, { method: 'PATCH', body: JSON.stringify({ body, image, tags }) }),
+  archiveLifePost: (id) => request<void>(`/life-posts/${id}`, { method: 'DELETE' }),
+  adminContent: (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.type) params.set('type', filters.type);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.tag) params.set('tag', filters.tag);
+    return request<{ items: AdminContentItem[] }>(`/admin/content${params.size ? `?${params.toString()}` : ''}`);
+  },
+  updateContentStatus: (id, status, reason) => request<{ item: AdminContentItem }>(`/admin/content/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status, reason }) }),
+  adminTags: (type) => request<{ tags: ApiContentTag[] }>(`/admin/tags${type ? `?type=${encodeURIComponent(type)}` : ''}`),
+  createTag: (input) => request<{ tag: ApiContentTag }>('/admin/tags', { method: 'POST', body: JSON.stringify(input) }),
+  updateTag: (id, input) => request<{ tag: ApiContentTag }>(`/admin/tags/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   favorite: (id, saved) => request<{ saved: boolean }>(`/activities/${id}/favorite`, { method: saved ? 'PUT' : 'DELETE' }),
   join: (id) => request<{ thread: ApiThread }>(`/activities/${id}/join`, { method: 'POST' }),
   threads: () => request<{ threads: ApiThread[] }>('/threads'),

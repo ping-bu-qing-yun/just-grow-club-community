@@ -1,11 +1,10 @@
 import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import type { RowDataPacket } from 'mysql2/promise';
 import { REQUIRED_MIGRATIONS } from '../db';
 import type { QiahaoDatabase } from '../db';
 
-const migrationRoot = fileURLToPath(new URL('./mysql/', import.meta.url));
+const migrationRoot = resolve(process.cwd(), 'server/migrations/mysql');
 const requiredTables = [
   'users',
   'sessions',
@@ -17,6 +16,11 @@ const requiredTables = [
   'messages',
   'notifications',
   'notification_outbox',
+  'content_items',
+  'needs',
+  'life_posts',
+  'content_tags',
+  'content_item_tags',
   'schema_migrations',
 ] as const;
 

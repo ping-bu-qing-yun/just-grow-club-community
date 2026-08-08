@@ -83,6 +83,7 @@ test('opens the bell notification center, detail, and archives read notices', as
     { id: 'e2e-system', category: 'system', title: '恰好安全提醒', body: '第一次线下见面请选择公共场所。', createdAt: '2026-08-08T08:15:00.000Z', read: true, target: { type: 'none' } },
     { id: 'e2e-like', category: 'like', title: '有人赞了你的需求', body: '清和赞了你的需求。', createdAt: '2026-08-07T20:40:00.000Z', read: false, target: { type: 'need', id: 'need-001', label: '查看需求' } },
     { id: 'e2e-comment', category: 'comment', title: '收到一条评论回复', body: '阿岚回复你：集合前我会在活动群里发准确位置。', createdAt: '2026-08-07T18:20:00.000Z', read: false, target: { type: 'messages', id: 'system-safety', label: '查看会话' } },
+    { id: 'e2e-feedback', category: 'feedback', title: '填写活动反馈', body: '你参加的活动已结束，花 1 分钟写下感受。', createdAt: '2026-08-07T12:00:00.000Z', read: false, target: { type: 'activity', id: 'club-dinner', label: '去填写反馈' } },
   ];
   await page.route('**/api/notifications**', async (route) => {
     const request = route.request();
@@ -119,6 +120,15 @@ test('opens the bell notification center, detail, and archives read notices', as
   await expect(page.getByRole('heading', { name: '通知' })).toBeVisible();
   await expect(page.getByRole('button', { name: '活动', exact: true })).toHaveCount(0);
   await expect(page.getByText('本周活动上新')).toBeVisible();
+  await expect(page.getByRole('button', { name: '反馈', exact: true })).toBeVisible();
+
+  await page.getByRole('button', { name: '反馈', exact: true }).click();
+  await page.getByRole('button', { name: /填写活动反馈/ }).click();
+  await expect(page.getByRole('heading', { name: '填写活动反馈' })).toBeVisible();
+  await page.getByRole('button', { name: '去填写反馈' }).click();
+  await expect(page.getByRole('heading', { name: '这场见面怎么样？' })).toBeVisible();
+  await page.getByRole('button', { name: '返回' }).click();
+  await page.getByRole('button', { name: /^通知/ }).click();
 
   await page.getByRole('button', { name: '评论', exact: true }).click();
   const comment = page.getByRole('button', { name: /收到一条评论回复/ });

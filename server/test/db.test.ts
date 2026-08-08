@@ -1,16 +1,16 @@
-import { afterEach, expect, it } from 'vitest';
-import { createDatabase, type QiahaoDatabase } from '../db';
+import { expect, it } from 'vitest';
+import { REQUIRED_MIGRATIONS } from '../db';
+import { migrationStatementCounts } from '../migrations/service';
 
-let database: QiahaoDatabase | undefined;
-afterEach(() => database?.close());
-
-it('creates the complete schema in memory', () => {
-  database = createDatabase(':memory:');
-  const tables = database.raw.prepare(
-    "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
-  ).all().map((row) => (row as { name: string }).name);
-  expect(tables).toEqual(expect.arrayContaining([
-    'activities', 'activity_members', 'favorites', 'messages',
-    'sessions', 'thread_members', 'threads', 'users',
-  ]));
+it('registers the complete MySQL migration chain and non-empty SQL files', async () => {
+  const counts = await migrationStatementCounts();
+  expect(REQUIRED_MIGRATIONS).toEqual([
+    '001_initial.sql',
+    '002_notifications.sql',
+    '003_notification_feedback_category.sql',
+    '004_roles_content.sql',
+    '005_content_tags.sql',
+  ]);
+  expect(counts).toHaveLength(REQUIRED_MIGRATIONS.length);
+  expect(counts.every((item) => item.statements > 0)).toBe(true);
 });

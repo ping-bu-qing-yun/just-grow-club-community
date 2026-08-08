@@ -1,5 +1,5 @@
-import { afterEach, expect, it } from 'vitest';
-import { buildTestApp } from './helpers';
+import { afterEach, expect } from 'vitest';
+import { buildTestApp, mysqlIt } from './helpers';
 
 const resources: Array<{ app: { close: () => Promise<void> }, database: { close: () => void } }> = [];
 afterEach(async () => {
@@ -9,7 +9,7 @@ afterEach(async () => {
   }
 });
 
-it('logs in the demo user and authorizes /api/me', async () => {
+mysqlIt('logs in the demo user and authorizes /api/me', async () => {
   const resource = await buildTestApp();
   resources.push(resource);
   const login = await resource.app.inject({ method: 'POST', url: '/api/auth/login', payload: {
@@ -24,7 +24,7 @@ it('logs in the demo user and authorizes /api/me', async () => {
   expect(me.json().data.user.name).toBe('小恰');
 });
 
-it('rejects a wrong password without exposing details', async () => {
+mysqlIt('rejects a wrong password without exposing details', async () => {
   const resource = await buildTestApp();
   resources.push(resource);
   const response = await resource.app.inject({ method: 'POST', url: '/api/auth/login', payload: {
@@ -34,7 +34,7 @@ it('rejects a wrong password without exposing details', async () => {
   expect(response.json().error.code).toBe('INVALID_CREDENTIALS');
 });
 
-it('rejects protected endpoints without a token', async () => {
+mysqlIt('rejects protected endpoints without a token', async () => {
   const resource = await buildTestApp();
   resources.push(resource);
   const response = await resource.app.inject({ method: 'GET', url: '/api/me' });

@@ -1,3 +1,58 @@
-import { useState } from 'react';import { ArrowLeft,ImagePlus,Mic } from 'lucide-react';import { useClub } from '../club/ClubContext';
-const guides=['想认识能自然聊天、不用硬找话题的人。','周末想找附近的人，一起散步或喝杯咖啡。','不想一上来就交换微信，先舒服地认识。','想找能认真聊价值观、不止聊工作的人。'];
-export function CreateNeedPage({onBack,onPublished}:{onBack:()=>void;onPublished:()=>void}){const{publishNeed}=useClub();const[text,setText]=useState('');const[tags,setTags]=useState<string[]>([]);const[error,setError]=useState('');function submit(){if(!text.trim()){setError('先写下一句话');return}publishNeed(text.trim(),tags.length?tags:['自然认识']);onPublished()}return <main className="create-need page"><header className="subpage-header"><button aria-label="返回" onClick={onBack}><ArrowLeft/></button><div><small>发布需求</small><h1>写下你想遇见什么</h1></div></header><p className="create-need-lead">不用写得很正式，像给朋友发一句消息就好。</p><div className="guide-chips">{guides.map(guide=><button onClick={()=>setText(guide)} key={guide}>{guide}</button>)}</div><textarea aria-label="需求内容" value={text} onChange={e=>{setText(e.target.value);setError('')}} placeholder="比如：最近想找能慢慢聊天的人……"/>{error&&<p className="field-error">{error}</p>}<div className="need-tools"><button onClick={()=>setText(text||'我想先轻松认识，不急着定义关系。')}><Mic size={18}/>语音说一段</button><button><ImagePlus size={18}/>加图片</button></div><div className="tag-picks">{['自然聊天','少人数','周末','附近','deep talk'].map(tag=><button className={tags.includes(tag)?'is-active':''} onClick={()=>setTags(current=>current.includes(tag)?current.filter(item=>item!==tag):[...current,tag])} key={tag}>#{tag}</button>)}</div><button className="primary-button primary-button--wide" onClick={submit}>确认发布</button></main>}
+import { useState } from 'react';
+import { ArrowLeft, ImagePlus, Mic } from 'lucide-react';
+import { useQiahao } from '../state/QiahaoContext';
+
+const guides = [
+  '想认识能自然聊天、不用硬找话题的人。',
+  '周末想找附近的人，一起散步或喝杯咖啡。',
+  '不想一上来就交换微信，先舒服地认识。',
+  '想找能认真聊价值观、不止聊工作的人。',
+];
+const tagOptions = [
+  { value: '自然聊天', ref: 'natural-chat' },
+  { value: '少人数', ref: 'small-group' },
+  { value: '周末', ref: 'weekend' },
+  { value: '附近', ref: 'nearby' },
+  { value: 'deep talk', ref: 'deep-talk' },
+];
+
+export function CreateNeedPage({ onBack, onPublished }: { onBack: () => void; onPublished: () => void }) {
+  const { createNeed } = useQiahao();
+  const [text, setText] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+
+  async function submit() {
+    if (!text.trim()) {
+      setError('先写下一句话');
+      return;
+    }
+    setPending(true);
+    setError('');
+    try {
+      await createNeed(text.trim(), tags);
+      onPublished();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '发布失败');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <main className="create-need page">
+      <header className="subpage-header">
+        <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+        <div><small>发布需求</small><h1>写下你想遇见什么</h1></div>
+      </header>
+      <p className="create-need-lead">不用写得很正式，像给朋友发一句消息就好。</p>
+      <div className="guide-chips">{guides.map((guide) => <button type="button" onClick={() => setText(guide)} key={guide}>{guide}</button>)}</div>
+      <textarea aria-label="需求内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：最近想找能慢慢聊天的人……" />
+      {error && <p className="field-error" role="alert">{error}</p>}
+      <div className="need-tools"><button type="button" onClick={() => setText(text || '我想先轻松认识，不急着定义关系。')}><Mic size={18} />语音说一段</button><button type="button"><ImagePlus size={18} />加图片</button></div>
+      <div className="tag-picks">{tagOptions.map((tag) => <button type="button" className={tags.includes(tag.ref) ? 'is-active' : ''} onClick={() => setTags((current) => current.includes(tag.ref) ? current.filter((item) => item !== tag.ref) : [...current, tag.ref])} key={tag.ref}>#{tag.value}</button>)}</div>
+      <button type="button" className="primary-button primary-button--wide" onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</button>
+    </main>
+  );
+}
