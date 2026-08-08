@@ -59,7 +59,4 @@ INSERT IGNORE INTO content_items
 SELECT a.id,a.host_id,'activity','approved',a.created_at,a.created_at,a.created_at
   FROM activities a;
 
-ALTER TABLE activities
-  ADD CONSTRAINT fk_activities_content_item FOREIGN KEY (id) REFERENCES content_items(id);
-
 UPDATE users SET role='admin' WHERE id='me';
