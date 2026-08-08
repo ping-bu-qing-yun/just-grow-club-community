@@ -3,14 +3,19 @@ import type { ClubActivity } from '../club/types';
 
 export function ClubActivityCard({
   activity,
+  matchLabel,
   onOpen,
 }: {
   activity: ClubActivity;
+  /** 推荐引擎动态匹配标签；缺省用活动自身 matchLabel */
+  matchLabel?: string;
   onOpen?: (activity: ClubActivity) => void;
 }) {
   function open() {
     onOpen?.(activity);
   }
+
+  const badge = matchLabel ?? activity.matchLabel;
 
   return (
     <article className="club-activity-card">
@@ -20,7 +25,8 @@ export function ClubActivityCard({
       </button>
       <div className="club-activity-copy">
         <div className="club-tags">
-          {activity.tags.slice(0, 3).map((tag) => (
+          {badge ? <span className="club-tag-match">{badge}</span> : null}
+          {activity.tags.slice(0, badge ? 2 : 3).map((tag) => (
             <span key={tag}>{tag}</span>
           ))}
         </div>

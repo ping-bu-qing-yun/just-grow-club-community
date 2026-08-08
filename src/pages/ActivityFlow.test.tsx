@@ -42,8 +42,9 @@ it('opens club activity detail from home card and supports join confirm', async 
   const user = userEvent.setup();
   render(<App />);
 
-  await user.click(screen.getByRole('button', { name: '查看深度对谈夜局详情' }));
-  expect(screen.getByRole('heading', { name: '深度对谈夜局' })).toBeInTheDocument();
+  // 默认画像下 For You 会重排；选首页出现的预活动验证预约流程
+  await user.click(screen.getByRole('button', { name: '查看滨江骑行轻食局详情' }));
+  expect(screen.getByRole('heading', { name: '滨江骑行轻食局' })).toBeInTheDocument();
   expect(screen.getByText('解决需求')).toBeInTheDocument();
   expect(screen.getByText('活动怎么进行')).toBeInTheDocument();
   expect(screen.getByText('参与边界')).toBeInTheDocument();

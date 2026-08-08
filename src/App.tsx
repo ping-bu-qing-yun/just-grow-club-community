@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell } from './components/AppShell';
 import type { AppTab } from './components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from './components/PublishTypeSheet';
@@ -29,6 +29,7 @@ import { NotificationDetailPage } from './pages/NotificationDetailPage';
 import { AdminContentPage } from './pages/AdminContentPage';
 import type { AppNotification } from './notifications/types';
 import { clubActivities, seedNeeds } from './club/seed';
+import { getClubActivityById, readActivityIdFromLocation, writeActivityIdToLocation } from './lib/activityShare';
 
 function QiahaoApp() {
   const { status, error, retry, login, user } = useQiahao();
@@ -37,12 +38,29 @@ function QiahaoApp() {
   const [activeTab, setActiveTab] = useState<AppTab>('activities');
   const [subview, setSubview] = useState<string | null>(null);
   const [selectedNeed, setSelectedNeed] = useState<Need | null>(null);
-  const [selectedClubActivity, setSelectedClubActivity] = useState<ClubActivity | null>(null);
+  const [selectedClubActivity, setSelectedClubActivity] = useState<ClubActivity | null>(() =>
+    getClubActivityById(readActivityIdFromLocation()),
+  );
   const [feedbackActivity, setFeedbackActivity] = useState<ClubActivity | null>(null);
   const [notificationSubview, setNotificationSubview] = useState<'center' | 'detail' | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<AppNotification | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
+  const [deepLinkReady, setDeepLinkReady] = useState(false);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !state.onboardingComplete || deepLinkReady) return;
+    const activity = getClubActivityById(readActivityIdFromLocation());
+    if (activity) {
+      setSelectedNeed(null);
+      setFeedbackActivity(null);
+      setNotificationSubview(null);
+      setSelectedNotification(null);
+      setSelectedClubActivity(activity);
+      writeActivityIdToLocation(activity.id);
+    }
+    setDeepLinkReady(true);
+  }, [status, state.onboardingComplete, deepLinkReady]);
 
   if (status === 'anonymous') return <LoginPage login={login} />;
   if (status === 'loading') return <main className="app-state"><p>正在打开恰好…</p></main>;
@@ -67,6 +85,7 @@ function QiahaoApp() {
     setNotificationSubview(null);
     setSelectedNotification(null);
     setPublishOpen(false);
+    writeActivityIdToLocation(null);
     window.scrollTo({ top: 0 });
   }
 
@@ -85,6 +104,7 @@ function QiahaoApp() {
     setPublishOpen(false);
     setSelectedNeed(null);
     setSelectedClubActivity(null);
+    writeActivityIdToLocation(null);
     if (kind === 'activity') setSubview('create-activity');
     if (kind === 'need') setSubview('create-need');
     if (kind === 'life') setSubview('create-life');
@@ -96,7 +116,13 @@ function QiahaoApp() {
     setFeedbackActivity(null);
     setSelectedClubActivity(activity);
     setPublishOpen(false);
+    writeActivityIdToLocation(activity.id);
     window.scrollTo({ top: 0 });
+  }
+
+  function closeClubActivity() {
+    setSelectedClubActivity(null);
+    writeActivityIdToLocation(null);
   }
 
   function openActivityFeedback(activity: ClubActivity) {
@@ -107,6 +133,7 @@ function QiahaoApp() {
     setNotificationSubview(null);
     setSelectedNotification(null);
     setPublishOpen(false);
+    writeActivityIdToLocation(null);
     window.scrollTo({ top: 0 });
   }
 
@@ -117,6 +144,7 @@ function QiahaoApp() {
     setSubview(null);
     setNotificationSubview('center');
     setSelectedNotification(null);
+    writeActivityIdToLocation(null);
     window.scrollTo({ top: 0 });
   }
 
@@ -176,7 +204,7 @@ function QiahaoApp() {
     content = (
       <ClubActivityDetailPage
         activity={selectedClubActivity}
-        onBack={() => setSelectedClubActivity(null)}
+        onBack={closeClubActivity}
         onNotice={setToast}
       />
     );

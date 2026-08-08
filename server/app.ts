@@ -13,6 +13,7 @@ import { AuthorizationError, requireAuthenticatedUser, requireContentOwnerOrAdmi
 import { ContentRepositoryError, archiveContent, changeModerationStatus, createContentTag, listAdminContent, listContentTags, requireContent, updateContentTag } from './content-repository';
 import { createNeed, getNeed, listNeeds, updateNeed } from './need-repository';
 import { createLifePost, getLifePost, listLifePosts, updateLifePost } from './life-post-repository';
+import { absoluteUrl, getShareActivity, renderActivityShareHtml } from './share-catalog';
 
 type Options = { database: QiahaoDatabase; notificationHub?: NotificationHub };
 type ErrorReply = { code: (status: number) => { send: (body: unknown) => unknown } };
@@ -353,6 +354,28 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
       unsubscribe();
     });
   });
+
+  // 分享落地页：给微信/爬虫 OG 图文；真人浏览器会 meta-refresh / JS 跳回 SPA 详情
+  app.get<{ Params: { id: string } }>('/api/share/activity/:id', async (request, reply) => {
+    const activity = getShareActivity(request.params.id);
+    if (!activity) return fail(reply, 404, 'NOT_FOUND', '活动不存在');
+
+    const protoHeader = request.headers['x-forwarded-proto'];
+    const proto = (Array.isArray(protoHeader) ? protoHeader[0] : protoHeader)?.split(',')[0]?.trim()
+      || (request.protocol ?? 'http');
+    const host = request.headers['x-forwarded-host'] || request.headers.host || '127.0.0.1:3001';
+    const origin = `${proto}://${host}`;
+    const frontendOrigin = process.env.QIAHAO_WEB_ORIGIN?.replace(/\/$/, '') || 'http://127.0.0.1:5174';
+    const pageUrl = absoluteUrl(origin, `/api/share/activity/${encodeURIComponent(activity.id)}`);
+    const appUrl = `${frontendOrigin}/?activity=${encodeURIComponent(activity.id)}`;
+    const imageUrl = absoluteUrl(frontendOrigin, activity.image);
+
+    reply
+      .type('text/html; charset=utf-8')
+      .header('cache-control', 'public, max-age=300')
+      .send(renderActivityShareHtml({ activity, pageUrl, imageUrl, appUrl }));
+  });
+
   return app;
 }
 

@@ -1,7 +1,10 @@
+import { useMemo } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { clubActivities, seedNeeds } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
+import { buildUserPortrait } from '../club/portrait';
+import { rankClubActivities } from '../club/recommend';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
 
@@ -15,7 +18,18 @@ export function ActivitiesHomePage({
   onOpenNotifications: () => void;
 }) {
   const { state } = useClub();
-  const featured = clubActivities[0];
+  const portrait = useMemo(() => buildUserPortrait(state), [state]);
+  const ranked = useMemo(
+    () =>
+      rankClubActivities(portrait, clubActivities, {
+        penalizeIds: state.joinedClubActivityIds,
+      }),
+    [portrait, state.joinedClubActivityIds],
+  );
+  const featuredRanked = ranked[0];
+  const featured = featuredRanked?.activity ?? clubActivities[0];
+  const forYou = ranked.slice(1, 4);
+  const highlightTags = portrait.highlightTags.slice(0, 3);
 
   return (
     <main className="club-home page">
@@ -33,14 +47,14 @@ export function ActivitiesHomePage({
             <Sparkles size={15} />
             刚刚懂你一点
           </span>
-          <b>42%</b>
+          <b>{portrait.completeness}%</b>
         </div>
-        <h2>你更适合，慢一点认识的场景</h2>
+        <h2>{portrait.summaryLabel}</h2>
         <p>先看清自己的社交需求，再挑一场舒服的见面。</p>
         <div>
-          <span>怕尴尬</span>
-          <span>少人数</span>
-          <span>自然聊天</span>
+          {highlightTags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
         </div>
       </section>
 
@@ -52,7 +66,10 @@ export function ActivitiesHomePage({
       >
         <img src={featured.image} alt={featured.title} />
         <div>
-          <small>本周精选 · 成熟活动</small>
+          <small>
+            本周精选 · {featured.status}
+            {featuredRanked ? ` · ${featuredRanked.matchLabel}` : ''}
+          </small>
           <h2>{featured.title}</h2>
           <p>
             {featured.people} · {featured.location.split('/')[0].trim()} · {featured.date.replace(' · ', '')}
@@ -68,8 +85,13 @@ export function ActivitiesHomePage({
           </div>
         </header>
         <div className="club-card-list">
-          {clubActivities.slice(1, 4).map((activity) => (
-            <ClubActivityCard key={activity.id} activity={activity} onOpen={onOpenActivity} />
+          {forYou.map((item) => (
+            <ClubActivityCard
+              key={item.activity.id}
+              activity={item.activity}
+              matchLabel={item.matchLabel}
+              onOpen={onOpenActivity}
+            />
           ))}
         </div>
       </section>

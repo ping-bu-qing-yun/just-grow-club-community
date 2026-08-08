@@ -1,8 +1,9 @@
-import { ArrowLeft, Heart, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, ShieldCheck, X } from 'lucide-react';
 import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
+import { shareActivity } from '../lib/activityShare';
 
 const DISLIKE_COUNT_KEY = 'qiahao-dislike-count';
 /** 前 3 次「不考虑」只记数；第 4 次起弹出原因选择 */
@@ -41,6 +42,7 @@ export function ClubActivityDetailPage({
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [feedback, setFeedback] = useState<'consider' | 'dislike' | null>(null);
   const [showDislikeReasons, setShowDislikeReasons] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   const feeLabel = activity.fee === '免费' ? '免费参加' : activity.fee;
   const needsText = activity.needs.join('、');
@@ -70,6 +72,20 @@ export function ClubActivityDetailPage({
     onNotice?.(`已记下不考虑：${reason}`);
   }
 
+  async function handleShare() {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const result = await shareActivity(activity);
+      onNotice?.(result === 'shared' ? '已打开系统分享' : '分享链接已复制');
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      onNotice?.('暂时无法分享，请稍后重试');
+    } finally {
+      setSharing(false);
+    }
+  }
+
   return (
     <main className="page detail-page">
       <div className="detail-media">
@@ -78,17 +94,28 @@ export function ClubActivityDetailPage({
           <button type="button" className="icon-button floating-button" aria-label="返回" onClick={onBack}>
             <ArrowLeft size={21} />
           </button>
-          <button
-            type="button"
-            className={`icon-button floating-button${saved ? ' is-active' : ''}`}
-            aria-label={`${saved ? '取消收藏' : '收藏'}${activity.title}`}
-            onClick={() => {
-              toggleClubActivitySaved(activity.id);
-              onNotice?.(saved ? '已取消收藏' : '已收藏活动');
-            }}
-          >
-            <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
-          </button>
+          <div className="detail-media__actions">
+            <button
+              type="button"
+              className="icon-button floating-button"
+              aria-label={`分享${activity.title}`}
+              disabled={sharing}
+              onClick={() => void handleShare()}
+            >
+              <Share2 size={20} />
+            </button>
+            <button
+              type="button"
+              className={`icon-button floating-button${saved ? ' is-active' : ''}`}
+              aria-label={`${saved ? '取消收藏' : '收藏'}${activity.title}`}
+              onClick={() => {
+                toggleClubActivitySaved(activity.id);
+                onNotice?.(saved ? '已取消收藏' : '已收藏活动');
+              }}
+            >
+              <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
+            </button>
+          </div>
         </div>
       </div>
 
