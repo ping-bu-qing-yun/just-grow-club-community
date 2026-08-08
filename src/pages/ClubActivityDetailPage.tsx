@@ -1,5 +1,5 @@
 import { ArrowLeft, Heart, Share2, ShieldCheck, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
@@ -32,10 +32,12 @@ export function ClubActivityDetailPage({
   activity,
   onBack,
   onNotice,
+  focusComments = false,
 }: {
   activity: ClubActivity;
   onBack: () => void;
   onNotice?: (message: string) => void;
+  focusComments?: boolean;
 }) {
   const { isClubActivitySaved, isClubActivityJoined, toggleClubActivitySaved, joinClubActivity } = useClub();
   const saved = isClubActivitySaved(activity.id);
@@ -48,6 +50,12 @@ export function ClubActivityDetailPage({
   const feeLabel = activity.fee === '免费' ? '免费参加' : activity.fee;
   const needsText = activity.needs.join('、');
   const peopleText = `${activity.people}${activity.people.includes('男女') ? '' : '，男女比例尽量均衡'}`;
+
+  useEffect(() => {
+    if (!focusComments) return;
+    const comments = document.getElementById(`activity-${activity.id}-comments`);
+    comments?.scrollIntoView?.({ block: 'start' });
+  }, [activity.id, focusComments]);
 
   function handleConsider() {
     setFeedback('consider');

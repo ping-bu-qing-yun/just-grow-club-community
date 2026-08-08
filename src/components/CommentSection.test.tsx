@@ -5,7 +5,7 @@ import type { ApiComment } from '../api/types';
 import type { CommentApi } from '../hooks/useComments';
 import { CommentSection } from './CommentSection';
 
-const viewer = { id: 'me', name: '小恰', avatar: '/assets/avatar-me.jpg', role: 'operator' };
+const viewer = { id: 'me', name: '小恰', avatar: '/assets/avatar-me.jpg', role: 'admin' };
 
 function comment(id: string, body = id, authorId = 'u1'): ApiComment {
   return {

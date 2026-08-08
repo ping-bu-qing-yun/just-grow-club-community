@@ -9,7 +9,7 @@ import type { CreateActivityInput, UserRole } from '../src/domain/types';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
 import { NotificationHub } from './notification-hub';
-import { AuthorizationError, requireAuthenticatedUser, requireCommentOwnerOrOperator, requireContentOwnerOrAdmin, requireRole } from './authorization';
+import { AuthorizationError, requireAuthenticatedUser, requireCommentOwnerOrAdmin, requireContentOwnerOrAdmin, requireRole } from './authorization';
 import { ContentRepositoryError, archiveContent, changeModerationStatus, createContentTag, listAdminContent, listContentTags, requireContent, updateContentTag } from './content-repository';
 import { createNeed, getNeed, listNeeds, updateNeed } from './need-repository';
 import { createLifePost, getLifePost, listLifePosts, updateLifePost } from './life-post-repository';
@@ -43,6 +43,12 @@ function parseTagRefs(value: unknown): string[] | null {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > 20 || value.some((item) => typeof item !== 'string' || item.length > 120)) return null;
   return value;
+}
+
+function parseContentBody(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const body = value.trim();
+  return body && body.length <= 5000 ? body : null;
 }
 
 function parseOptionalImage(value: unknown): string | undefined | null {
@@ -172,8 +178,8 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.post<{ Body: { body?: string; tags?: string[] } }>('/api/needs', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const body = request.body?.body?.trim();
-    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
+    const body = parseContentBody(request.body?.body);
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
     const tags = parseTagRefs(request.body?.tags);
     if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
     const need = await createNeed(database, user.id, body, tags);
@@ -186,8 +192,8 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
     requireContentOwnerOrAdmin(user, current);
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
-    const body = request.body?.body?.trim();
-    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
+    const body = parseContentBody(request.body?.body);
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
     const tags = parseTagRefs(request.body?.tags);
     if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
     const need = await updateNeed(database, request.params.id, body, tags);
@@ -219,8 +225,8 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.post<{ Body: { body?: string; image?: string; tags?: string[] } }>('/api/life-posts', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const body = request.body?.body?.trim();
-    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
+    const body = parseContentBody(request.body?.body);
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
     const image = parseOptionalImage(request.body?.image);
     const tags = parseTagRefs(request.body?.tags);
     if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
@@ -234,8 +240,8 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
     requireContentOwnerOrAdmin(user, current);
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
-    const body = request.body?.body?.trim();
-    if (!body || body.length > 5000) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
+    const body = parseContentBody(request.body?.body);
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
     const image = parseOptionalImage(request.body?.image);
     const tags = parseTagRefs(request.body?.tags);
     if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
@@ -276,7 +282,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const user = await requireAuthenticatedUser(request, database);
     const current = await getComment(database, request.params.commentId);
     if (!current) return fail(reply, 404, 'COMMENT_NOT_FOUND', '评论不存在');
-    requireCommentOwnerOrOperator(user, current);
+    requireCommentOwnerOrAdmin(user, current);
     await deleteComment(database, request.params.commentId);
     return reply.code(204).send();
   });

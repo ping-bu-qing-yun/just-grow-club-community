@@ -25,10 +25,8 @@ export function requireContentOwnerOrAdmin(user: AuthenticatedUser, content: { a
   }
 }
 
-/** 评论删除沿用内容授权：作者本人或 operator（兼容当前代码中的 admin）可以删除。 */
-export function requireCommentOwnerOrOperator(user: AuthenticatedUser, comment: { authorId: string }): void {
-  const role = String(user.role);
-  if (role !== 'operator' && role !== 'admin' && user.id !== comment.authorId) {
+export function requireCommentOwnerOrAdmin(user: AuthenticatedUser, comment: { authorId: string }): void {
+  if (user.role !== 'admin' && user.id !== comment.authorId) {
     throw new AuthorizationError(403, 'FORBIDDEN', '只能删除自己的评论');
   }
 }

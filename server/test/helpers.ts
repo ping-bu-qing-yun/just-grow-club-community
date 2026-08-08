@@ -24,6 +24,7 @@ export async function resetTestDatabase(database: QiahaoDatabase): Promise<void>
       'life_posts',
       'needs',
       'content_item_tags',
+      'content_tags',
       'content_items',
       'sessions',
       'users',
@@ -50,11 +51,16 @@ export async function buildTestApp() {
 }
 
 export async function authInject(app: Awaited<ReturnType<typeof buildApp>>, options: any) {
+  return authInjectAs(app, '13800000000', options);
+}
+
+export async function authInjectAs(app: Awaited<ReturnType<typeof buildApp>>, phone: string, options: any) {
   const login = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
-    payload: { phone: '13800000000', password: 'qiahao123' },
+    payload: { phone, password: 'qiahao123' },
   });
+  if (login.statusCode !== 200) throw new Error(`登录失败：${login.statusCode}`);
   const token = login.json().data.token as string;
   return app.inject({ ...options, headers: { ...(options.headers ?? {}), authorization: `Bearer ${token}` } });
 }
