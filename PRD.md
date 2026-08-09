@@ -8,9 +8,11 @@
 
 ## 2. 当前演示链接
 
-外部访问：[https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/gh-pages/index.html](https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/gh-pages/index.html)
+外部访问：[https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html](https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html)
 
-GitHub Pages 兜底访问：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
+从注册流程开始体验：[https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html?reset=registration](https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html?reset=registration)
+
+GitHub Pages 源码入口：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
 
 Sites 生产访问：[https://qiahao-club-demo.chengyan090.chatgpt.site](https://qiahao-club-demo.chengyan090.chatgpt.site)
 

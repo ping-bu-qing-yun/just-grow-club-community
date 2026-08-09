@@ -5,9 +5,11 @@
 一个手机优先的「关系型活动 + 需求洞察 + 小CC运营工作台」微信小程序原型。
 它围绕用户从注册问答、画像生成、专属活动推荐、需求/生活发布、活动报名/预约/反馈，到小CC基于需求生成 AI 活动提案的闭环进行演示。
 
-外部演示链接：[https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/gh-pages/index.html](https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/gh-pages/index.html)
+外部演示链接：[https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html](https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html)
 
-GitHub Pages 兜底链接：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
+从注册流程开始体验：[https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html?reset=registration](https://ping-bu-qing-yun.github.io/just-grow-club-community/demo.html?reset=registration)
+
+GitHub Pages 源码入口：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
 
 Sites 生产链接：[https://qiahao-club-demo.chengyan090.chatgpt.site](https://qiahao-club-demo.chengyan090.chatgpt.site)
 
