@@ -169,6 +169,22 @@ export async function migrationStatementCounts(): Promise<Array<{ version: strin
   })));
 }
 
+export function isIgnorableMigrationError(statement: string, error: unknown): boolean {
+  if (!/^ALTER\s+TABLE\s+\S+\s+ADD\s+COLUMN\s+/i.test(statement)) return false;
+  if (!error || typeof error !== 'object') return false;
+  const mysqlError = error as { code?: unknown; errno?: unknown };
+  return mysqlError.code === 'ER_DUP_FIELDNAME' || mysqlError.errno === 1060;
+}
+
+async function executeMigrationStatement(database: QiahaoDatabase, statement: string): Promise<void> {
+  try {
+    await database.query(statement);
+  } catch (error) {
+    if (isIgnorableMigrationError(statement, error)) return;
+    throw error;
+  }
+}
+
 async function verifyTables(database: QiahaoDatabase): Promise<void> {
   const rows = await database.query<Array<RowDataPacket & { TABLE_NAME: string }>>(
     `SELECT TABLE_NAME

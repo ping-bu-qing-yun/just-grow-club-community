@@ -1,7 +1,5 @@
 import { ArrowUpRight, MapPin, MessageCircle, UsersRound } from 'lucide-react';
 import type { ClubActivity } from '../club/types';
-import { useClub } from '../club/ClubContext';
-import { getClubActivityStats } from '../club/activityStats';
 
 export function ClubActivityCard({
   activity,
@@ -13,13 +11,11 @@ export function ClubActivityCard({
   matchLabel?: string;
   onOpen?: (activity: ClubActivity, focusComments?: boolean) => void;
 }) {
-  const { isClubActivityJoined } = useClub();
   function open(focusComments = false) {
     onOpen?.(activity, focusComments);
   }
 
   const badge = matchLabel ?? activity.matchLabel;
-  const stats = getClubActivityStats(activity, isClubActivityJoined(activity.id));
 
   return (
     <article className="club-activity-card">
@@ -44,7 +40,6 @@ export function ClubActivityCard({
           <ArrowUpRight size={18} aria-hidden />
         </button>
         <p>{activity.description}</p>
-        <div className="activity-stat-line activity-stat-line--card">{stats.views}看过｜{stats.joined}人已报名</div>
         <div className="club-activity-meta">
           <span>
             <MapPin size={13} />
