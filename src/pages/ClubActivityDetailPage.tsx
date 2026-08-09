@@ -1,10 +1,11 @@
-import { ArrowLeft, Heart, Share2, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
 import { CommentSection } from '../components/CommentSection';
 import { shareActivity } from '../lib/activityShare';
+import { Sheet } from '../components/Sheet';
 
 const DISLIKE_COUNT_KEY = 'qiahao-dislike-count';
 /** 前 3 次「不考虑」只记数；第 4 次起弹出原因选择 */
@@ -221,23 +222,7 @@ export function ClubActivityDetailPage({
       </div>
 
       {showJoinSheet && (
-        <div className="sheet-backdrop" onMouseDown={() => setShowJoinSheet(false)}>
-          <section
-            className="bottom-sheet"
-            role="dialog"
-            aria-modal="true"
-            aria-label="确认报名"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="sheet-handle" />
-            <button
-              type="button"
-              className="icon-button sheet-close"
-              aria-label="关闭"
-              onClick={() => setShowJoinSheet(false)}
-            >
-              <X size={20} />
-            </button>
+        <Sheet label="确认报名" onClose={() => setShowJoinSheet(false)}>
             <span className="sheet-icon">
               <ShieldCheck size={25} />
             </span>
@@ -261,8 +246,7 @@ export function ClubActivityDetailPage({
             >
               {activity.status === '预活动' ? '确认预约' : '确认报名'}
             </button>
-          </section>
-        </div>
+        </Sheet>
       )}
 
       {showDislikeReasons && (

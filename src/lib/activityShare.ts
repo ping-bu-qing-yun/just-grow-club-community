@@ -18,9 +18,7 @@ export function readActivityIdFromLocation(search = window.location.search): str
 }
 
 export function buildActivityDeepLink(activityId: string, origin = window.location.origin): string {
-  const url = new URL(origin);
-  url.searchParams.set(ACTIVITY_QUERY_KEY, activityId);
-  return url.toString();
+  return new URL(`/activities/${encodeURIComponent(activityId)}`, origin).toString();
 }
 
 /** 给微信/爬虫的分享入口：走 /api/share，可出 OG 图文，再跳回前端详情 */

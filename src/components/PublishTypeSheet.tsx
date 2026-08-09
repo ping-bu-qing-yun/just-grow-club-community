@@ -1,4 +1,5 @@
-import { CalendarHeart, MessagesSquare, Sparkles, X } from 'lucide-react';
+import { CalendarHeart, MessagesSquare, Sparkles } from 'lucide-react';
+import { Sheet } from './Sheet';
 
 export type PublishKind = 'activity' | 'need' | 'life';
 
@@ -40,20 +41,9 @@ export function PublishTypeSheet({
   }>;
 
   return (
-    <div className="sheet-backdrop" onMouseDown={onClose}>
-      <section
-        className="bottom-sheet publish-type-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="选择发布类型"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <div className="sheet-handle" />
-        <button type="button" className="icon-button sheet-close" aria-label="关闭" onClick={onClose}>
-          <X size={20} />
-        </button>
+    <Sheet label="选择发布类型" onClose={onClose} className="publish-type-sheet">
         <h2>想发布什么？</h2>
-        <p>{canPublishActivity ? '管理者可发布活动、需求与生活' : '你可以发布需求或生活动态'}</p>
+        <p>{canPublishActivity ? '运营者可发布活动、需求与生活' : '你可以发布需求或生活动态'}</p>
         <div className="publish-type-list">
           {options.map(({ id, label, description, Icon }) => (
             <button
@@ -72,7 +62,6 @@ export function PublishTypeSheet({
             </button>
           ))}
         </div>
-      </section>
-    </div>
+    </Sheet>
   );
 }

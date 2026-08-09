@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { Sheet } from './Sheet';
 
 /** 与产品稿一致的不考虑原因选项 */
 export const DISLIKE_REASONS = [
@@ -18,18 +18,7 @@ export function DislikeReasonSheet({
   onClose: () => void;
 }) {
   return (
-    <div className="sheet-backdrop" onMouseDown={onClose}>
-      <section
-        className="bottom-sheet feedback-reason-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="选择不考虑原因"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <div className="sheet-handle" />
-        <button type="button" className="icon-button sheet-close" aria-label="关闭" onClick={onClose}>
-          <X size={20} />
-        </button>
+    <Sheet label="选择不考虑原因" onClose={onClose} className="feedback-reason-sheet">
         <h2>你为什么不考虑？</h2>
         <p>你的选择会让推荐更准确</p>
         <div className="reason-grid">
@@ -44,7 +33,6 @@ export function DislikeReasonSheet({
             </button>
           ))}
         </div>
-      </section>
-    </div>
+    </Sheet>
   );
 }
