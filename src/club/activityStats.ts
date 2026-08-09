@@ -9,6 +9,10 @@ function capacityFromPeople(people: string): number {
   return values.length ? Math.max(...values) : 8;
 }
 
+export function getClubActivityCapacity(activity: ClubActivity): number {
+  return capacityFromPeople(activity.people);
+}
+
 export function getClubActivityStats(activity: ClubActivity, joined = false) {
   const seed = hashId(activity.id);
   const capacity = capacityFromPeople(activity.people);
@@ -19,5 +23,7 @@ export function getClubActivityStats(activity: ClubActivity, joined = false) {
   return {
     views,
     joined: joinedCount,
+    capacity,
+    isFull: activity.status !== '预活动' && joinedCount >= capacity,
   };
 }

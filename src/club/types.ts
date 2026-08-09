@@ -98,6 +98,8 @@ export interface ClubState {
   savedClubActivityIds: string[];
   /** 俱乐部活动报名/预约 id */
   joinedClubActivityIds: string[];
+  /** 满员活动的捡漏提醒 id */
+  waitlistedClubActivityIds: string[];
   /** 用户取消报名/预约的原因 */
   cancelledClubActivityReasons: Record<string, string>;
   /** 用户明确不喜欢的活动 id：不再进入专属推荐 */

@@ -2,6 +2,7 @@ import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction }
 import { ArrowLeft, BellRing, Bot, CalendarDays, Check, ChevronRight, Coins, Eye, Lightbulb, Megaphone, MessageCircle, Pencil, Send, ShieldAlert, Sparkles, UsersRound, X } from 'lucide-react';
 import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
+import { getClubActivityStats } from '../club/activityStats';
 import type { MessageThread } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
 
@@ -220,7 +221,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
       allActivities.map((activity, index) => ({
         activity,
         phase: activityPhases[activity.id] ?? phaseFromActivity(activity, index),
-        signups: Math.max(1, (index + 2) * 3),
+        signups: getClubActivityStats(activity).joined,
         views: 47 + index * 38,
         feedbacks: index % 3 === 0 ? 8 : index % 2 === 0 ? 3 : 0,
         score: 4.5 + (index % 4) * 0.1,
@@ -301,6 +302,17 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
 
   function sendPush() {
     if (!selectedManagedActivity) return;
+    if (selectedManagedActivity.phase !== 'mature' && selectedManagedActivity.phase !== 'recruiting') {
+      setNotice('只有成熟活动和报名中活动可以推送招募');
+      go('activity-detail', true);
+      return;
+    }
+    const stats = getClubActivityStats(selectedManagedActivity.activity);
+    if (stats.isFull) {
+      setNotice('这场活动已满员，不再推送招募');
+      go('activity-detail', true);
+      return;
+    }
     setPushDraft((current) => ({ ...current, sent: true }));
     setPushCounts((current) => ({ ...current, [selectedManagedActivity.activity.id]: (current[selectedManagedActivity.activity.id] ?? 0) + 1 }));
     setActivityPhases((current) => ({ ...current, [selectedManagedActivity.activity.id]: 'recruiting' }));
@@ -702,11 +714,13 @@ function ActivitiesManagePage({ activities, filter, setFilter, onOpen }: { activ
 
 function ActivityManageDetail({ item, pushCount, onConfirm, onPush, onPreview }: { item: ManagedActivity; pushCount: number; onConfirm: () => void; onPush: () => void; onPreview: () => void }) {
   const activity = item.activity;
-  const canPush = item.phase === 'mature' || item.phase === 'recruiting';
+  const stats = getClubActivityStats(activity);
+  const isFull = stats.isFull;
+  const canPush = (item.phase === 'mature' || item.phase === 'recruiting') && !isFull;
   return (
     <section className="activity-manage-detail">
       <div className="activity-admin-hero"><img src={activity.image} alt="" /><span>{phaseLabel(item.phase)}</span><h2>{activity.title}</h2><p>{activity.pitch || activity.description}</p></div>
-      <section className="operator-panel"><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className="activity-kpi-grid"><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article><article><b>{pushCount}</b><span>AI 招募推送</span></article><article><b>{canPush ? '可推' : '收起'}</b><span>推送状态</span></article></div></section>
+      <section className="operator-panel"><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className="activity-kpi-grid"><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article><article><b>{pushCount}</b><span>AI 招募推送</span></article><article><b>{isFull ? '满员' : canPush ? '可推' : '收起'}</b><span>推送状态</span></article></div></section>
       <section className="operator-panel"><header><h2>活动信息</h2><span>可编辑</span></header><div className="proposal-info-table"><div><span>时间</span><b>{activity.timeRange}</b></div><div><span>地点</span><b>{activity.location}</b></div><div><span>人数</span><b>{activity.people}</b></div><div><span>费用</span><b>{activity.fee}</b></div><div><span>适合谁</span><b>{activity.audience}</b></div></div></section>
       <section className="operator-panel"><header><h2>流程亮点</h2></header><div className="activity-flow-mini">{activity.flow.map((step) => <article key={step.title}><b>{step.title}</b><p>{step.body}</p></article>)}</div></section>
       <div className="proposal-actions">
@@ -714,7 +728,8 @@ function ActivityManageDetail({ item, pushCount, onConfirm, onPush, onPreview }:
         {canPush ? <button type="button" onClick={onPush}><Megaphone size={17} />{pushCount > 0 ? `AI 再次推送招募 · 已推 ${pushCount} 次` : 'AI 推送招募'}</button> : null}
         <button type="button" onClick={onPreview}><Eye size={17} />预览给用户看</button>
       </div>
-      {!canPush && item.phase !== 'pre' ? <p className="push-guard">这场活动已进入{phaseLabel(item.phase)}阶段，不再展示招募推送入口，避免重复打扰用户。</p> : null}
+      {isFull ? <p className="push-guard">这场活动已满员，不再展示 AI 招募推送入口，避免把用户导向无效报名。</p> : null}
+      {!isFull && !canPush && item.phase !== 'pre' ? <p className="push-guard">这场活动已进入{phaseLabel(item.phase)}阶段，不再展示招募推送入口，避免重复打扰用户。</p> : null}
     </section>
   );
 }

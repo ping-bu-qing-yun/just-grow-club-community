@@ -1,7 +1,11 @@
-import { ArrowUpRight, MapPin, MessageCircle, UsersRound } from 'lucide-react';
+import { ArrowUpRight, MapPin, UsersRound } from 'lucide-react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { getClubActivityStats } from '../club/activityStats';
+
+function formatFee(fee: string): string {
+  return fee === '免费' ? '免费' : fee.includes('/人') ? fee : `${fee}/人`;
+}
 
 export function ClubActivityCard({
   activity,
@@ -23,6 +27,7 @@ export function ClubActivityCard({
   const badge = matchLabel ?? activity.matchLabel;
   const stats = getClubActivityStats(activity, isClubActivityJoined(activity.id));
   const statsActionLabel = activity.status === '预活动' ? '人已预约' : '人已报名';
+  const feeText = formatFee(activity.fee);
 
   return (
     <article className="club-activity-card">
@@ -57,12 +62,8 @@ export function ClubActivityCard({
             <UsersRound size={13} />
             {activity.people}
           </span>
-          <strong>{activity.fee}</strong>
+          <strong>{feeText}</strong>
         </div>
-        <button type="button" className="club-activity-comment-link" onClick={() => open(true)} aria-label={`查看${activity.title}评论`}>
-          <MessageCircle size={15} aria-hidden />
-          评论
-        </button>
       </div>
     </article>
   );

@@ -64,7 +64,7 @@ function activityToClubActivity(activity: Activity): ClubActivity {
 
 function QiahaoApp() {
   const { status, error, retry, login, logout, user } = useQiahao();
-  const { state, resetOnboarding } = useClub();
+  const { state } = useClub();
   const { markRead } = useNotifications();
   const [activeTab, setActiveTab] = useState<AppTab>('activities');
   const [subview, setSubview] = useState<string | null>(null);
@@ -85,7 +85,6 @@ function QiahaoApp() {
   const [toast, setToast] = useState<string | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
   const [deepLinkReady, setDeepLinkReady] = useState(false);
-  const [forceRegistration, setForceRegistration] = useState(false);
   const [needsReturnToProfile, setNeedsReturnToProfile] = useState(false);
   const returnScrollRef = useRef(0);
   const allClubActivities = useMemo(
@@ -114,18 +113,11 @@ function QiahaoApp() {
     setDeepLinkReady(true);
   }, [status, state.onboardingComplete, deepLinkReady]);
 
-  useEffect(() => {
-    if (status !== 'authenticated' || !forceRegistration) return;
-    resetOnboarding();
-    setForceRegistration(false);
+  async function startRegistration(phone: string, password: string) {
+    await login(phone, password);
     setActiveTab('activities');
     setSubview(null);
     window.scrollTo({ top: 0 });
-  }, [forceRegistration, resetOnboarding, status]);
-
-  async function startRegistration(phone: string, password: string) {
-    setForceRegistration(true);
-    await login(phone, password);
   }
 
   if (status === 'anonymous') return <LoginPage login={startRegistration} />;

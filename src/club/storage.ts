@@ -38,6 +38,7 @@ export const defaultClubState: ClubState = {
   resonatedLifePostIds: [],
   savedClubActivityIds: [],
   joinedClubActivityIds: [],
+  waitlistedClubActivityIds: [],
   cancelledClubActivityReasons: {},
   dislikedClubActivityIds: [],
   consideredClubActivityReasons: {},
@@ -70,6 +71,7 @@ function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
     resonatedLifePostIds: Array.isArray(raw?.resonatedLifePostIds) ? raw!.resonatedLifePostIds : [],
     savedClubActivityIds: Array.isArray(raw?.savedClubActivityIds) ? raw!.savedClubActivityIds : [],
     joinedClubActivityIds: Array.isArray(raw?.joinedClubActivityIds) ? raw!.joinedClubActivityIds : [],
+    waitlistedClubActivityIds: Array.isArray(raw?.waitlistedClubActivityIds) ? raw!.waitlistedClubActivityIds : [],
     cancelledClubActivityReasons:
       raw?.cancelledClubActivityReasons && typeof raw.cancelledClubActivityReasons === 'object'
         ? raw.cancelledClubActivityReasons
