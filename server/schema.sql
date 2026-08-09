@@ -1,3 +1,5 @@
+-- Deprecated legacy SQLite schema. Runtime uses server/migrations/mysql/*.sql.
+-- Keep this file only for historical/offline artifacts; do not use it for the API database.
 PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS users (

@@ -22,11 +22,12 @@ export function NeedsPage({
     return [...new Map(source.map((item) => [item.id, item])).values()].filter((item) => filter !== 'similar' || item.similar);
   }, [filter, qiahao?.needs, state.publishedNeeds]);
   const lifeFeed = useMemo(() => {
-    const remote = qiahao?.lifePosts ?? [];
-    const localPublished = state.publishedLifePosts ?? [];
-    const base = remote.length ? remote : lifePosts;
-    return [...new Map([...localPublished, ...base].map((item) => [item.id, item])).values()];
-  }, [qiahao?.lifePosts, state.publishedLifePosts]);
+    // Once the API provider exists, its approved response (or its explicit
+    // read-only cache fallback) is authoritative. Seed data is only for the
+    // standalone/offline preview that has no provider at all.
+    const base = qiahao ? qiahao.lifePosts : [...(state.publishedLifePosts ?? []), ...lifePosts];
+    return [...new Map(base.map((item) => [item.id, item])).values()];
+  }, [qiahao, state.publishedLifePosts]);
 
   return (
     <main className="needs-page page">

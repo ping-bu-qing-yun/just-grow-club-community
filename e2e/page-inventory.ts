@@ -1,7 +1,7 @@
 export type PageInventoryNode = {
   id: string;
   name: string;
-  roleRequired: 'any' | 'operator' | 'member';
+  roleRequired: 'any' | 'admin' | 'user';
   tags: string[];
 };
 
@@ -26,7 +26,7 @@ export const PAGE_INVENTORY: PageInventoryNode[] = [
   { id: 'saved-activities', name: '活动收藏', roleRequired: 'any', tags: ['account', 'known-probe'] },
   { id: 'messages', name: '消息', roleRequired: 'any', tags: ['account', 'known-probe'] },
   { id: 'publish-sheet', name: '发布类型', roleRequired: 'any', tags: ['publish'] },
-  { id: 'create-activity', name: '发布活动', roleRequired: 'operator', tags: ['publish'] },
+  { id: 'create-activity', name: '发布活动', roleRequired: 'admin', tags: ['publish'] },
   { id: 'create-need', name: '发布需求', roleRequired: 'any', tags: ['publish'] },
   { id: 'create-life', name: '发布生活', roleRequired: 'any', tags: ['publish'] },
   { id: 'toast', name: '全局提示', roleRequired: 'any', tags: ['feedback'] },

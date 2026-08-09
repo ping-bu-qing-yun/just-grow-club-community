@@ -37,7 +37,7 @@ type Cursor = { createdAt: string; id: string };
 
 const contentTypes = new Set<CommentContentType>(['activity', 'need', 'life']);
 
-function assertContentType(value: string): asserts value is CommentContentType {
+function assertContentType(value: unknown): asserts value is CommentContentType {
   if (!contentTypes.has(value as CommentContentType)) {
     throw new CommentRepositoryError('INVALID_CONTENT_TYPE', '评论内容类型无效');
   }
@@ -47,8 +47,11 @@ function encodeCursor(cursor: Cursor): string {
   return Buffer.from(JSON.stringify(cursor), 'utf8').toString('base64url');
 }
 
-function decodeCursor(value: string | undefined | null): Cursor | null {
-  if (!value) return null;
+function decodeCursor(value: unknown): Cursor | null {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string') {
+    throw new CommentRepositoryError('INVALID_CURSOR', '评论分页游标无效');
+  }
   try {
     const parsed = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as Partial<Cursor>;
     if (typeof parsed.createdAt !== 'string' || !parsed.createdAt || typeof parsed.id !== 'string' || !parsed.id) {
@@ -94,19 +97,20 @@ const commentSelect = `
 
 export async function listComments(
   database: QiahaoDatabase,
-  input: { contentType: string; contentId: string; limit?: number; cursor?: string | null },
+  input: { contentType: unknown; contentId: unknown; limit?: unknown; cursor?: unknown },
 ): Promise<CommentPage> {
   const { contentType, contentId } = input;
   assertContentType(contentType);
   const limit = input.limit ?? 5;
-  if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+  if (typeof limit !== 'number' || !Number.isInteger(limit) || limit < 1 || limit > 100) {
     throw new CommentRepositoryError('INVALID_BODY', '评论分页数量必须在 1 至 100 之间');
   }
-  if (!contentId?.trim() || contentId.length > 128) {
+  if (typeof contentId !== 'string' || !contentId.trim() || contentId.length > 128) {
     throw new CommentRepositoryError('CONTENT_NOT_FOUND', '评论对应的内容不存在或不可见');
   }
-  await requirePublicContent(database, contentType, contentId);
+  const normalizedContentId = contentId.trim();
   const cursor = decodeCursor(input.cursor);
+  await requirePublicContent(database, contentType, normalizedContentId);
   const cursorClause = cursor ? ' AND (c.created_at < ? OR (c.created_at = ? AND c.id < ?))' : '';
   const cursorParams = cursor ? [cursor.createdAt, cursor.createdAt, cursor.id] : [];
   const [rows, countRows] = await Promise.all([
@@ -115,11 +119,11 @@ export async function listComments(
         WHERE c.content_type=? AND c.content_id=? AND c.deleted_at IS NULL${cursorClause}
         ORDER BY c.created_at DESC,c.id DESC
         LIMIT ?`,
-      [contentType, contentId, ...cursorParams, limit],
+      [contentType, normalizedContentId, ...cursorParams, limit],
     ),
     database.query<Array<RowDataPacket & { total: number | string }>>(
       'SELECT COUNT(*) AS total FROM comments WHERE content_type=? AND content_id=? AND deleted_at IS NULL',
-      [contentType, contentId],
+      [contentType, normalizedContentId],
     ),
   ]);
   const total = Number(countRows[0]?.total ?? 0);
@@ -134,7 +138,7 @@ export async function listComments(
         WHERE c.content_type=? AND c.content_id=? AND c.deleted_at IS NULL
           AND (c.created_at < ? OR (c.created_at = ? AND c.id < ?))
         LIMIT 1`,
-      [contentType, contentId, rows[rows.length - 1].created_at, rows[rows.length - 1].created_at, rows[rows.length - 1].id],
+      [contentType, normalizedContentId, rows[rows.length - 1].created_at, rows[rows.length - 1].created_at, rows[rows.length - 1].id],
     );
     if (!lookahead.length) resolvedCursor = null;
   }
@@ -152,21 +156,25 @@ export async function countComments(database: CommentExecutor, contentType: Comm
 
 export async function createComment(
   database: QiahaoDatabase,
-  input: { contentType: string; contentId: string; authorId: string; body: string },
+  input: { contentType: unknown; contentId: unknown; authorId: string; body: unknown },
 ): Promise<ApiComment> {
   const contentType = input.contentType;
   assertContentType(contentType);
-  const body = input.body?.trim() ?? '';
+  const body = typeof input.body === 'string' ? input.body.trim() : '';
   if (!body || body.length > 500) {
     throw new CommentRepositoryError('INVALID_BODY', '评论内容不能为空且不能超过 500 字');
   }
-  await requirePublicContent(database, contentType, input.contentId);
+  if (typeof input.contentId !== 'string' || !input.contentId.trim() || input.contentId.length > 128) {
+    throw new CommentRepositoryError('CONTENT_NOT_FOUND', '评论对应的内容不存在或不可见');
+  }
+  const contentId = input.contentId.trim();
+  await requirePublicContent(database, contentType, contentId);
   const id = `comment-${Date.now()}-${randomUUID().slice(0, 12)}`;
   const now = toMysqlDateTime();
   await database.query<ResultSetHeader>(
     `INSERT INTO comments (id,content_type,content_id,author_id,body,created_at,updated_at,deleted_at)
      VALUES (?,?,?,?,?,?,?,NULL)`,
-    [id, contentType, input.contentId, input.authorId, body, now, now],
+    [id, contentType, contentId, input.authorId, body, now, now],
   );
   const rows = await database.query<CommentRow[]>(`${commentSelect} WHERE c.id=? LIMIT 1`, [id]);
   if (!rows[0]) throw new Error('评论创建失败');

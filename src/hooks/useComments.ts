@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api/client';
 import type { ApiComment, CommentContentType, CommentPage, QiahaoApi } from '../api/types';
 import { localCommentsFor } from '../comments/local-comments';
+import type { UserRole } from '../domain/types';
 
 export type CommentViewState = 'preview' | 'expanded';
 export type CommentApi = Pick<QiahaoApi, 'listComments' | 'createComment' | 'deleteComment'>;
@@ -16,7 +17,7 @@ export type CommentViewer = {
   id: string;
   name: string;
   avatar?: string;
-  role?: string;
+  role?: UserRole;
 };
 
 function mergeComments(current: ApiComment[], incoming: ApiComment[]): ApiComment[] {
@@ -66,6 +67,8 @@ export function useComments({
   viewer: CommentViewer | null;
 }) {
   const key = `${contentType}:${contentId}`;
+  const keyRef = useRef(key);
+  keyRef.current = key;
   const cacheRef = useRef(new Map<string, CommentCacheEntry>());
   const localEntriesRef = useRef(new Map<string, ApiComment[]>());
   if (localMode && !localEntriesRef.current.has(key)) {
@@ -80,6 +83,7 @@ export function useComments({
   const [viewState, setViewState] = useState<CommentViewState>('preview');
   const [loading, setLoading] = useState(() => !localMode);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +109,7 @@ export function useComments({
   }, [key]);
 
   const loadPreview = useCallback(async (force = false) => {
+    const requestKey = key;
     setViewState('preview');
     setError(null);
     if (!force) {
@@ -119,25 +124,29 @@ export function useComments({
     setLoading(true);
     try {
       const page = await readPage(null, 5);
+      if (keyRef.current !== requestKey) return;
       saveEntry({ comments: page.comments, total: page.total, nextCursor: page.nextCursor });
     } catch (reason) {
+      if (keyRef.current !== requestKey) return;
       setEntry(null);
       setError(reason instanceof Error ? reason.message : '评论加载失败');
     } finally {
-      setLoading(false);
+      if (keyRef.current === requestKey) setLoading(false);
     }
-  }, [key, readPage, saveEntry]);
+  }, [key, keyRef, readPage, saveEntry]);
 
   useEffect(() => {
     void loadPreview();
   }, [loadPreview]);
 
   const expand = useCallback(async () => {
+    const requestKey = key;
     const current = entryRef.current;
-    if (!current || loadingMore) return;
+    if (!current || loadingMoreRef.current) return;
     setViewState('expanded');
     setError(null);
     if (!current.nextCursor) return;
+    loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
       let next = current;
@@ -146,6 +155,7 @@ export function useComments({
       while (cursor && !seen.has(cursor)) {
         seen.add(cursor);
         const page = await readPage(cursor, 100);
+        if (keyRef.current !== requestKey) return;
         next = {
           comments: mergeComments(next.comments, page.comments),
           total: page.total,
@@ -153,19 +163,23 @@ export function useComments({
         };
         cursor = page.nextCursor;
       }
+      if (keyRef.current !== requestKey) return;
       saveEntry(next);
     } catch (reason) {
+      if (keyRef.current !== requestKey) return;
       setError(reason instanceof Error ? reason.message : '展开评论失败');
     } finally {
-      setLoadingMore(false);
+      loadingMoreRef.current = false;
+      if (keyRef.current === requestKey) setLoadingMore(false);
     }
-  }, [loadingMore, readPage, saveEntry]);
+  }, [key, keyRef, readPage, saveEntry]);
 
   const collapse = useCallback(() => {
     setViewState('preview');
   }, []);
 
   const create = useCallback(async (rawBody: string): Promise<boolean> => {
+    const requestKey = key;
     const body = rawBody.trim();
     if (!body || body.length > 500) {
       setError('评论内容不能为空且不能超过 500 字');
@@ -185,22 +199,25 @@ export function useComments({
         const currentLocal = localEntriesRef.current.get(key) ?? [];
         localEntriesRef.current.set(key, [comment, ...currentLocal.filter((item) => item.id !== comment.id)]);
       }
+      if (keyRef.current !== requestKey) return false;
       const current = entryRef.current ?? { comments: [], total: 0, nextCursor: null };
       saveEntry({
-        comments: [...current.comments.filter((item) => item.id !== comment.id), comment],
+        comments: [comment, ...current.comments.filter((item) => item.id !== comment.id)],
         total: current.total + 1,
         nextCursor: current.nextCursor,
       });
       return true;
     } catch (reason) {
+      if (keyRef.current !== requestKey) return false;
       setError(reason instanceof Error ? reason.message : '发表评论失败');
       return false;
     } finally {
-      setSubmitting(false);
+      if (keyRef.current === requestKey) setSubmitting(false);
     }
-  }, [apiClient, contentId, contentType, key, localMode, saveEntry, viewer]);
+  }, [apiClient, contentId, contentType, key, keyRef, localMode, saveEntry, viewer]);
 
   const remove = useCallback(async (comment: ApiComment): Promise<boolean> => {
+    const requestKey = key;
     if (!viewer) {
       setError('请先登录后再删除评论');
       return false;
@@ -214,6 +231,7 @@ export function useComments({
       } else {
         await apiClient.deleteComment(comment.id);
       }
+      if (keyRef.current !== requestKey) return true;
       const current = entryRef.current;
       if (current) {
         saveEntry({
@@ -224,6 +242,7 @@ export function useComments({
       }
       return true;
     } catch (reason) {
+      if (keyRef.current !== requestKey) return false;
       setError(reason instanceof Error ? reason.message : '删除评论失败');
       return false;
     } finally {
@@ -233,22 +252,24 @@ export function useComments({
         return next;
       });
     }
-  }, [apiClient, key, localMode, saveEntry, viewer]);
+  }, [apiClient, key, keyRef, localMode, saveEntry, viewer]);
 
+  const isActiveKey = entryKey === key;
+  const visibleViewState = isActiveKey ? viewState : 'preview';
   const comments = useMemo(() => {
     const all = activeEntry?.comments ?? [];
-    return viewState === 'preview' ? all.slice(0, 5) : all;
-  }, [activeEntry?.comments, viewState]);
+    return visibleViewState === 'preview' ? all.slice(0, 5) : all;
+  }, [activeEntry?.comments, visibleViewState]);
 
   return {
     comments,
     total: activeEntry?.total ?? 0,
-    viewState,
-    loading,
-    loadingMore,
-    submitting,
+    viewState: visibleViewState,
+    loading: !isActiveKey || loading,
+    loadingMore: isActiveKey && loadingMore,
+    submitting: isActiveKey && submitting,
     deletingIds,
-    error,
+    error: isActiveKey ? error : null,
     canToggle: (activeEntry?.total ?? 0) > 5,
     create,
     remove,

@@ -111,7 +111,7 @@ async function dismissToast(page: Page) {
   if (await close.count()) await close.click();
 }
 
-async function loginMemberWithoutResettingClubState(page: Page) {
+async function loginUserWithoutResettingClubState(page: Page) {
   await page.evaluate(() => localStorage.removeItem('qiahao-auth-token'));
   await page.reload();
   await page.locator('.login-form input').first().fill('13800000001');
@@ -444,18 +444,18 @@ test('walks the executable page inventory and writes the UI issue report', async
   }
   await nav(page, '我的').click();
   await page.getByRole('button', { name: /退出当前账号/ }).click();
-  await loginMemberWithoutResettingClubState(page);
+  await loginUserWithoutResettingClubState(page);
   await nav(page, '我的').click();
-  const memberProfileText = await page.locator('main').innerText();
-  if (memberProfileText.includes('小满') || memberProfileText.includes('Playwright 走查需求')) {
+  const userProfileText = await page.locator('main').innerText();
+  if (userProfileText.includes('小满') || userProfileText.includes('Playwright 走查需求')) {
     record({
       id: 'CLUB-STATE-CROSS-USER',
       severity: 'P1',
       pageId: 'profile',
-      title: 'member 登录后继承了 operator 的俱乐部本地状态',
+      title: 'user 登录后继承了 admin 的俱乐部本地状态',
       expected: '用户画像、收藏和发布内容应按账号隔离',
-      actual: 'member 仍看到 operator 的昵称/需求/收藏状态',
-      evidence: 'member profile snapshot from Browser Relay and Playwright',
+      actual: 'user 仍看到 admin 的昵称/需求/收藏状态',
+      evidence: 'user profile snapshot from Browser Relay and Playwright',
       code: 'src/club/storage.ts: CLUB_STORAGE_KEY；src/club/ClubContext.tsx',
       status: 'confirmed',
     });
@@ -465,37 +465,37 @@ test('walks the executable page inventory and writes the UI issue report', async
   await expect(publishDialog).toBeVisible();
   if (await publishDialog.getByRole('button', { name: /发起一场可报名/ }).count()) {
     record({
-      id: 'ROLE-UI-MEMBER-ACTIVITY',
+      id: 'ROLE-UI-USER-ACTIVITY',
       severity: 'P1',
       pageId: 'publish-sheet',
-      title: 'member 发布菜单显示活动',
-      expected: 'member 不应看到活动发布项',
+      title: 'user 发布菜单显示活动',
+      expected: 'user 不应看到活动发布项',
       actual: '活动发布项可见',
-      evidence: 'member publish sheet',
+      evidence: 'user publish sheet',
       code: 'src/domain/roles.ts；src/components/PublishTypeSheet.tsx',
       status: 'confirmed',
     });
   }
-  const memberCreate = await page.evaluate(async () => {
+  const userCreate = await page.evaluate(async () => {
     const token = localStorage.getItem('qiahao-auth-token');
     const response = await fetch('/api/activities', {
       method: 'POST',
       headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ title: `member 权限探针 ${Date.now()}`, category: '徒步', description: '权限测试', dateLabel: '周日 · 8月9日', time: '17:00', location: '本地测试地点', capacity: 4, price: 0 }),
+      body: JSON.stringify({ title: `user 权限探针 ${Date.now()}`, category: '徒步', description: '权限测试', dateLabel: '周日 · 8月9日', time: '17:00', location: '本地测试地点', capacity: 4, price: 0 }),
     });
     const body = await response.json();
     return { status: response.status, id: body?.data?.activity?.id, error: body?.error?.code };
   });
-  if (memberCreate.status < 400) {
+  if (userCreate.status < 400) {
     record({
       id: 'ROLE-ADR-DRIFT',
       severity: 'P0',
       pageId: 'publish-sheet',
-      title: 'member 可绕过 UI 直接创建活动',
-      expected: '后端应拒绝非 operator 的活动写入',
-      actual: `member POST /api/activities 返回 ${memberCreate.status}，id=${memberCreate.id}`,
+      title: 'user 可绕过 UI 直接创建活动',
+      expected: '后端应拒绝非 admin 的活动写入',
+      actual: `user POST /api/activities 返回 ${userCreate.status}，id=${userCreate.id}`,
       evidence: 'Playwright page.evaluate API permission probe',
-      code: 'server/app.ts: POST /api/activities；server/schema.sql（无 role 写校验）',
+      code: 'server/app.ts: POST /api/activities；server/migrations/mysql/004_roles_content.sql',
       status: 'confirmed',
     });
   }
