@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { ClubActivityCard } from '../components/ClubActivityCard';
@@ -23,8 +24,31 @@ export function ExplorePage({
   onOpenActivity: (activity: ClubActivity) => void;
   onOpenNotifications: () => void;
 }) {
-  const [filter, setFilter] = useState('all');
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedFilter = searchParams.get('filter');
+  const filter = filters.some(([id]) => id === requestedFilter) ? requestedFilter : 'all';
+  const query = searchParams.get('q') ?? '';
+
+  function updateFilter(nextFilter: string) {
+    const params = new URLSearchParams(searchParams);
+    if (nextFilter === 'all') params.delete('filter');
+    else params.set('filter', nextFilter);
+    setSearchParams(params, { replace: true });
+  }
+
+  function updateQuery(nextQuery: string) {
+    const params = new URLSearchParams(searchParams);
+    if (nextQuery) params.set('q', nextQuery);
+    else params.delete('q');
+    setSearchParams(params, { replace: true });
+  }
+
+  function clearFilters() {
+    const params = new URLSearchParams(searchParams);
+    params.delete('filter');
+    params.delete('q');
+    setSearchParams(params, { replace: true });
+  }
 
   const visible = useMemo(
     () =>
@@ -47,13 +71,13 @@ export function ExplorePage({
         <input
           aria-label="搜索活动"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => updateQuery(event.target.value)}
           placeholder="搜索活动、地点或场景"
         />
       </label>
       <div className="club-filter-strip">
         {filters.map(([id, label]) => (
-          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => setFilter(id)} type="button">
+          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => updateFilter(id)} type="button">
             {label}
           </button>
         ))}
@@ -69,10 +93,7 @@ export function ExplorePage({
           <button
             className="secondary-button"
             type="button"
-            onClick={() => {
-              setFilter('all');
-              setQuery('');
-            }}
+            onClick={clearFilters}
           >
             清除筛选
           </button>
