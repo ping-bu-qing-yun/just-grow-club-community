@@ -5,6 +5,9 @@ import { api } from '../api/client';
 import type { ActivityProposalStatus } from '../api/types';
 import type { ConfigDomain, ConfigEntityType } from '../config/types';
 import { queryKeys } from '../data/queryClient';
+import { Button } from '../components/ui/Button';
+import { Input, Select, Textarea } from '../components/ui/Input';
+import styles from './OperatorBusinessConfigPage.module.css';
 
 const domains: Array<{ key: ConfigDomain; label: string; entities: ConfigEntityType[] }> = [
   { key: 'activity-categories', label: '活动分类', entities: ['activity-category'] },
@@ -111,28 +114,82 @@ export function OperatorBusinessConfigPage({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <main className="operator-business page">
-      <header className="subpage-header"><button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div><small>运营工作台</small><h1>业务配置与活动提案</h1></div></header>
-      {notice ? <p className="operator-notice" role="status">{notice}</p> : null}
-      <section className="operator-panel">
-        <header><div><Settings2 size={19} /><h2>动态业务配置</h2></div><button type="button" onClick={() => void refreshAfterMutation()}><RefreshCw size={15} />刷新</button></header>
-        <div className="operator-domain-tabs">{domains.map((item) => <button type="button" className={domain === item.key ? 'is-active' : ''} key={item.key} onClick={() => setDomain(item.key)}>{item.label}</button>)}</div>
-        <p>当前版本：{configQuery.data?.version ?? '加载中'}。业务键发布后应保持稳定；停用项不会再用于新内容，历史内容仍可展示。</p>
-        <pre className="operator-config-preview">{JSON.stringify(configQuery.data?.config ?? null, null, 2)}</pre>
-        <form className="operator-config-form" onSubmit={(event) => void mutateConfig(event)}>
-          <label>操作<select value={mode} onChange={(event) => setMode(event.target.value as MutationMode)}><option value="create">新建</option><option value="update">编辑</option><option value="disable">停用</option><option value="restore">恢复</option></select></label>
-          <label>实体<select value={entityType} onChange={(event) => setEntityType(event.target.value as ConfigEntityType)}>{domainEntry.entities.map((item) => <option value={item} key={item}>{entityLabels[item]}</option>)}</select></label>
-          <label>业务键<input value={key} onChange={(event) => setKey(event.target.value)} placeholder={entityType.endsWith('option') ? 'group::option_key' : 'stable_key'} /></label>
-          {mode === 'create' || mode === 'update' ? <label>配置值 JSON<textarea value={values} onChange={(event) => setValues(event.target.value)} rows={10} spellCheck={false} /></label> : null}
-          <button type="submit" className="primary-button" disabled={pending || !key.trim() || !configQuery.data}><Save size={16} />{pending ? '保存中…' : '提交配置'}</button>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+        <div><small>运营工作台</small><h1>业务配置与活动提案</h1></div>
+      </header>
+      {notice ? <p className={styles.notice} role="status">{notice}</p> : null}
+      <section className={styles.panel}>
+        <header>
+          <div className={styles.panelTitle}><Settings2 size={19} /><h2>动态业务配置</h2></div>
+          <Button variant="secondary" size="sm" icon={<RefreshCw size={15} />} onClick={() => void refreshAfterMutation()}>刷新</Button>
+        </header>
+        <div className={styles.domainTabs}>
+          {domains.map((item) => (
+            <button type="button" className={domain === item.key ? styles.active : ''} key={item.key} onClick={() => setDomain(item.key)}>
+              {item.label}
+            </button>
+          ))}
+        </div>
+        <p className={styles.lead}>当前版本：{configQuery.data?.version ?? '加载中'}。业务键发布后应保持稳定；停用项不会再用于新内容，历史内容仍可展示。</p>
+        <pre className={styles.preview}>{JSON.stringify(configQuery.data?.config ?? null, null, 2)}</pre>
+        <form className={styles.form} onSubmit={(event) => void mutateConfig(event)}>
+          <Select label="操作" value={mode} onChange={(event) => setMode(event.target.value as MutationMode)}>
+            <option value="create">新建</option>
+            <option value="update">编辑</option>
+            <option value="disable">停用</option>
+            <option value="restore">恢复</option>
+          </Select>
+          <Select label="实体" value={entityType} onChange={(event) => setEntityType(event.target.value as ConfigEntityType)}>
+            {domainEntry.entities.map((item) => (
+              <option value={item} key={item}>{entityLabels[item]}</option>
+            ))}
+          </Select>
+          <Input label="业务键" value={key} onChange={(event) => setKey(event.target.value)} placeholder={entityType.endsWith('option') ? 'group::option_key' : 'stable_key'} />
+          {mode === 'create' || mode === 'update' ? (
+            <Textarea label="配置值 JSON" value={values} onChange={(event) => setValues(event.target.value)} rows={10} spellCheck={false} />
+          ) : null}
+          <Button type="submit" icon={<Save size={16} />} disabled={pending || !key.trim() || !configQuery.data}>
+            {pending ? '保存中…' : '提交配置'}
+          </Button>
         </form>
-        <details><summary>最近审计记录（{auditQuery.data?.events.length ?? 0}）</summary><div className="operator-audit-list">{auditQuery.data?.events.map((event) => <p key={event.id}><b>v{event.revision} · {event.action}</b><span>{event.entityType} / {event.entityKey}</span><small>{event.createdAt}</small></p>)}</div></details>
+        <details className={styles.audit}>
+          <summary>最近审计记录（{auditQuery.data?.events.length ?? 0}）</summary>
+          <div className={styles.auditList}>
+            {auditQuery.data?.events.map((event) => (
+              <p key={event.id}><b>v{event.revision} · {event.action}</b><span>{event.entityType} / {event.entityKey}</span><small>{event.createdAt}</small></p>
+            ))}
+          </div>
+        </details>
       </section>
 
-      <section className="operator-panel">
-        <header><div><h2>活动提案</h2></div><button type="button" onClick={() => void proposalsQuery.refetch()}><RefreshCw size={15} />刷新</button></header>
-        {!proposalsQuery.data?.proposals.length ? <div className="empty-state"><h3>暂无待处理提案</h3></div> : null}
-        <div className="operator-proposal-list">{proposalsQuery.data?.proposals.map((proposal) => <form key={proposal.id} onSubmit={(event) => void saveProposal(event, proposal.id)}><label>标题<input name="title" defaultValue={proposal.title} /></label><label>分类键<input name="categoryKey" defaultValue={proposal.categoryKey} /></label><label>状态<select name="status" defaultValue={proposal.status}>{(['draft','submitted','accepted','rejected','withdrawn'] as const).map((status) => <option key={status}>{status}</option>)}</select></label><label>描述<textarea name="description" defaultValue={proposal.description} rows={4} /></label><label>处理说明<textarea name="reviewNote" defaultValue={proposal.reviewNote ?? ''} rows={2} /></label><p>主理人：{proposal.host.name} · {proposal.categoryLabel}</p><div><button type="submit" className="primary-button"><Save size={15} />保存编辑</button><button type="button" className="secondary-button" onClick={() => void archiveProposal(proposal.id)}><Archive size={15} />归档</button></div></form>)}</div>
+      <section className={styles.panel}>
+        <header>
+          <div className={styles.panelTitle}><h2>活动提案</h2></div>
+          <Button variant="secondary" size="sm" icon={<RefreshCw size={15} />} onClick={() => void proposalsQuery.refetch()}>刷新</Button>
+        </header>
+        {!proposalsQuery.data?.proposals.length ? <div className={styles.empty}><h3>暂无待处理提案</h3></div> : null}
+        <div className={styles.proposalList}>
+          {proposalsQuery.data?.proposals.map((proposal) => (
+            <form key={proposal.id} className={styles.proposalForm} onSubmit={(event) => void saveProposal(event, proposal.id)}>
+              <Input label="标题" name="title" defaultValue={proposal.title} />
+              <Input label="分类键" name="categoryKey" defaultValue={proposal.categoryKey} />
+              <Select label="状态" name="status" defaultValue={proposal.status}>
+                {(['draft','submitted','accepted','rejected','withdrawn'] as const).map((status) => (
+                  <option key={status}>{status}</option>
+                ))}
+              </Select>
+              <Textarea label="描述" name="description" defaultValue={proposal.description} rows={4} />
+              <Textarea label="处理说明" name="reviewNote" defaultValue={proposal.reviewNote ?? ''} rows={2} />
+              <p className={styles.proposalMeta}>主理人：{proposal.host.name} · {proposal.categoryLabel}</p>
+              <div className={styles.proposalActions}>
+                <Button type="submit" size="sm" icon={<Save size={15} />}>保存编辑</Button>
+                <Button type="button" variant="secondary" size="sm" icon={<Archive size={15} />} onClick={() => void archiveProposal(proposal.id)}>归档</Button>
+              </div>
+            </form>
+          ))}
+        </div>
       </section>
     </main>
   );

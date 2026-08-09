@@ -1,0 +1,110 @@
+/* Sheet — gesture-driven bottom sheet: blur scrim + material panel.
+   The panel's translateY is driven by a MotionValue via --sheet-offset
+   (see Sheet.tsx); CSS only owns layout, material, and the entrance. */
+
+.backdrop {
+  position: fixed;
+  z-index: var(--z-overlay);
+  inset: 0;
+  display: flex;
+  width: 100%;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--scrim);
+  opacity: 1;
+  transition: opacity var(--dur-fast) ease-out;
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.closing {
+  opacity: 0;
+}
+
+.panel {
+  --sheet-offset: 0px;
+  width: min(100%, 600px);
+  max-height: min(86dvh, 760px);
+  overflow-y: auto;
+  padding: 8px 20px calc(22px + env(safe-area-inset-bottom));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-bottom: 0;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  background: var(--material-thick);
+  color: var(--ink);
+  box-shadow: var(--shadow-raised);
+  transform: translate3d(0, var(--sheet-offset), 0);
+  will-change: transform;
+  animation: sheet-enter var(--dur-sheet) var(--ease-out) both;
+  -webkit-backdrop-filter: var(--blur-sheet);
+  backdrop-filter: var(--blur-sheet);
+}
+
+.handleArea {
+  display: grid;
+  height: 32px;
+  margin: -2px 44px 7px;
+  place-items: center;
+  cursor: grab;
+  touch-action: none;
+}
+
+.handleArea:active {
+  cursor: grabbing;
+}
+
+.handle {
+  width: 38px;
+  height: 5px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+.close {
+  position: absolute;
+  top: 9px;
+  right: 12px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-instant) ease-out;
+}
+
+.close:active {
+  transform: scale(0.92);
+}
+
+@keyframes sheet-enter {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, var(--sheet-offset), 0);
+  }
+}
+
+@media (min-width: 900px) {
+  .backdrop {
+    padding: 28px;
+    align-items: center;
+  }
+  .panel {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--radius-sheet);
+    padding-bottom: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+    transition: opacity 200ms ease;
+  }
+}

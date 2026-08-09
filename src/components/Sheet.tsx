@@ -21,7 +21,8 @@ import { animate, motionValue, type MotionValue } from 'motion';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { project, rubberband } from '../motion/gestures';
-import { sheet as sheetSpring, reducedFade } from '../motion/springs';
+import { sheet as sheetSpring } from '../motion/springs';
+import styles from './Sheet.module.css';
 
 const focusableSelector = [
   'a[href]',
@@ -235,30 +236,30 @@ export function Sheet({
 
   return createPortal(
     <div
-      className={`sheet-backdrop${closing ? ' is-closing' : ''}`}
+      className={`${styles.backdrop}${closing ? ` ${styles.closing}` : ''}`}
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) finishClose();
       }}
     >
       <section
         ref={panelRef}
-        className={`bottom-sheet${className ? ` ${className}` : ''}`}
+        className={`${styles.panel}${className ? ` ${className}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={label}
         tabIndex={-1}
       >
         <div
-          className="sheet-handle-area"
+          className={`${styles.handleArea} sheet-handle-area`}
           aria-hidden="true"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerEnd}
           onPointerCancel={handlePointerEnd}
         >
-          <div className="sheet-handle" />
+          <div className={styles.handle} />
         </div>
-        <button type="button" className="icon-button sheet-close" aria-label="关闭" onClick={() => finishClose()}>
+        <button type="button" className={styles.close} aria-label="关闭" onClick={() => finishClose()}>
           <X size={20} />
         </button>
         {children}

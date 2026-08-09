@@ -18,10 +18,12 @@ import { AppShell } from '../components/AppShell';
 import type { AppTab } from '../components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from '../components/PublishTypeSheet';
 import { Toast } from '../components/Toast';
+import { Button } from '../components/ui/Button';
 import { domainActivityToClub } from '../club/activity-adapter';
 import { useClub } from '../club/ClubContext';
 import { canPublishActivity, isOperator } from '../domain/roles';
 import { reducedFade, snappy } from '../motion/springs';
+import styles from './AppRouter.module.css';
 import { useNotifications } from '../notifications/NotificationContext';
 import type { AppNotification } from '../notifications/types';
 import { toLifePost, toNeed, useQiahao } from '../state/QiahaoContext';
@@ -90,9 +92,9 @@ function useShell(): ShellContext {
 
 function AppState({ message, action }: { message: string; action?: { label: string; run(): void } }) {
   return (
-    <main className="app-state">
+    <main className={styles.appState}>
       <p>{message}</p>
-      {action ? <button type="button" className="primary-button" onClick={action.run}>{action.label}</button> : null}
+      {action ? <Button type="button" onClick={action.run}>{action.label}</Button> : null}
     </main>
   );
 }
@@ -172,7 +174,7 @@ function ProductShell() {
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          className="route-stage"
+          className={styles.routeStage}
           key={pathname}
           initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}

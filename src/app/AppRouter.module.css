@@ -1,0 +1,15 @@
+/* AppRouter — route transition stage + the fallback app-state screen. */
+
+.routeStage {
+  min-height: inherit;
+}
+
+.appState {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
