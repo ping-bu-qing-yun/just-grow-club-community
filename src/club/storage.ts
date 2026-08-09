@@ -10,18 +10,25 @@ export const defaultClubState: ClubState = {
   lightAnswers: [[], [], []],
   qaAnswers: {},
   profile: {
-    nickname: '小恰',
-    birthDate: '1997-08-12',
-    gender: '女',
-    education: '本科',
-    occupation: '品牌策划',
-    height: '165cm',
-    city: '上海 杨浦区',
-    hometown: '中国',
-    relationship: '正在寻觅',
-    bio: '我喜欢有趣但不吵闹的活动，也希望在自然的相处里慢慢认识一个人。',
-    tags: ['喜欢深聊', '周末散步', '慢热'],
-    preferences: ['喝杯咖啡', '看展', '户外运动'],
+    nickname: '',
+    avatar: '',
+    birthDate: '',
+    gender: '',
+    education: '',
+    occupation: '',
+    height: '',
+    city: '',
+    hometown: '',
+    relationship: '',
+    bio: '',
+    tags: [],
+    preferences: [],
+    supplementalInfo: {
+      ideal: '',
+      expectation: '',
+      age: '',
+      other: '',
+    },
   },
   savedNeedIds: [],
   resonatedNeedIds: [],
@@ -31,6 +38,10 @@ export const defaultClubState: ClubState = {
   resonatedLifePostIds: [],
   savedClubActivityIds: [],
   joinedClubActivityIds: [],
+  cancelledClubActivityReasons: {},
+  dislikedClubActivityIds: [],
+  consideredClubActivityReasons: {},
+  reservationCommentedActivityIds: [],
 };
 
 export function clubStorageKey(userId: string): string {
@@ -41,7 +52,14 @@ function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
   return {
     ...defaultClubState,
     ...raw,
-    profile: { ...defaultClubState.profile, ...(raw?.profile ?? {}) },
+    profile: {
+      ...defaultClubState.profile,
+      ...(raw?.profile ?? {}),
+      supplementalInfo: {
+        ...defaultClubState.profile.supplementalInfo,
+        ...(raw?.profile?.supplementalInfo ?? {}),
+      },
+    },
     lightAnswers: Array.isArray(raw?.lightAnswers) ? raw!.lightAnswers : defaultClubState.lightAnswers,
     qaAnswers: raw?.qaAnswers && typeof raw.qaAnswers === 'object' ? raw.qaAnswers : {},
     savedNeedIds: Array.isArray(raw?.savedNeedIds) ? raw!.savedNeedIds : [],
@@ -52,6 +70,16 @@ function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
     resonatedLifePostIds: Array.isArray(raw?.resonatedLifePostIds) ? raw!.resonatedLifePostIds : [],
     savedClubActivityIds: Array.isArray(raw?.savedClubActivityIds) ? raw!.savedClubActivityIds : [],
     joinedClubActivityIds: Array.isArray(raw?.joinedClubActivityIds) ? raw!.joinedClubActivityIds : [],
+    cancelledClubActivityReasons:
+      raw?.cancelledClubActivityReasons && typeof raw.cancelledClubActivityReasons === 'object'
+        ? raw.cancelledClubActivityReasons
+        : {},
+    dislikedClubActivityIds: Array.isArray(raw?.dislikedClubActivityIds) ? raw!.dislikedClubActivityIds : [],
+    consideredClubActivityReasons:
+      raw?.consideredClubActivityReasons && typeof raw.consideredClubActivityReasons === 'object'
+        ? raw.consideredClubActivityReasons
+        : {},
+    reservationCommentedActivityIds: Array.isArray(raw?.reservationCommentedActivityIds) ? raw!.reservationCommentedActivityIds : [],
   };
 }
 

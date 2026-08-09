@@ -3,7 +3,7 @@ import { CalendarHeart, Compass, MessagesSquare, Plus, UserRound } from 'lucide-
 export type AppTab = 'activities' | 'explore' | 'needs' | 'profile';
 
 export const appNavigationItems = [
-  { id: 'activities' as const, label: '活动', Icon: CalendarHeart },
+  { id: 'activities' as const, label: '专属', Icon: CalendarHeart },
   { id: 'explore' as const, label: '发现', Icon: Compass },
   { id: 'needs' as const, label: '需求', Icon: MessagesSquare },
   { id: 'profile' as const, label: '我的', Icon: UserRound },

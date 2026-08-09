@@ -21,6 +21,10 @@ export interface ClubContextValue {
   isLifePostResonated(id: string): boolean;
   toggleClubActivitySaved(id: string): void;
   joinClubActivity(id: string): void;
+  cancelClubActivity(id: string, reason: string): void;
+  dislikeClubActivity(id: string): void;
+  saveClubActivityConsideration(id: string, reasons: string[]): void;
+  markReservationCommented(id: string): void;
   isClubActivitySaved(id: string): boolean;
   isClubActivityJoined(id: string): boolean;
 }
@@ -165,7 +169,48 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         setState((current) =>
           current.joinedClubActivityIds.includes(id)
             ? current
-            : { ...current, joinedClubActivityIds: [...current.joinedClubActivityIds, id] },
+            : {
+                ...current,
+                joinedClubActivityIds: [...current.joinedClubActivityIds, id],
+                cancelledClubActivityReasons: Object.fromEntries(
+                  Object.entries(current.cancelledClubActivityReasons).filter(([activityId]) => activityId !== id),
+                ),
+              },
+        );
+      },
+      cancelClubActivity(id, reason) {
+        setState((current) => ({
+          ...current,
+          joinedClubActivityIds: current.joinedClubActivityIds.filter((item) => item !== id),
+          cancelledClubActivityReasons: { ...current.cancelledClubActivityReasons, [id]: reason },
+        }));
+      },
+      dislikeClubActivity(id) {
+        setState((current) => ({
+          ...current,
+          dislikedClubActivityIds: current.dislikedClubActivityIds.includes(id)
+            ? current.dislikedClubActivityIds
+            : [...current.dislikedClubActivityIds, id],
+          consideredClubActivityReasons: Object.fromEntries(
+            Object.entries(current.consideredClubActivityReasons).filter(([activityId]) => activityId !== id),
+          ),
+        }));
+      },
+      saveClubActivityConsideration(id, reasons) {
+        setState((current) => ({
+          ...current,
+          dislikedClubActivityIds: current.dislikedClubActivityIds.filter((activityId) => activityId !== id),
+          consideredClubActivityReasons: {
+            ...current.consideredClubActivityReasons,
+            [id]: reasons,
+          },
+        }));
+      },
+      markReservationCommented(id) {
+        setState((current) =>
+          current.reservationCommentedActivityIds.includes(id)
+            ? current
+            : { ...current, reservationCommentedActivityIds: [...current.reservationCommentedActivityIds, id] },
         );
       },
       isClubActivitySaved(id) {

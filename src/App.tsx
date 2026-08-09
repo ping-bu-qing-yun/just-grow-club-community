@@ -63,7 +63,7 @@ function activityToClubActivity(activity: Activity): ClubActivity {
 }
 
 function QiahaoApp() {
-  const { status, error, retry, login, user } = useQiahao();
+  const { status, error, retry, login, logout, user } = useQiahao();
   const { state, resetOnboarding } = useClub();
   const { markRead } = useNotifications();
   const [activeTab, setActiveTab] = useState<AppTab>('activities');
@@ -86,6 +86,7 @@ function QiahaoApp() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [deepLinkReady, setDeepLinkReady] = useState(false);
   const [forceRegistration, setForceRegistration] = useState(false);
+  const [needsReturnToProfile, setNeedsReturnToProfile] = useState(false);
   const returnScrollRef = useRef(0);
   const allClubActivities = useMemo(
     () => [
@@ -138,7 +139,15 @@ function QiahaoApp() {
     );
   }
   if (!state.onboardingComplete) {
-    return <OnboardingFlow onComplete={() => { setActiveTab('activities'); setSubview(null); }} />;
+    return (
+      <OnboardingFlow
+        onBackStart={() => void logout()}
+        onComplete={() => {
+          setActiveTab('activities');
+          setSubview(null);
+        }}
+      />
+    );
   }
 
   function changeTab(tab: AppTab) {
@@ -155,6 +164,7 @@ function QiahaoApp() {
     setNotificationSubview(null);
     setSelectedNotification(null);
     setPublishOpen(false);
+    setNeedsReturnToProfile(false);
     writeActivityIdToLocation(null);
     window.scrollTo({ top: 0 });
   }
@@ -162,7 +172,11 @@ function QiahaoApp() {
   function profileNavigate(destination: ProfileDestination) {
     if (destination === 'dynamics') {
       setNeedsMode('life');
-      return changeTab('needs');
+      setActiveTab('needs');
+      setSubview(null);
+      setNeedsReturnToProfile(true);
+      window.scrollTo({ top: 0 });
+      return;
     }
     setSubview(destination);
     setSelectedMessageThread(null);
@@ -345,6 +359,11 @@ function QiahaoApp() {
         onBack={closeClubActivity}
         onNotice={setToast}
         focusComments={activityFocusComments}
+        canEdit={selectedClubActivity.matchLabel === '新发布'}
+        onUpdate={(activity) => {
+          setCreatedClubActivities((current) => [activity, ...current.filter((item) => item.id !== activity.id)]);
+          setSelectedClubActivity(activity);
+        }}
       />
     );
   } else if (subview === 'editor') content = <ProfileEditorPage onBack={() => setSubview(null)} />;
@@ -363,6 +382,7 @@ function QiahaoApp() {
         }}
         onOpenClubActivity={openClubActivity}
         clubActivityOptions={allClubActivities}
+        onBack={() => setSubview(null)}
       />
     );
   } else if (subview === 'saved-needs' || subview === 'attended') {
@@ -426,7 +446,7 @@ function QiahaoApp() {
       />
     );
   } else if (activeTab === 'explore') content = <ExplorePage activities={allClubActivities} onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
-  else if (activeTab === 'needs') content = <NeedsPage mode={needsMode} onModeChange={setNeedsMode} onOpenNeed={openNeed} onOpenLifePost={openLifePost} onNotice={setToast} />;
+  else if (activeTab === 'needs') content = <NeedsPage mode={needsMode} onModeChange={setNeedsMode} onOpenNeed={openNeed} onOpenLifePost={openLifePost} onNotice={setToast} onBack={needsReturnToProfile ? () => changeTab('profile') : undefined} />;
   else if (activeTab === 'profile') content = <ProfilePage onNotice={setToast} onNavigate={profileNavigate} />;
   else content = <ActivitiesHomePage activities={allClubActivities} onOpenNeed={openNeed} onOpenActivity={openClubActivity} onOpenNotifications={openNotifications} />;
 

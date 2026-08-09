@@ -1,4 +1,4 @@
-import { Heart } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
@@ -11,11 +11,13 @@ export function SavedPage({
   onOpenActivity,
   onOpenClubActivity,
   clubActivityOptions = clubActivities,
+  onBack,
 }: {
   onExplore: () => void;
   onOpenActivity: (id: string) => void;
   onOpenClubActivity?: (activity: ClubActivity) => void;
   clubActivityOptions?: ClubActivity[];
+  onBack?: () => void;
 }) {
   const { activities, savedIds, toggleSaved } = useQiahao();
   const { state } = useClub();
@@ -25,11 +27,18 @@ export function SavedPage({
 
   return (
     <main className="page standard-page">
-      <header className="page-header">
-        <span className="eyebrow">SAVED</span>
-        <h1>我的心愿</h1>
-        <p>把想去的地方，留给刚刚好的时间。</p>
-      </header>
+      {onBack ? (
+        <header className="subpage-header">
+          <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+          <div><small>SAVED</small><h1>我的心愿</h1></div>
+        </header>
+      ) : (
+        <header className="page-header">
+          <span className="eyebrow">SAVED</span>
+          <h1>我的心愿</h1>
+          <p>把想去的地方，留给刚刚好的时间。</p>
+        </header>
+      )}
       {!empty ? (
         <div className="activity-list club-card-list">
           {savedClub.map((activity) => (

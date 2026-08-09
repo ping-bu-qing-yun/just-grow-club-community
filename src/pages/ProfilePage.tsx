@@ -8,7 +8,7 @@ export type ProfileDestination = 'editor' | 'messages' | 'saved-activities' | 's
 export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: string) => void; onNavigate?: (destination: ProfileDestination) => void }) {
   const { state } = useClub();
   const { activities, joinedIds, savedIds, user, needs, logout } = useQiahao();
-  const identity = user ?? { id: 'me', name: state.profile.nickname, avatar: '/assets/avatar-me.jpg', bio: state.profile.bio, role: 'member' as const };
+  const identity = user ?? { id: 'me', name: state.profile.nickname, avatar: state.profile.avatar || '/assets/avatar-me.jpg', bio: state.profile.bio, role: 'member' as const };
   const hosted = activities.filter((item) => item.host.id === identity.id).length;
   const joinedCount = joinedIds.size + state.joinedClubActivityIds.length;
   const savedActivityCount = savedIds.size + state.savedClubActivityIds.length;
@@ -23,7 +23,7 @@ export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: stri
   return (
     <main className="page club-profile">
       <div className="profile-cover" />
-      <section className="profile-identity"><img src={identity.avatar} alt={identity.name} /><div><h1>{state.profile.nickname || identity.name}</h1><p>低压力线下重启型</p></div><button className="icon-button" aria-label="编辑资料" onClick={() => onNavigate?.('editor')}><PenLine size={18} /></button></section>
+      <section className="profile-identity"><img src={state.profile.avatar || identity.avatar} alt={identity.name} /><div><h1>{state.profile.nickname || identity.name}</h1><p>低压力线下重启型</p></div><button className="icon-button" aria-label="编辑资料" onClick={() => onNavigate?.('editor')}><PenLine size={18} /></button></section>
       <div className="trust-strip"><span><BadgeCheck size={17} />已实名</span><span><ShieldCheck size={17} />信用良好</span></div>
       <section className="portrait-progress"><div><b>画像完善度</b><span>{portraitCompleteness}%</span></div><i><em style={{ width: `${portraitCompleteness}%` }} /></i><p>每次回答和活动反馈，都会让推荐更贴合你。</p></section>
       <section className="profile-promos"><button onClick={() => onNavigate?.('portrait')}><Sparkles /><b>画像成长</b><span>继续认识自己</span></button><button className="orange" onClick={() => onNavigate?.('saved-needs')}><Bookmark /><b>需求收藏</b><span>查看收藏的需求</span></button></section>

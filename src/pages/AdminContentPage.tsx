@@ -1,10 +1,11 @@
 import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { ArrowLeft, Bot, CalendarDays, Check, ChevronRight, Coins, Eye, Lightbulb, Megaphone, Pencil, Send, ShieldAlert, Sparkles, UsersRound, X } from 'lucide-react';
+import { ArrowLeft, BellRing, Bot, CalendarDays, Check, ChevronRight, Coins, Eye, Lightbulb, Megaphone, MessageCircle, Pencil, Send, ShieldAlert, Sparkles, UsersRound, X } from 'lucide-react';
 import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
+import type { MessageThread } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
 
-type AdminView = 'home' | 'proposals' | 'detail' | 'daily' | 'users' | 'revenue' | 'activities' | 'activity-detail' | 'confirm' | 'push' | 'preview';
+type AdminView = 'home' | 'proposals' | 'detail' | 'daily' | 'operator-messages' | 'users' | 'revenue' | 'activities' | 'activity-detail' | 'confirm' | 'push' | 'preview';
 type ProposalStatus = 'pending' | 'approved' | 'rejected';
 type ActivityPhase = 'pre' | 'mature' | 'recruiting' | 'feedback' | 'ended';
 
@@ -342,7 +343,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
             <button type="button" onClick={() => go('daily')}><span className="admin-action-icon">芽</span><b>小CC 每日分身</b><em>关系小芽替你盯着今天</em><ChevronRight /></button>
             <button type="button" onClick={() => go('revenue')}><span className="admin-action-icon is-money">¥</span><b>经营明细</b><em>本月 ¥{estimatedRevenue.toLocaleString('zh-CN')} · 按月/按年看收入</em><ChevronRight /></button>
             <button type="button" onClick={() => go('activities')}><span className="admin-action-icon">活</span><b>活动管理</b><em>预活动、报名、反馈、评分一览</em><ChevronRight /></button>
-            <button type="button" onClick={() => setNotice('消息中心将在下一步接入企微提醒和用户反馈线程')}><span className="admin-action-icon">信</span><b>我的消息</b><em>系统通知 / 用户联系 / 反馈提醒</em><i>{messages.length}</i><ChevronRight /></button>
+            <button type="button" onClick={() => go('operator-messages')}><span className="admin-action-icon">信</span><b>我的消息</b><em>系统通知 / 用户联系 / 反馈提醒</em><i>{messages.length}</i><ChevronRight /></button>
           </section>
           <DemandInsight clusters={demandClusters} onGenerateProposal={() => go('proposals')} />
         </>
@@ -361,7 +362,8 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
         />
       ) : null}
       {view === 'preview' ? <ActivityPreview activity={previewActivity} onActivities={() => go('activities')} onProposals={() => go('proposals')} /> : null}
-      {view === 'daily' ? <DailyPage needs={needs} pendingCount={pendingCount} feedbackCount={feedbackCount} proposals={proposals} onOpenProposal={openProposal} onDraft={() => openProposal(proposals[0])} /> : null}
+      {view === 'daily' ? <DailyPage needs={needs} pendingCount={pendingCount} feedbackCount={feedbackCount} proposals={proposals} onOpenProposal={openProposal} onDraft={() => openProposal(proposals[0])} onReminder={() => setNotice('已给余额不足用户发送轻提醒，并保留名额到今晚 22:00')} onSnooze={() => setNotice('已稍后处理，小芽会把这条建议保留到明早简报')} /> : null}
+      {view === 'operator-messages' ? <OperatorMessagesPage messages={messages} onFollow={(message) => setNotice(`已标记跟进「${message.title}」`)} /> : null}
       {view === 'users' ? <UsersPage totalUsers={totalUsers} needs={needs} lifePostsCount={lifePosts.length} /> : null}
       {view === 'revenue' ? <RevenuePage mode={revenueMode} setMode={setRevenueMode} /> : null}
       {view === 'activities' ? (
@@ -394,6 +396,7 @@ function viewTitle(view: AdminView): string {
     proposals: 'AI 活动提案',
     detail: '提案详情',
     daily: '小CC 每日分身',
+    'operator-messages': '我的消息',
     users: '入驻用户',
     revenue: '经营明细',
     activities: '活动一览',
@@ -538,7 +541,25 @@ function ActivityPreview({ activity, onActivities, onProposals }: { activity: Cl
   );
 }
 
-function DailyPage({ needs, pendingCount, feedbackCount, proposals, onOpenProposal, onDraft }: { needs: Need[]; pendingCount: number; feedbackCount: number; proposals: Proposal[]; onOpenProposal: (proposal: Proposal) => void; onDraft: () => void }) {
+function DailyPage({
+  needs,
+  pendingCount,
+  feedbackCount,
+  proposals,
+  onOpenProposal,
+  onDraft,
+  onReminder,
+  onSnooze,
+}: {
+  needs: Need[];
+  pendingCount: number;
+  feedbackCount: number;
+  proposals: Proposal[];
+  onOpenProposal: (proposal: Proposal) => void;
+  onDraft: () => void;
+  onReminder: () => void;
+  onSnooze: () => void;
+}) {
   return (
     <section className="cc-daily-page">
       <section className="cc-daily-hero"><span><Sparkles size={18} /></span><div><small>关系小芽 · 小CC 的每日分身</small><h2>今天，我帮你盯着这几件事</h2></div></section>
@@ -549,8 +570,47 @@ function DailyPage({ needs, pendingCount, feedbackCount, proposals, onOpenPropos
         <article><b>{feedbackCount}</b><span>待收反馈</span><em>已结束</em></article>
       </div>
       <section className="operator-panel cc-brief"><header><h2>小芽的今日简报</h2><span>08-09 早</span></header><p>昨晚「深度对谈夜局」刚结束，有 1 位用户还没写反馈；广场上“想认识靠谱的人”又多了几条共鸣，已经快到成局线。我建议你今天先做三件事：</p><ul><li>把「周末低压力认识局」从预活动升级</li><li>给犹豫的用户发一条轻提醒</li><li>起草一份「附近早餐局」承接新需求</li></ul></section>
-      <section className="operator-panel"><header><h2>待你拍板</h2><span>{pendingCount} 条</span></header><div className="cc-pending-list">{proposals.map((proposal) => <button type="button" key={proposal.id} onClick={() => onOpenProposal(proposal)}><b>提案 {proposal.code}｜{proposal.title}</b><span>{proposal.resonance} 人共鸣 · {proposal.flow.length} 段流程</span><em>去拍板</em></button>)}<button type="button"><b>1 人报名夜谈但余额不足</b><span>需要你决定是否保留名额</span><em>发提醒</em></button></div><p className="cc-note">点任意一条会打开完整提案，看清流程和现场提问后再决定同意还是拒绝。</p></section>
-      <section className="operator-panel cc-suggest"><header><h2>小芽想跟你说</h2></header><p>你一个人运营很累，这些重复的活我来扛。今天要不要我直接起草一份「附近早餐局」？你点一下就能发出去。</p><div><button type="button" onClick={onDraft}>好，起草一份</button><button type="button">稍后再说</button></div></section>
+      <section className="operator-panel"><header><h2>待你拍板</h2><span>{pendingCount} 条</span></header><div className="cc-pending-list">{proposals.map((proposal) => <button type="button" key={proposal.id} onClick={() => onOpenProposal(proposal)}><b>提案 {proposal.code}｜{proposal.title}</b><span>{proposal.resonance} 人共鸣 · {proposal.flow.length} 段流程</span><em>去拍板</em></button>)}<button type="button" onClick={onReminder}><b>1 人报名夜谈但余额不足</b><span>需要你决定是否保留名额</span><em>发提醒</em></button></div><p className="cc-note">点任意一条会打开完整提案，看清流程和现场提问后再决定同意还是拒绝。</p></section>
+      <section className="operator-panel cc-suggest"><header><h2>小芽想跟你说</h2></header><p>你一个人运营很累，这些重复的活我来扛。今天要不要我直接起草一份「附近早餐局」？你点一下就能发出去。</p><div><button type="button" onClick={onDraft}>好，起草一份</button><button type="button" onClick={onSnooze}>稍后再说</button></div></section>
+    </section>
+  );
+}
+
+function OperatorMessagesPage({ messages, onFollow }: { messages: MessageThread[]; onFollow: (message: MessageThread) => void }) {
+  const groupedMessages = [
+    { title: '待小CC跟进', rows: messages.filter((message) => message.unread || message.system).slice(0, 4) },
+    { title: '用户联系', rows: messages.filter((message) => !message.system).slice(0, 4) },
+  ].filter((group) => group.rows.length > 0);
+
+  return (
+    <section className="operator-messages-page">
+      <section className="cc-daily-hero cc-daily-hero--messages">
+        <span><BellRing size={18} /></span>
+        <div><small>消息收件箱</small><h2>把系统通知、用户联系和反馈提醒放到小CC手边</h2></div>
+      </section>
+      <div className="cc-daily-metrics">
+        <article><b>{messages.length}</b><span>全部消息</span><em>可处理</em></article>
+        <article><b>{messages.filter((message) => message.unread).length}</b><span>未读提醒</span><em>优先看</em></article>
+        <article><b>{messages.filter((message) => message.system).length}</b><span>系统通知</span><em>活动/报名</em></article>
+        <article><b>{messages.filter((message) => !message.system).length}</b><span>用户联系</span><em>可跟进</em></article>
+      </div>
+      {groupedMessages.map((group) => (
+        <section className="operator-panel" key={group.title}>
+          <header><h2>{group.title}</h2><span>{group.rows.length} 条</span></header>
+          <div className="operator-message-list">
+            {group.rows.map((message) => (
+              <article key={`${group.title}-${message.id}`}>
+                <span className={`message-avatar${message.system ? ' message-avatar--system' : ''}`}>
+                  {message.image ? <img src={message.image} alt="" /> : message.system ? <BellRing size={19} /> : <MessageCircle size={19} />}
+                </span>
+                <div><b>{message.title}</b><p>{message.lastMessage}</p><small>{message.time}{message.unread ? ` · 未读 ${message.unread}` : ''}</small></div>
+                <button type="button" onClick={() => onFollow(message)}>标记跟进</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+      {!messages.length ? <section className="operator-panel"><header><h2>暂无消息</h2></header><p>当用户报名、评论、反馈或系统有待处理事项时，会在这里汇总。</p></section> : null}
     </section>
   );
 }

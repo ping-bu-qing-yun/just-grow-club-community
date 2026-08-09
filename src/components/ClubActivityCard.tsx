@@ -22,13 +22,14 @@ export function ClubActivityCard({
 
   const badge = matchLabel ?? activity.matchLabel;
   const stats = getClubActivityStats(activity, isClubActivityJoined(activity.id));
+  const statsActionLabel = activity.status === '预活动' ? '人已预约' : '人已报名';
 
   return (
     <article className="club-activity-card">
       <button type="button" className="club-activity-media" onClick={() => open()} aria-label={`打开${activity.title}`}>
         <img src={activity.image} alt="" />
         <span>{activity.status}</span>
-        {showStats ? <em>{stats.views}看过｜{stats.joined}人已报名</em> : null}
+        {showStats ? <em>{stats.views}看过｜{stats.joined}{statsActionLabel}</em> : null}
       </button>
       <div className="club-activity-copy">
         <div className="club-tags">

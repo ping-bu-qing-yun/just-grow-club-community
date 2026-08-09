@@ -5,14 +5,15 @@ import { computePortraitCompleteness } from '../../club/portrait';
 export function PortraitStep({ onComplete }: { onComplete: () => void }) {
   const { state, completeOnboarding } = useClub();
   const completeness = computePortraitCompleteness(state);
+  const nickname = state.profile.nickname || '小恰';
 
   return (
     <section className="onboarding-body portrait-step">
-      <div className="portrait-cover">
-        <img src="/assets/avatar-me.jpg" alt={state.profile.nickname} />
+      <div className="portrait-cover profile-portrait-cover onboarding-portrait-cover">
+        <img src={state.profile.avatar || '/assets/avatar-me.jpg'} alt={nickname} />
         <span><Sparkles size={16} />初回画像</span>
         <h1>低压力线下重启型</h1>
-        <p>{state.profile.nickname} · 画像完成度 {completeness}%</p>
+        <p>{nickname} · 画像完成度 {completeness}%</p>
       </div>
       <div className="portrait-tags">
         <span>想认识靠谱的人</span>
@@ -33,7 +34,7 @@ export function PortraitStep({ onComplete }: { onComplete: () => void }) {
           onComplete();
         }}
       >
-        去看活动<ArrowRight size={18} />
+        去看你的专属<ArrowRight size={18} />
       </button>
     </section>
   );

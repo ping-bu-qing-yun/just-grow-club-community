@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, SkipForward } from 'lucide-react';
+import { Mic } from 'lucide-react';
 import { qaSets, type QaQuestion } from '../../club/seed';
 import { useClub } from '../../club/ClubContext';
 
@@ -95,7 +95,10 @@ export function QaCardsStep({ onNext }: { onNext: () => void }) {
         <button type="button" className={mode === 'advanced' ? 'is-active' : ''} onClick={() => switchMode('advanced')}>高级 · 3题</button>
       </div>
       <article className="qa-focus">
-        <small>{index + 1} / {questions.length}</small>
+        <div className="qa-title-row">
+          <small>{index + 1} / {questions.length}</small>
+          <span>{question.text ? '文字回答' : question.multiple ? '可多选' : '单选'}</span>
+        </div>
         <h2>{question.title}</h2>
         {question.groups ? (
           <div className="qa-option-groups">
@@ -134,7 +137,6 @@ export function QaCardsStep({ onNext }: { onNext: () => void }) {
       </article>
       <div className="onboarding-actions">
         {mode !== 'basic' || index > 0 ? <button type="button" className="secondary-button" onClick={previous}>上一题</button> : <span />}
-        {mode !== 'basic' ? <button type="button" className="secondary-button" onClick={onNext}><SkipForward size={16} />跳到基础资料</button> : null}
         {(question.multiple || question.text) ? <button type="button" className="primary-button" disabled={!canContinue} onClick={() => save()}>{canSkip && !value.trim() ? '跳过高级题' : '下一题'}</button> : null}
       </div>
     </section>

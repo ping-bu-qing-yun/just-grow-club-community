@@ -1,5 +1,5 @@
 import { LoaderCircle, MessageCircle, Send, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CommentContentType } from '../api/types';
 import { useQiahaoOptional } from '../state/QiahaoContext';
 import { type CommentApi, type CommentViewer, useComments } from '../hooks/useComments';
@@ -30,6 +30,9 @@ export function CommentSection({
   contentId,
   title = '大家怎么说',
   onCountChange,
+  autoComment,
+  autoCommentKey,
+  onAutoCommented,
   apiClient,
   viewer: viewerProp,
   localMode: localModeProp,
@@ -38,6 +41,9 @@ export function CommentSection({
   contentId: string;
   title?: string;
   onCountChange?: (count: number) => void;
+  autoComment?: string;
+  autoCommentKey?: string;
+  onAutoCommented?: () => void;
   apiClient?: CommentApi;
   viewer?: CommentViewer | null;
   localMode?: boolean;
@@ -64,10 +70,23 @@ export function CommentSection({
     retry,
   } = useComments({ contentType, contentId, apiClient, localMode, viewer });
   const [body, setBody] = useState('');
+  const autoCommentedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!loading) onCountChange?.(total);
   }, [loading, onCountChange, total]);
+
+  useEffect(() => {
+    if (!autoComment || !autoCommentKey || loading || autoCommentedKeyRef.current === autoCommentKey) return;
+    autoCommentedKeyRef.current = autoCommentKey;
+    let alive = true;
+    create(autoComment).then((created) => {
+      if (alive && created) onAutoCommented?.();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [autoComment, autoCommentKey, create, loading, onAutoCommented]);
 
   async function submit() {
     const created = await create(body);

@@ -110,7 +110,6 @@ export function ProfileRecordsPage({
         </div>
       </header>
       {content}
-      <button type="button" className="secondary-button records-return-button" onClick={onBack}>返回我的</button>
     </main>
   );
 }

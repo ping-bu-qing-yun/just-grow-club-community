@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { lifePosts, seedNeeds } from '../club/seed';
 import type { LifePost, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
@@ -14,12 +15,14 @@ export function NeedsPage({
   mode,
   onModeChange,
   onNotice,
+  onBack,
 }: {
   onOpenNeed: (need: Need, focusComments?: boolean) => void;
   onOpenLifePost?: (post: LifePost, focusComments?: boolean) => void;
   mode: NeedsMode;
   onModeChange: (mode: NeedsMode) => void;
   onNotice?: (message: string) => void;
+  onBack?: () => void;
 }) {
   const { state } = useClub();
   const qiahao = useQiahaoOptional();
@@ -38,6 +41,12 @@ export function NeedsPage({
 
   return (
     <main className="needs-page page">
+      {onBack ? (
+        <button type="button" className="needs-back-button" aria-label="返回我的" onClick={onBack}>
+          <ArrowLeft size={19} />
+          <span>返回我的</span>
+        </button>
+      ) : null}
       <section className="needs-hero">
         <span>需求与生活</span>
         <h1>先被看见，再慢慢靠近</h1>
@@ -47,7 +56,7 @@ export function NeedsPage({
       <div className="needs-mode">
         <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => onModeChange('needs')}>
           <b>需求</b>
-          <span>寻找同频的人</span>
+          <span>说出你的关系所想</span>
         </button>
         <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => onModeChange('life')}>
           <b>生活</b>

@@ -1,5 +1,6 @@
 export interface BasicProfile {
   nickname: string;
+  avatar?: string;
   birthDate: string;
   gender: string;
   education: string;
@@ -11,6 +12,12 @@ export interface BasicProfile {
   bio: string;
   tags: string[];
   preferences: string[];
+  supplementalInfo?: {
+    ideal?: string;
+    expectation?: string;
+    age?: string;
+    other?: string;
+  };
 }
 
 export interface Need {
@@ -91,4 +98,12 @@ export interface ClubState {
   savedClubActivityIds: string[];
   /** 俱乐部活动报名/预约 id */
   joinedClubActivityIds: string[];
+  /** 用户取消报名/预约的原因 */
+  cancelledClubActivityReasons: Record<string, string>;
+  /** 用户明确不喜欢的活动 id：不再进入专属推荐 */
+  dislikedClubActivityIds: string[];
+  /** 用户正在考虑的活动及原因 */
+  consideredClubActivityReasons: Record<string, string[]>;
+  /** 预活动预约后是否已自动写入评论 */
+  reservationCommentedActivityIds: string[];
 }

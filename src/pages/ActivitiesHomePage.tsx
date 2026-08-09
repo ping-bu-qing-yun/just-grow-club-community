@@ -5,8 +5,8 @@ import type { ClubActivity, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { buildUserPortrait } from '../club/portrait';
 import { rankClubActivities } from '../club/recommend';
-import { getClubActivityStats } from '../club/activityStats';
 import { ClubActivityCard } from '../components/ClubActivityCard';
+import { InteractiveCatMascot } from '../components/InteractiveCatMascot';
 import { NotificationBell } from '../notifications/NotificationBell';
 
 export function ActivitiesHomePage({
@@ -22,32 +22,42 @@ export function ActivitiesHomePage({
 }) {
   const { state } = useClub();
   const portrait = useMemo(() => buildUserPortrait(state), [state]);
+  const recommendationActivities = useMemo(
+    () => activities.filter((activity) => !state.dislikedClubActivityIds.includes(activity.id)),
+    [activities, state.dislikedClubActivityIds],
+  );
   const ranked = useMemo(
     () =>
-      rankClubActivities(portrait, activities, {
+      rankClubActivities(portrait, recommendationActivities, {
         penalizeIds: state.joinedClubActivityIds,
       }),
-    [activities, portrait, state.joinedClubActivityIds],
+    [portrait, recommendationActivities, state.joinedClubActivityIds],
   );
-  const featuredRanked = ranked[0];
-  const pinnedCreated = activities.find((activity) => activity.matchLabel === '新发布' || activity.matchLabel === 'AI提案');
-  const featured = pinnedCreated ?? featuredRanked?.activity ?? activities[0] ?? clubActivities[0];
-  const forYou = ranked.filter((item) => item.activity.id !== featured.id).slice(0, 3);
+  const pinnedCreated = recommendationActivities.find((activity) => activity.matchLabel === '新发布' || activity.matchLabel === 'AI提案');
+  const forYou = [
+    ...(pinnedCreated ? [{ activity: pinnedCreated, matchLabel: pinnedCreated.matchLabel || '新发布' }] : []),
+    ...ranked.filter((item) => item.activity.id !== pinnedCreated?.id),
+  ].slice(0, 4);
   const highlightTags = portrait.highlightTags.slice(0, 3);
-  const featuredStats = getClubActivityStats(featured, state.joinedClubActivityIds.includes(featured.id));
   const featuredNeed = seedNeeds[0];
+  const nickname = state.profile.nickname || '小恰';
+  const avatar = state.profile.avatar || '/assets/avatar-me.jpg';
 
   return (
     <main className="club-home page">
       <header className="club-home-header">
-        <div>
-          <small>周末好，{state.profile.nickname}</small>
-          <h1>恰好</h1>
+        <div className="club-home-title">
+          <h1>恰好是你</h1>
+        </div>
+        <div className="club-home-user" aria-label={`当前用户：${nickname}`}>
+          <img src={avatar} alt="" />
+          <span>{nickname}</span>
         </div>
         <NotificationBell onOpen={onOpenNotifications} />
       </header>
 
       <section className="portrait-strip">
+        <InteractiveCatMascot />
         <div className="portrait-strip-head">
           <span>
             <Sparkles size={15} />
@@ -63,26 +73,6 @@ export function ActivitiesHomePage({
           ))}
         </div>
       </section>
-
-      <button
-        type="button"
-        className="club-feature"
-        onClick={() => onOpenActivity(featured)}
-        aria-label={`查看${featured.title}详情`}
-      >
-        <img src={featured.image} alt={featured.title} />
-        <div>
-          <small>
-            本周精选 · {featured.status}
-            {featuredRanked ? ` · ${featuredRanked.matchLabel}` : ''}
-          </small>
-          <h2>{featured.title}</h2>
-          <p>
-            {featured.people} · {featured.location.split('/')[0].trim()} · {featured.date.replace(' · ', '')}
-          </p>
-          <span className="activity-stat-line">{featuredStats.views}看过｜{featuredStats.joined}人已报名</span>
-        </div>
-      </button>
 
       <section className="club-section">
         <header>

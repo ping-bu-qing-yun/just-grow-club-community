@@ -33,9 +33,13 @@ export function computePortraitCompleteness(state: Pick<ClubState, 'lightAnswers
   if (profile?.tags?.length) score += 5;
   if (profile?.preferences?.length) score += 5;
 
+  const supplementalCount = Object.values(profile?.supplementalInfo ?? {}).filter((value) => value?.trim()).length;
+  score += Math.min(4, supplementalCount) * 3;
+
   if (state.onboardingComplete) score = Math.max(score, 42);
 
-  return Math.max(0, Math.min(100, score));
+  const cappedScore = Math.max(0, Math.min(100, score));
+  return supplementalCount > 0 ? cappedScore : Math.min(92, cappedScore);
 }
 
 export function buildSummaryLabel(portrait: Pick<UserPortrait, 'intents' | 'scenes' | 'barriers'>): string {

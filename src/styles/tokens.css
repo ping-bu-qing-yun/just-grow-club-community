@@ -1,15 +1,15 @@
 :root {
-  --brand: #e85245;
-  --brand-dark: #bd3f35;
-  --brand-soft: #fff0ed;
+  --brand: #ef554d;
+  --brand-dark: #b9483e;
+  --brand-soft: #fff1ed;
   --ink: #1f1f1f;
   --muted: #6f6f6f;
   --subtle: #9b9b9b;
-  --line: #e8e6e3;
+  --line: #e8e1da;
   --surface: #ffffff;
-  --canvas: #f2f1ef;
-  --green: #2f6f59;
-  --yellow: #f4cb55;
+  --canvas: #f4f2ee;
+  --green: #5f7f5e;
+  --yellow: #f0c965;
   --radius-card: 8px;
   --tap: 44px;
   --shadow-soft: 0 12px 32px rgba(39, 32, 28, 0.08);
@@ -18,4 +18,3 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
-
