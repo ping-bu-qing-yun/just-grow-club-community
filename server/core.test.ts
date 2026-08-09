@@ -9,7 +9,7 @@ import type { AuthenticatedUser } from './auth';
 import { hashPassword } from './auth';
 import { AuthorizationError, requireCommentOwnerOrAdmin, requireContentOwnerOrAdmin, requireRole } from './authorization';
 import { REQUIRED_MIGRATIONS, type QiahaoDatabase } from './db';
-import { migrationStatementCounts, splitMigrationStatements } from './migrations/service';
+import { isIgnorableMigrationError, migrationStatementCounts, splitMigrationStatements } from './migrations/service';
 import { changeModerationStatus, isAllowedStatusTransition } from './content-repository';
 import { cancelActivity, joinActivity } from './social-repository';
 import { decodeTimestampCursor, encodeTimestampCursor, PaginationCursorError } from './pagination';
@@ -192,7 +192,7 @@ describe('migrations and v2 session security', () => {
     expect(counts.map((item) => item.version)).toEqual([...REQUIRED_MIGRATIONS]);
     expect(counts.map((item) => item.version)).toEqual(['001_canonical_domain_schema.sql', '002_dynamic_business_config.sql']);
     expect(counts[0]?.statements).toBe(33);
-    expect(counts[1]?.statements).toBe(38);
+    expect(counts[1]?.statements).toBe(40);
     expect(counts.at(-1)?.version).toBe('002_dynamic_business_config.sql');
     for (const version of REQUIRED_MIGRATIONS) {
       const sql = await readFile(resolve('server/migrations/mysql', version), 'utf8');
@@ -215,7 +215,12 @@ describe('migrations and v2 session security', () => {
     ]) {
       expect(dynamic).toContain(`CREATE TABLE IF NOT EXISTS ${table}`);
     }
-    expect(dynamic).toMatch(/ALTER TABLE activity_proposals\s+ADD COLUMN IF NOT EXISTS archived_at/i);
+    expect(dynamic.match(/ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci/g)).toHaveLength(9);
+    expect(dynamic).toMatch(/ALTER TABLE activity_proposals\s+ADD COLUMN archived_at/i);
+    expect(dynamic).not.toMatch(/ADD COLUMN IF NOT EXISTS/i);
+    expect(isIgnorableMigrationError('ALTER TABLE activities ADD COLUMN archived_at DATETIME(3)', { code: 'ER_DUP_FIELDNAME' })).toBe(true);
+    expect(isIgnorableMigrationError('ALTER TABLE activities ADD COLUMN archived_at DATETIME(3)', { errno: 1060 })).toBe(true);
+    expect(isIgnorableMigrationError('UPDATE activities SET category=?', { code: 'ER_DUP_FIELDNAME' })).toBe(false);
     expect(dynamic).not.toMatch(/(?:DELETE\s+FROM|UPDATE)\s+content_tags/i);
   });
 

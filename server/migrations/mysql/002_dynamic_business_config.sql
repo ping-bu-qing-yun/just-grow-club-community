@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS activity_category_configs (
   CONSTRAINT fk_activity_category_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_activity_category_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_activity_category_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS onboarding_question_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS onboarding_question_configs (
   CONSTRAINT chk_onboarding_question_configs_required CHECK (required_flag IN (0,1)),
   CONSTRAINT chk_onboarding_question_configs_enabled CHECK (enabled IN (0,1)),
   CONSTRAINT chk_onboarding_question_configs_selections CHECK (max_selections IS NULL OR max_selections >= 1)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS onboarding_option_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS onboarding_option_configs (
   CONSTRAINT fk_onboarding_option_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_onboarding_option_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_onboarding_option_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS profile_option_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS profile_option_configs (
   CONSTRAINT fk_profile_option_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_profile_option_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_profile_option_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS feedback_option_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS feedback_option_configs (
   CONSTRAINT fk_feedback_option_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_feedback_option_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_feedback_option_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS recommendation_rule_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS recommendation_rule_configs (
   CONSTRAINT fk_recommendation_rule_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_recommendation_rule_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_recommendation_rule_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS recommendation_setting_configs (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS recommendation_setting_configs (
   CONSTRAINT fk_recommendation_setting_configs_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_recommendation_setting_configs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT chk_recommendation_setting_configs_enabled CHECK (enabled IN (0,1))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS config_revisions (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS config_revisions (
   UNIQUE KEY uq_config_revisions_domain_revision (domain_key,revision_no),
   INDEX idx_config_revisions_domain_created (domain_key,created_at,id),
   CONSTRAINT fk_config_revisions_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS config_audit_events (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -165,11 +165,13 @@ CREATE TABLE IF NOT EXISTS config_audit_events (
   INDEX idx_config_audit_events_entity (entity_type,entity_key,created_at,id),
   CONSTRAINT fk_config_audit_events_revision FOREIGN KEY (revision_id) REFERENCES config_revisions(id) ON DELETE RESTRICT,
   CONSTRAINT fk_config_audit_events_actor FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE activity_feedback
-  MODIFY COLUMN mood VARCHAR(160) NOT NULL,
-  ADD COLUMN IF NOT EXISTS deleted_at DATETIME(3) NULL AFTER updated_at;
+  MODIFY COLUMN mood VARCHAR(160) NOT NULL;
+
+ALTER TABLE activity_feedback
+  ADD COLUMN deleted_at DATETIME(3) NULL AFTER updated_at;
 
 UPDATE activity_feedback SET mood='comfortable' WHERE mood='舒服自然';
 UPDATE activity_feedback SET mood='nervous' WHERE mood='有点紧张';
@@ -178,11 +180,13 @@ UPDATE activity_feedback SET mood='neutral' WHERE mood='一般般';
 UPDATE activity_feedback SET mood='not_suitable' WHERE mood='不太合适';
 
 ALTER TABLE user_interest_tags
-  ADD COLUMN IF NOT EXISTS enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order,
-  ADD COLUMN IF NOT EXISTS updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) AFTER created_at;
+  ADD COLUMN enabled TINYINT(1) NOT NULL DEFAULT 1 AFTER sort_order;
+
+ALTER TABLE user_interest_tags
+  ADD COLUMN updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3) AFTER created_at;
 
 ALTER TABLE activity_proposals
-  ADD COLUMN IF NOT EXISTS archived_at DATETIME(3) NULL AFTER review_note;
+  ADD COLUMN archived_at DATETIME(3) NULL AFTER review_note;
 
 INSERT IGNORE INTO content_media (id,content_id,content_type,media_type,url,alt_text,sort_order,created_at)
 SELECT CONCAT('media-',SHA2(CONCAT('activity:',id),256)),id,'activity','image',image,title,0,created_at
