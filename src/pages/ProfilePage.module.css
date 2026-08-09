@@ -1,0 +1,256 @@
+/* ProfilePage — the profile hub tab. */
+
+.profile {
+  padding-bottom: 34px;
+}
+
+.cover {
+  height: 132px;
+  background: linear-gradient(135deg, #e85245 0%, #e98468 50%, #f3bd76 100%);
+}
+
+.identity {
+  position: relative;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 44px;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: -35px;
+  padding: 0 18px 18px;
+}
+
+.identityAvatar {
+  border: 4px solid var(--surface);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.identityCopy {
+  min-width: 0;
+}
+
+.identityCopy h1 {
+  margin: 0 0 4px;
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-leading);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.identityCopy p {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.editButton {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.trustStrip {
+  display: flex;
+  gap: 8px;
+  padding: 0 18px 18px;
+}
+
+.trustStrip span {
+  display: inline-flex;
+  min-height: 29px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border-radius: var(--radius-control);
+  background: #eff5f1;
+  color: var(--green);
+  font-size: var(--text-caption-size);
+  font-weight: 750;
+}
+
+.progress {
+  margin: 0 18px 18px;
+  padding: 15px;
+  border-radius: var(--radius-card);
+  background: var(--surface-secondary);
+}
+
+.progress > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-caption-size);
+}
+
+.progressBar {
+  display: block;
+  height: 5px;
+  margin: 9px 0;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.progressBar em {
+  display: block;
+  width: 42%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand);
+}
+
+.progress p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.promos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  padding: 0 18px 19px;
+}
+
+.promos button {
+  display: flex;
+  min-height: 105px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 3px;
+  padding: 14px;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: #eaf3ed;
+  color: #3e6352;
+  text-align: left;
+  cursor: pointer;
+}
+
+.promos button.orange {
+  background: #fff0e9;
+  color: #a95139;
+}
+
+.promos b {
+  margin-top: 10px;
+  font-size: var(--text-callout-size);
+}
+
+.promos span {
+  font-size: 9px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 18px 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.stats > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-right: 1px solid var(--line);
+}
+
+.stats > div:last-child {
+  border-right: 0;
+}
+
+.stats strong {
+  font-size: var(--text-title-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.stats span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.section {
+  margin-top: 8px;
+  border-top: 8px solid var(--surface-secondary);
+}
+
+.section > h2 {
+  margin: 0;
+  padding: 17px 18px 7px;
+  font-size: var(--text-callout-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.section > button {
+  display: grid;
+  width: 100%;
+  min-height: 64px;
+  grid-template-columns: 38px 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) ease-out;
+}
+
+.section > button:active {
+  background: var(--surface-secondary);
+}
+
+.rowIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--brand);
+}
+
+.rowCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.rowCopy b {
+  font-size: var(--text-callout-size);
+}
+
+.rowCopy small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.section svg:last-child {
+  color: var(--subtle);
+}
+
+.danger .rowCopy b,
+.danger svg:last-child {
+  color: #b94439;
+}
+
+.profileId {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--subtle);
+  font-size: 9px;
+}

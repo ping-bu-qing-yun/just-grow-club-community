@@ -1,0 +1,245 @@
+/* ActivitiesHomePage — the home tab feed. */
+
+.home {
+  padding: 0 18px 34px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-height: 100px;
+  padding: max(20px, env(safe-area-inset-top)) 0 14px;
+}
+
+.header small {
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+}
+
+.header h1 {
+  margin: 4px 0 0;
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-leading);
+  letter-spacing: var(--text-display-tracking);
+  font-weight: 800;
+}
+
+.portraitStrip {
+  padding: 18px;
+  border-radius: var(--radius-card);
+  background: #f0f5f1;
+}
+
+.portraitStripHead {
+  display: flex;
+  justify-content: space-between;
+}
+
+.portraitStripHead span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #496758;
+  font-size: var(--text-caption-size);
+  font-weight: 800;
+}
+
+.portraitStripHead b {
+  font-size: var(--text-caption-size);
+}
+
+.portraitStrip h2 {
+  margin: 13px 0 6px;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.portraitStrip p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  line-height: 1.65;
+}
+
+.portraitTags {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.portraitTags span {
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 9px;
+}
+
+.feature {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 260px;
+  margin-top: 20px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--surface-secondary);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.feature img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.feature::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), transparent 70%);
+}
+
+.featureCopy {
+  position: absolute;
+  z-index: 1;
+  right: 17px;
+  bottom: 18px;
+  left: 17px;
+}
+
+.featureCopy small {
+  color: #fff;
+  font-size: var(--text-caption-size);
+}
+
+.featureCopy h2 {
+  margin: 7px 0 6px;
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-leading);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.featureCopy p {
+  margin: 0;
+  font-size: var(--text-callout-size);
+}
+
+.section {
+  margin-top: 28px;
+}
+
+.section > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.section > header span {
+  color: var(--brand);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.section > header h2 {
+  margin: 4px 0 0;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.cardList {
+  display: grid;
+  gap: 22px;
+}
+
+.needRecommend {
+  position: relative;
+  min-height: 250px;
+  margin-top: 28px;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  will-change: transform;
+}
+
+.needRecommend img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.needRecommend::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(20, 15, 12, 0.82), rgba(20, 15, 12, 0.08));
+}
+
+.needRecommendCopy {
+  position: absolute;
+  z-index: 1;
+  right: 18px;
+  bottom: 18px;
+  left: 18px;
+  color: #fff;
+}
+
+.needRecommendCopy small {
+  font-size: 9px;
+}
+
+.needRecommendCopy h2 {
+  margin: 7px 0;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.needRecommendCopy p {
+  font-size: var(--text-callout-size);
+}
+
+.needRecommendCta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: var(--text-callout-size);
+  cursor: pointer;
+}
+
+.empty {
+  padding: 34px 20px;
+  text-align: center;
+}
+
+.empty h3 {
+  margin: 0 0 6px;
+  font-size: var(--text-headline-size);
+}
+
+.empty p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+}
+
+@media (min-width: 900px) {
+  .cardList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+  }
+  .feature {
+    height: 420px;
+  }
+}

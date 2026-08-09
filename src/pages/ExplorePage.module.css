@@ -1,0 +1,115 @@
+/* ExplorePage — discover tab: search + filter strip + activity grid. */
+
+.page {
+  padding: 0 18px 34px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: max(34px, env(safe-area-inset-top)) 0 22px;
+}
+
+.hero span {
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.hero h1 {
+  margin: 6px 0;
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-leading);
+  letter-spacing: var(--text-display-tracking);
+  font-weight: 800;
+}
+
+.hero p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+}
+
+.search {
+  display: flex;
+  height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--muted);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--text-callout-size);
+}
+
+.search input::placeholder {
+  color: var(--subtle);
+}
+
+.filterStrip {
+  display: flex;
+  gap: 8px;
+  margin: 15px -18px 18px;
+  padding: 0 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.filterStrip::-webkit-scrollbar {
+  display: none;
+}
+
+.filterStrip button {
+  flex: none;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out;
+}
+
+.filterStrip button.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.cardList {
+  display: grid;
+  gap: 22px;
+}
+
+.empty {
+  padding: 34px 20px;
+  text-align: center;
+}
+
+.empty h3 {
+  margin: 0 0 17px;
+  font-size: var(--text-headline-size);
+}
+
+@media (min-width: 900px) {
+  .cardList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+  }
+}

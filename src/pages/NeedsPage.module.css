@@ -1,0 +1,99 @@
+/* NeedsPage — needs + life dual feed tab. */
+
+.page {
+  padding: max(10px, env(safe-area-inset-top)) 18px 34px;
+  background: var(--surface);
+}
+
+.hero {
+  margin: 0 0 14px;
+  padding: 22px 18px 19px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+
+.hero span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--green);
+  font-size: var(--text-caption-size);
+  font-weight: 900;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: var(--text-title-size);
+  line-height: var(--text-title-leading);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.hero p {
+  max-width: 285px;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  line-height: 1.7;
+}
+
+.subhead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 22px 0 14px;
+}
+
+.subhead h2 {
+  margin: 0;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.subhead p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+}
+
+.subheadFilters {
+  display: flex;
+  gap: 5px;
+}
+
+.subheadFilters button {
+  flex: none;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out;
+}
+
+.subheadFilters button.active {
+  background: var(--ink);
+  color: var(--surface);
+}
+
+.list {
+  display: grid;
+  gap: 24px;
+}
+
+.loadMore {
+  margin-top: 18px;
+}
+
+@media (min-width: 900px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
