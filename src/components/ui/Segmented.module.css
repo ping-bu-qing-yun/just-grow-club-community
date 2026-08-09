@@ -1,0 +1,55 @@
+/* Segmented — iOS segmented control with a layout-animated sliding thumb. */
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+}
+
+.option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: calc(var(--radius-control) - 4px);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  font-weight: 700;
+  cursor: pointer;
+  transition: color var(--dur-fast) ease-out;
+}
+
+.option:disabled {
+  color: var(--subtle);
+  cursor: default;
+}
+
+.option.active {
+  color: var(--ink);
+}
+
+.thumb {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  will-change: transform;
+}
+
+.text {
+  position: relative;
+  z-index: 1;
+}
+
+.sm .option {
+  min-height: 34px;
+  font-size: var(--text-caption-size);
+}

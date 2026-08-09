@@ -1,0 +1,36 @@
+/* Card — material surface; elevation scales shadow depth with size. */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  transition:
+    box-shadow var(--dur-fast) ease-out,
+    transform var(--dur-fast) ease-out;
+}
+
+.flat {
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.raised {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+.floating {
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-raised);
+}
+
+.interactive {
+  cursor: pointer;
+  will-change: transform;
+}
+
+.interactive:hover {
+  box-shadow: var(--shadow-raised);
+}
