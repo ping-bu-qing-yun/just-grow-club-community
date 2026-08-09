@@ -28,6 +28,7 @@
   --sidebar-width: 264px;
   --z-navigation: 20;
   --z-overlay: 50;
+  --z-toast: 80;
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
   font-optical-sizing: auto;
@@ -86,5 +87,82 @@
     --line: currentColor;
     --line-strong: currentColor;
     --muted: var(--ink);
+  }
+}
+
+/* ============================================================
+   Apple Design tokens — motion / material / typography
+   (SKILL.md §4 springs, §12 materials, §15 optical type)
+   ============================================================ */
+:root {
+  /* Duration tokens. True springs live in JS (src/motion/springs.ts);
+     these bezier/durations serve only non-gesture CSS transitions. */
+  --dur-instant: 100ms;          /* pointer-down feedback (SKILL §1) */
+  --dur-fast: 180ms;
+  --dur-sheet: 320ms;
+  --ease-out: cubic-bezier(0.22, 0.8, 0.28, 1);   /* enter / settle */
+  --ease-in-out: cubic-bezier(0.32, 0.72, 0, 1);  /* reversible (§7) */
+
+  /* Press feedback scale (SKILL §1: respond on pointer-down) */
+  --press-scale: 0.97;
+
+  /* Material weights — heavier separates structure, lighter draws
+     attention; never stack light-on-light (SKILL §12) */
+  --material-thin: rgba(249, 249, 251, 0.6);
+  --material-regular: rgba(249, 249, 251, 0.78);
+  --material-thick: rgba(255, 255, 255, 0.92);
+  --blur-nav: saturate(180%) blur(20px);
+  --blur-sheet: saturate(180%) blur(28px);
+  --material-edge: inset 0 1px 0 rgba(255, 255, 255, 0.55); /* light-catching top edge */
+
+  /* Scrim for dim-to-focus (SKILL §12) */
+  --scrim: rgba(0, 0, 0, 0.42);
+
+  /* Optical type scale (SKILL §15): size-specific tracking + leading.
+     Large text tightens tracking; body stays near 0. */
+  --text-display-size: 2rem;      /* 32px */
+  --text-display-leading: 1.1;
+  --text-display-tracking: -0.02em;
+  --text-title-size: 1.6875rem;   /* 27px */
+  --text-title-leading: 1.15;
+  --text-title-tracking: -0.01em;
+  --text-headline-size: 1.0625rem;/* 17px */
+  --text-headline-leading: 1.3;
+  --text-body-size: 0.9375rem;    /* 15px */
+  --text-body-leading: 1.5;
+  --text-callout-size: 0.8125rem; /* 13px */
+  --text-callout-leading: 1.55;
+  --text-caption-size: 0.6875rem; /* 11px */
+  --text-caption-leading: 1.4;
+  --text-caption-tracking: 0.01em;
+}
+
+:root[data-theme='dark'] {
+  --material-thin: rgba(28, 28, 30, 0.5);
+  --material-regular: rgba(28, 28, 30, 0.78);
+  --material-thick: rgba(44, 44, 46, 0.92);
+  --material-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --scrim: rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --material-thin: rgba(28, 28, 30, 0.5);
+    --material-regular: rgba(28, 28, 30, 0.78);
+    --material-thick: rgba(44, 44, 46, 0.92);
+    --material-edge: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --scrim: rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Frostier, solid materials when the user asks for less transparency (SKILL §14) */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --material-thin: var(--surface);
+    --material-regular: var(--surface);
+    --material-thick: var(--surface);
+    --blur-nav: none;
+    --blur-sheet: none;
+    --material-edge: none;
   }
 }

@@ -1,0 +1,101 @@
+@import "./tokens.css";
+
+/* ============================================================
+   base.css — universal reset + document baseline + a11y media
+   (Replaces the generic sections of the retired global.css.)
+   Per-page / per-component styles live in *.module.css files.
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--canvas);
+  /* Respect the platform's text-size setting (SKILL §15) */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: var(--text-body-size);
+  line-height: var(--text-body-leading);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Comfortable minimum target size (44px) on interactive controls */
+button,
+input,
+textarea,
+select {
+  min-height: var(--tap);
+}
+button[aria-label] {
+  min-width: var(--tap);
+}
+
+/* Focus ring — consistent, brand-tinted, never suppressed */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 58%, transparent);
+  outline-offset: 2px;
+}
+
+/* ---------- Accessibility (SKILL §14) ---------- */
+
+/* Reduced motion: kill animation/transition duration, keep opacity/color */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Reduced transparency: surfaces go solid (materials also collapse via tokens) */
+@media (prefers-reduced-transparency: reduce) {
+  * {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
