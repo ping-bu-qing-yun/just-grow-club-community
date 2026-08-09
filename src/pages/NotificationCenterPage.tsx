@@ -14,6 +14,8 @@ import {
 import { useMemo, useState } from 'react';
 import { useNotifications } from '../notifications/NotificationContext';
 import type { AppNotification, NotificationCategory } from '../notifications/types';
+import { Avatar } from '../components/ui/Avatar';
+import styles from './NotificationCenterPage.module.css';
 
 type NotificationFilter = 'all' | NotificationCategory;
 
@@ -68,27 +70,27 @@ export function NotificationCenterPage({
   const hasRead = notifications.some((notification) => notification.read);
 
   return (
-    <main className="notification-page page">
-      <header className="notification-header">
-        <button type="button" className="icon-button" aria-label="返回活动" onClick={onBack}>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回活动" onClick={onBack}>
           <ArrowLeft size={20} />
         </button>
         <div>
           <span>NOTIFICATION</span>
           <h1>通知</h1>
         </div>
-        <button type="button" className="notification-clear" disabled={!hasRead} onClick={clearRead}>
+        <button type="button" className={styles.clear} disabled={!hasRead} onClick={clearRead}>
           <CheckCheck size={16} />
           清空已读
         </button>
       </header>
 
-      <nav className="notification-filters" aria-label="通知分类">
+      <nav className={styles.filters} aria-label="通知分类">
         {filters.map((item) => (
           <button
             type="button"
             key={item.value}
-            className={filter === item.value ? 'is-active' : ''}
+            className={filter === item.value ? styles.active : ''}
             aria-label={item.label}
             aria-pressed={filter === item.value}
             onClick={() => setFilter(item.value)}
@@ -100,14 +102,14 @@ export function NotificationCenterPage({
       </nav>
 
       {status === 'loading' && notifications.length === 0 ? (
-        <section className="notification-loading" role="status">
+        <section className={styles.loading} role="status">
           <Bell size={22} />
           <span>正在加载通知…</span>
         </section>
       ) : null}
 
       {error ? (
-        <section className="notification-error" role="alert">
+        <section className={styles.error} role="alert">
           <span>{error}，已保留本地通知。</span>
           <button type="button" onClick={() => void refresh()}>
             <RefreshCw size={15} />
@@ -117,21 +119,21 @@ export function NotificationCenterPage({
       ) : null}
 
       {visibleNotifications.length ? (
-        <section className="notification-list" aria-label="通知列表">
+        <section className={styles.list} aria-label="通知列表">
           {visibleNotifications.map((notification) => {
             const Icon = iconFor(notification.category);
             return (
               <button
                 type="button"
-                className={`notification-row${notification.read ? ' is-read' : ''}`}
+                className={`${styles.row} ${notification.read ? styles.read : ''}`}
                 key={notification.id}
                 onClick={() => onOpen(notification)}
               >
-                <span className={`notification-icon notification-icon--${notification.category}`}>
-                  {notification.actor?.avatar ? <img src={notification.actor.avatar} alt="" /> : <Icon size={20} />}
+                <span className={`${styles.icon} ${styles[`icon--${notification.category}`]}`}>
+                  {notification.actor?.avatar ? <Avatar src={notification.actor.avatar} size={44} /> : <Icon size={20} />}
                 </span>
-                <span className="notification-copy">
-                  <span className="notification-copy__title">
+                <span className={styles.copy}>
+                  <span className={styles.copyTitle}>
                     <strong>{notification.title}</strong>
                     {!notification.read ? <i aria-label="未读通知" /> : null}
                   </span>
@@ -146,7 +148,7 @@ export function NotificationCenterPage({
           })}
         </section>
       ) : status !== 'loading' ? (
-        <section className="notification-empty">
+        <section className={styles.empty}>
           <BellOff size={31} />
           <h2>{filter === 'all' ? '暂时没有新通知' : '这个分类还没有通知'}</h2>
           <p>新的公告、系统消息、点赞、评论回复和活动反馈都会出现在这里。</p>
