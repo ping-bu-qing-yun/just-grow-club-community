@@ -1,10 +1,8 @@
 import { useMemo } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { seedNeeds } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
-import { buildUserPortrait } from '../club/portrait';
-import { rankClubActivities } from '../club/recommend';
+import { computePortraitCompleteness } from '../club/portrait';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { useQiahao } from '../state/QiahaoContext';
@@ -20,20 +18,19 @@ export function ActivitiesHomePage({
   onOpenNotifications: () => void;
 }) {
   const { state } = useClub();
-  const { activities, joinedIds } = useQiahao();
-  const portrait = useMemo(() => buildUserPortrait(state), [state]);
-  const catalog = useMemo(() => activities.map(domainActivityToClub), [activities]);
-  const ranked = useMemo(
-    () =>
-      rankClubActivities(portrait, catalog, {
-        penalizeIds: [...joinedIds],
-      }),
-    [catalog, joinedIds, portrait],
-  );
+  const { activities, localMode, recommendations, needs } = useQiahao();
+  const ranked = useMemo(() => recommendations.length
+    ? recommendations.map((item) => ({ ...item, activity: domainActivityToClub(item.activity) }))
+    : localMode
+      ? activities.map((activity) => ({ activity: domainActivityToClub(activity), score: 50, matchedTags: [activity.category], reasons: ['预览模式推荐'], matchLabel: activity.matchLabel ?? '可以了解' }))
+      : [], [activities, localMode, recommendations]);
   const featuredRanked = ranked[0];
   const featured = featuredRanked?.activity;
   const forYou = ranked.slice(1, 4);
-  const highlightTags = portrait.highlightTags.slice(0, 3);
+  const highlightTags = featuredRanked?.matchedTags.slice(0, 3) ?? [];
+  const summaryLabel = featuredRanked?.reasons[0] ?? '先从一场低压力的见面开始';
+  const completeness = computePortraitCompleteness(state);
+  const highlightedNeed = needs[0];
 
   if (!featured) {
     return <main className="club-home page"><div className="empty-state"><h3>正在准备适合你的活动</h3><p>活动目录加载完成后会自动出现。</p></div></main>;
@@ -55,9 +52,9 @@ export function ActivitiesHomePage({
             <Sparkles size={15} />
             刚刚懂你一点
           </span>
-          <b>{portrait.completeness}%</b>
+          <b>{completeness}%</b>
         </div>
-        <h2>{portrait.summaryLabel}</h2>
+        <h2>{summaryLabel}</h2>
         <p>先看清自己的社交需求，再挑一场舒服的见面。</p>
         <div>
           {highlightTags.map((tag) => (
@@ -105,10 +102,10 @@ export function ActivitiesHomePage({
       </section>
 
       <section className="need-recommend" onClick={onNeeds}>
-        <img src={seedNeeds[0].image} alt="" />
+        <img src={highlightedNeed?.image ?? '/assets/coffee.jpg'} alt="" />
         <div>
-          <small>需求广场 · 72人共鸣</small>
-          <h2>不想尴尬交换微信，但想认真认识人</h2>
+          <small>需求广场{highlightedNeed ? ` · ${highlightedNeed.resonance}人共鸣` : ''}</small>
+          <h2>{highlightedNeed?.title ?? '说出你想遇见什么'}</h2>
           <p>如果暂时没有合适活动，可以先看见同频的人。</p>
           <button type="button">
             去看看

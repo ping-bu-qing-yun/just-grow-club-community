@@ -28,6 +28,7 @@ const requiredTables = [
   'activity_interest_signals',
   'activity_feedback',
   'activity_members',
+  'activity_proposals',
   'threads',
   'thread_members',
   'messages',
@@ -35,6 +36,16 @@ const requiredTables = [
   'content_audit_events',
   'notifications',
   'notification_outbox',
+  'favorites',
+  'activity_category_configs',
+  'onboarding_question_configs',
+  'onboarding_option_configs',
+  'profile_option_configs',
+  'feedback_option_configs',
+  'recommendation_rule_configs',
+  'recommendation_setting_configs',
+  'config_revisions',
+  'config_audit_events',
   'schema_migrations',
 ] as const;
 
@@ -61,6 +72,8 @@ const requiredIndexes = [
   ['activity_interest_signals', 'idx_activity_interest_signals_activity'],
   ['activity_feedback', 'uq_activity_feedback_activity_user'],
   ['activity_members', 'idx_members_activity'],
+  ['activity_proposals', 'idx_activity_proposals_host_status'],
+  ['activity_proposals', 'idx_activity_proposals_review'],
   ['threads', 'uq_threads_activity'],
   ['thread_members', 'idx_thread_members_user'],
   ['messages', 'idx_messages_thread_created'],
@@ -68,6 +81,23 @@ const requiredIndexes = [
   ['content_audit_events', 'idx_content_audit_events_content'],
   ['notifications', 'idx_notifications_user_state'],
   ['notification_outbox', 'idx_notification_outbox_pending'],
+  ['favorites', 'idx_favorites_activity'],
+  ['activity_category_configs', 'uq_activity_category_configs_key'],
+  ['activity_category_configs', 'idx_activity_category_configs_enabled'],
+  ['onboarding_question_configs', 'uq_onboarding_question_configs_key'],
+  ['onboarding_question_configs', 'idx_onboarding_question_configs_enabled'],
+  ['onboarding_option_configs', 'uq_onboarding_option_configs_question_key'],
+  ['onboarding_option_configs', 'idx_onboarding_option_configs_enabled'],
+  ['profile_option_configs', 'uq_profile_option_configs_group_key'],
+  ['profile_option_configs', 'idx_profile_option_configs_enabled'],
+  ['feedback_option_configs', 'uq_feedback_option_configs_group_key'],
+  ['feedback_option_configs', 'idx_feedback_option_configs_enabled'],
+  ['recommendation_rule_configs', 'uq_recommendation_rule_configs_key'],
+  ['recommendation_rule_configs', 'uq_recommendation_rule_configs_term'],
+  ['recommendation_setting_configs', 'uq_recommendation_setting_configs_key'],
+  ['config_revisions', 'uq_config_revisions_domain_revision'],
+  ['config_audit_events', 'idx_config_audit_events_domain_created'],
+  ['config_audit_events', 'idx_config_audit_events_entity'],
 ] as const;
 
 const requiredForeignKeys = [
@@ -97,6 +127,9 @@ const requiredForeignKeys = [
   ['activity_interest_signals', 'activity_id', 'activities', 'id'],
   ['activity_feedback', 'activity_id', 'activities', 'id'],
   ['activity_members', 'activity_id', 'activities', 'id'],
+  ['activity_proposals', 'host_user_id', 'users', 'id'],
+  ['activity_proposals', 'source_need_id', 'needs', 'id'],
+  ['activity_proposals', 'reviewed_by', 'users', 'id'],
   ['threads', 'activity_id', 'activities', 'id'],
   ['thread_members', 'thread_id', 'threads', 'id'],
   ['messages', 'thread_id', 'threads', 'id'],
@@ -106,6 +139,20 @@ const requiredForeignKeys = [
   ['notifications', 'target_thread_id', 'threads', 'id'],
   ['notification_outbox', 'notification_id', 'notifications', 'id'],
   ['notification_outbox', 'user_id', 'users', 'id'],
+  ['favorites', 'user_id', 'users', 'id'],
+  ['favorites', 'activity_id', 'activities', 'id'],
+  ['activity_category_configs', 'created_by', 'users', 'id'],
+  ['activity_category_configs', 'updated_by', 'users', 'id'],
+  ['onboarding_question_configs', 'created_by', 'users', 'id'],
+  ['onboarding_question_configs', 'updated_by', 'users', 'id'],
+  ['onboarding_option_configs', 'question_id', 'onboarding_question_configs', 'id'],
+  ['profile_option_configs', 'created_by', 'users', 'id'],
+  ['feedback_option_configs', 'created_by', 'users', 'id'],
+  ['recommendation_rule_configs', 'created_by', 'users', 'id'],
+  ['recommendation_setting_configs', 'created_by', 'users', 'id'],
+  ['config_revisions', 'actor_id', 'users', 'id'],
+  ['config_audit_events', 'revision_id', 'config_revisions', 'id'],
+  ['config_audit_events', 'actor_id', 'users', 'id'],
 ] as const;
 
 export function splitMigrationStatements(sql: string): string[] {
@@ -141,7 +188,7 @@ async function verifyColumns(database: QiahaoDatabase): Promise<void> {
     ['user_profiles', ['birth_date', 'gender', 'city', 'profile_visibility']],
     ['user_onboarding_progress', ['onboarding_version', 'current_step', 'completed_at']],
     ['user_onboarding_answers', ['question_key', 'answer_order', 'answer_value']],
-    ['user_interest_tags', ['tag_kind', 'label', 'source_key']],
+    ['user_interest_tags', ['tag_kind', 'label', 'source_key', 'sort_order', 'enabled', 'updated_at']],
     ['content_items', ['author_id', 'content_type', 'status', 'reviewed_by', 'reviewed_at', 'rejection_reason', 'published_at']],
     ['activities', ['content_type', 'lifecycle', 'starts_at', 'ends_at', 'audience', 'pitch', 'boundary', 'match_label']],
     ['needs', ['content_type', 'title', 'subtitle', 'body', 'author_id', 'city', 'district']],
@@ -155,13 +202,23 @@ async function verifyColumns(database: QiahaoDatabase): Promise<void> {
     ['activity_agenda_items', ['activity_id', 'sequence_no', 'title', 'body']],
     ['activity_need_links', ['activity_id', 'need_id', 'link_type']],
     ['activity_interest_signals', ['user_id', 'activity_id', 'signal_type', 'occurrence_count']],
-    ['activity_feedback', ['activity_id', 'user_id', 'mood', 'note']],
+    ['activity_feedback', ['activity_id', 'user_id', 'mood', 'note', 'deleted_at']],
     ['activity_members', ['status']],
+    ['activity_proposals', ['host_user_id', 'source_need_id', 'category', 'status', 'reviewed_by', 'archived_at']],
     ['thread_members', ['unread', 'joined_at', 'last_read_at']],
     ['messages', ['message_type', 'deleted_at']],
     ['content_reports', ['reporter_id', 'content_id', 'reason', 'status']],
     ['content_audit_events', ['content_id', 'event_type', 'before_data', 'after_data']],
     ['notifications', ['target_content_id', 'target_content_type', 'target_thread_id']],
+    ['activity_category_configs', ['config_key', 'label', 'theme_key', 'icon_key', 'enabled', 'sort_order', 'created_by', 'updated_by']],
+    ['onboarding_question_configs', ['question_key', 'section_key', 'prompt', 'input_type', 'required_flag', 'enabled', 'sort_order']],
+    ['onboarding_option_configs', ['question_id', 'option_key', 'label', 'answer_value', 'enabled', 'sort_order']],
+    ['profile_option_configs', ['group_key', 'option_key', 'label', 'option_value', 'enabled', 'sort_order']],
+    ['feedback_option_configs', ['group_key', 'option_key', 'label', 'enabled', 'sort_order']],
+    ['recommendation_rule_configs', ['rule_key', 'source_term', 'themes_json', 'tokens_json', 'reason_text', 'enabled']],
+    ['recommendation_setting_configs', ['setting_key', 'value_json', 'enabled']],
+    ['config_revisions', ['domain_key', 'revision_no', 'actor_id', 'summary']],
+    ['config_audit_events', ['revision_id', 'domain_key', 'entity_type', 'entity_key', 'action', 'before_data', 'after_data']],
   ]);
   const rows = await database.query<Array<RowDataPacket & { TABLE_NAME: string; COLUMN_NAME: string }>>(
     `SELECT TABLE_NAME,COLUMN_NAME
@@ -232,7 +289,7 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
          WHERE it.content_type<>ci.content_type OR it.content_type<>t.content_type) AS invalid_tag_types,
        (SELECT COUNT(*) FROM users WHERE role IS NULL OR role NOT IN ('member','host','operator')) AS invalid_roles,
        (SELECT COUNT(*) FROM activities WHERE lifecycle IS NULL OR lifecycle NOT IN ('pre','formal','archived')) AS invalid_activity_lifecycle,
-       (SELECT COUNT(*) FROM activity_members WHERE status IS NULL OR status NOT IN ('interested','joined')) AS invalid_participation_status`,
+       (SELECT COUNT(*) FROM activity_members WHERE status IS NULL OR status NOT IN ('interested','joined','cancelled','waitlisted')) AS invalid_participation_status`,
   );
   const row = rows[0];
   if (!row) throw new Error('迁移校验未返回数据一致性结果');
@@ -243,20 +300,6 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
   if (Number(row.invalid_participation_status) > 0) throw new Error(`迁移后存在 ${row.invalid_participation_status} 条非法参与状态`);
   const demoRows = await database.query<Array<RowDataPacket & { role: string }>>('SELECT role FROM users WHERE id=? LIMIT 1', ['me']);
   if (demoRows[0] && demoRows[0].role !== 'operator') throw new Error('演示账号 me 必须映射为 operator');
-}
-
-async function ensureActivitiesContentForeignKey(database: QiahaoDatabase): Promise<void> {
-  const rows = await database.query<Array<RowDataPacket & { count: number | string }>>(
-    `SELECT COUNT(*) AS count
-       FROM information_schema.KEY_COLUMN_USAGE
-      WHERE CONSTRAINT_SCHEMA=DATABASE()
-        AND TABLE_NAME='activities'
-        AND COLUMN_NAME='id'
-        AND REFERENCED_TABLE_NAME='content_items'
-        AND REFERENCED_COLUMN_NAME='id'`,
-  );
-  if (Number(rows[0]?.count ?? 0) > 0) return;
-  await database.query('ALTER TABLE activities ADD CONSTRAINT fk_activities_content_item FOREIGN KEY (id) REFERENCES content_items(id)');
 }
 
 export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
@@ -279,7 +322,6 @@ export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
       [version],
     );
   }
-  await ensureActivitiesContentForeignKey(database);
   await verifyTables(database);
   await verifyColumns(database);
   await verifyIndexes(database);

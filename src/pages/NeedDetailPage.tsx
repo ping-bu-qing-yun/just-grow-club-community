@@ -1,9 +1,9 @@
-import { ArrowLeft, Bookmark, Heart } from 'lucide-react';
+import { ArrowLeft, Archive, Bookmark, Heart, Pencil, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity, Need } from '../club/types';
-import { clubActivities } from '../club/seed';
 import { useQiahao } from '../state/QiahaoContext';
 import { CommentSection } from '../components/CommentSection';
+import { domainActivityToClub } from '../club/activity-adapter';
 
 export function NeedDetailPage({
   need,
@@ -16,16 +16,22 @@ export function NeedDetailPage({
   onOpenActivity?: (activity: ClubActivity) => void;
   focusComments?: boolean;
 }) {
-  const { toggleContentSaved, toggleContentResonance } = useQiahao();
+  const { activities, user, updateNeed, archiveNeed, toggleContentSaved, toggleContentResonance } = useQiahao();
   const saved = Boolean(need.saved);
   const resonated = Boolean(need.resonated);
 
-  const resonanceCount = need.resonance + (resonated ? 1 : 0);
+  const resonanceCount = need.resonance;
   const [commentCount, setCommentCount] = useState(need.comments);
+  const [editing, setEditing] = useState(false);
+  const [body, setBody] = useState(need.copy);
+  const [tags, setTags] = useState(need.tags.join('，'));
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const canManage = user?.role === 'operator' || Boolean(user && need.authorId === user.id);
   const hasResponse = Boolean(need.responseActivityId);
   const responseCount = hasResponse ? 1 : 0;
   const responseActivity = hasResponse
-    ? clubActivities.find((item) => item.id === need.responseActivityId)
+    ? activities.find((item) => item.id === need.responseActivityId)
     : undefined;
   const statsEmpty = resonanceCount === 0 && commentCount === 0 && responseCount === 0;
 
@@ -37,7 +43,32 @@ export function NeedDetailPage({
 
   function handleViewActivity() {
     if (!responseActivity || !onOpenActivity) return;
-    onOpenActivity(responseActivity);
+    onOpenActivity(domainActivityToClub(responseActivity));
+  }
+
+  async function saveChanges() {
+    setPending(true);
+    setError('');
+    try {
+      await updateNeed(need.id, body, tags.split(/[，,]/).map((tag) => tag.trim()).filter(Boolean));
+      setEditing(false);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '需求保存失败');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function archive() {
+    setPending(true);
+    setError('');
+    try {
+      await archiveNeed(need.id);
+      onBack();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '需求归档失败');
+      setPending(false);
+    }
   }
 
   return (
@@ -52,8 +83,9 @@ export function NeedDetailPage({
         <small>
           {need.author} · {need.subtitle}
         </small>
-        <h1>{need.title}</h1>
-        <p>{need.copy}</p>
+        {canManage ? <div className="content-owner-actions"><button type="button" onClick={() => setEditing((value) => !value)}><Pencil size={15} />{editing ? '取消编辑' : '编辑'}</button><button type="button" disabled={pending} onClick={() => void archive()}><Archive size={15} />归档</button></div> : null}
+        {editing ? <section className="content-inline-editor"><label>需求内容<textarea value={body} onChange={(event) => setBody(event.target.value)} rows={6} /></label><label>标签（逗号分隔）<input value={tags} onChange={(event) => setTags(event.target.value)} /></label><button type="button" className="primary-button" disabled={pending || !body.trim()} onClick={() => void saveChanges()}><Save size={15} />{pending ? '保存中…' : '保存修改'}</button></section> : <><h1>{need.title}</h1><p>{need.copy}</p></>}
+        {error ? <p className="field-error" role="alert">{error}</p> : null}
         <div className="club-tags">
           {need.tags.map((tag) => (
             <span key={tag}>{tag}</span>

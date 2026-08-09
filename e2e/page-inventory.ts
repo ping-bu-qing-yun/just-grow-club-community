@@ -26,5 +26,5 @@ export const PAGE_INVENTORY: PageInventoryNode[] = [
   { id: 'create-life', name: '发布生活', route: '/publish/life', roleRequired: 'any', tags: ['publish'] },
   { id: 'notif-center', name: '通知中心', route: '/notifications', roleRequired: 'any', tags: ['notification'] },
   { id: 'notif-detail', name: '通知详情', route: '/notifications/notice-safety', roleRequired: 'any', tags: ['notification'] },
-  { id: 'operator-content', name: '内容治理', route: '/operator/content', roleRequired: 'operator', tags: ['operator'] },
+  { id: 'operator-content', name: '内容治理', route: '/admin/content', roleRequired: 'operator', tags: ['operator'] },
 ];

@@ -12,15 +12,8 @@ type QueryResult = RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] |
 export type DatabaseRows<T extends RowDataPacket = RowDataPacket> = T[];
 
 export const REQUIRED_MIGRATIONS = [
-  '001_initial.sql',
-  '002_notifications.sql',
-  '003_notification_feedback_category.sql',
-  '004_roles_content.sql',
-  '005_content_tags.sql',
-  '006_comments.sql',
-  '007_canonical_roles.sql',
-  '008_activity_lifecycle.sql',
-  '009_v2_domain_model.sql',
+  '001_canonical_domain_schema.sql',
+  '002_dynamic_business_config.sql',
 ] as const;
 
 export function toMysqlDateTime(value: Date | string = new Date()): string {

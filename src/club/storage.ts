@@ -1,7 +1,7 @@
 import type { ClubState, LifePost } from './types';
 
 export const CLUB_STORAGE_KEY_PREFIX = 'qiahao-club-state-v1';
-/** @deprecated 仅用于迁移旧全局 key */
+/** @deprecated 仅保留旧 key 名称供兼容代码识别；正式模式不再自动迁移。 */
 export const CLUB_STORAGE_KEY = CLUB_STORAGE_KEY_PREFIX;
 
 export const defaultClubState: ClubState = {
@@ -9,6 +9,24 @@ export const defaultClubState: ClubState = {
   onboardingStep: 0,
   lightAnswers: [[], [], []],
   qaAnswers: {},
+  profile: {
+    nickname: '',
+    birthDate: '',
+    gender: '',
+    education: '',
+    occupation: '',
+    height: '',
+    city: '',
+    hometown: '',
+    relationship: '',
+    bio: '',
+    tags: [],
+    preferences: [],
+  },
+};
+
+const previewClubState: ClubState = {
+  ...defaultClubState,
   profile: {
     nickname: '小恰',
     birthDate: '1997-08-12',
@@ -31,31 +49,23 @@ export function clubStorageKey(userId: string): string {
 
 function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
   return {
-    ...defaultClubState,
+    ...previewClubState,
     ...raw,
-    profile: { ...defaultClubState.profile, ...(raw?.profile ?? {}) },
-    lightAnswers: Array.isArray(raw?.lightAnswers) ? raw!.lightAnswers : defaultClubState.lightAnswers,
+    profile: { ...previewClubState.profile, ...(raw?.profile ?? {}) },
+    lightAnswers: Array.isArray(raw?.lightAnswers) ? raw!.lightAnswers : previewClubState.lightAnswers,
     qaAnswers: raw?.qaAnswers && typeof raw.qaAnswers === 'object' ? raw.qaAnswers : {},
   };
 }
 
-/** 首次按用户读取时，若仅有旧全局 key，迁移到用户 key 后删除全局 key */
+/** 仅供显式 preview/JSDOM 模式使用；不会读取或迁移旧的正式业务缓存。 */
 export function readClubState(userId = 'local-user'): ClubState {
   try {
     const key = clubStorageKey(userId);
     const scoped = window.localStorage.getItem(key);
     if (scoped) return normalizeState(JSON.parse(scoped) as Partial<ClubState>);
-
-    const legacy = window.localStorage.getItem(CLUB_STORAGE_KEY_PREFIX);
-    if (legacy) {
-      const parsed = normalizeState(JSON.parse(legacy) as Partial<ClubState>);
-      window.localStorage.setItem(key, JSON.stringify(parsed));
-      window.localStorage.removeItem(CLUB_STORAGE_KEY_PREFIX);
-      return parsed;
-    }
-    return { ...defaultClubState };
+    return normalizeState(null);
   } catch {
-    return { ...defaultClubState };
+    return normalizeState(null);
   }
 }
 

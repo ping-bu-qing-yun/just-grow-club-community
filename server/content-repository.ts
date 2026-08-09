@@ -102,13 +102,43 @@ function toContent(row: ContentRow): ContentItem {
 const allowedTransitions: Record<ContentStatus, readonly ContentStatus[]> = {
   draft: ['pending'],
   pending: ['approved', 'rejected'],
-  approved: ['rejected', 'archived'],
+  approved: ['rejected', 'archived', 'hidden'],
   rejected: ['pending', 'archived'],
   archived: [],
+  hidden: ['approved', 'archived'],
 };
 
 export function isAllowedStatusTransition(from: ContentStatus, to: ContentStatus): boolean {
   return allowedTransitions[from].includes(to);
+}
+
+export async function recordContentAudit(
+  database: ContentExecutor,
+  input: {
+    contentId: string;
+    contentType: ContentType;
+    actorId?: string | null;
+    eventType: 'created' | 'edited' | 'lifecycle_changed' | 'status_changed' | 'archived' | 'restored' | 'reported';
+    reason?: string;
+    before?: unknown;
+    after?: unknown;
+  },
+): Promise<void> {
+  await database.query(
+    `INSERT INTO content_audit_events
+      (content_id,content_type,actor_id,event_type,reason,before_data,after_data,created_at)
+     VALUES (?,?,?,?,?,?,?,?)`,
+    [
+      input.contentId,
+      input.contentType,
+      input.actorId ?? null,
+      input.eventType,
+      input.reason?.trim() || null,
+      input.before === undefined ? null : JSON.stringify(input.before),
+      input.after === undefined ? null : JSON.stringify(input.after),
+      toMysqlDateTime(),
+    ],
+  );
 }
 
 export async function getContent(database: ContentExecutor, id: string): Promise<ContentItem | null> {
@@ -186,7 +216,9 @@ export async function createContent(
     ],
   );
   await replaceContentTags(database, input.id, input.contentType, tags);
-  return requireContent(database, input.id);
+  const content = await requireContent(database, input.id);
+  await recordContentAudit(database, { contentId: input.id, contentType: input.contentType, actorId: input.authorId, eventType: 'created', after: content });
+  return content;
 }
 
 export async function updateContentTags(database: ContentExecutor, id: string, contentType: ContentType, tagRefs: readonly string[]): Promise<ContentTag[]> {
@@ -267,6 +299,7 @@ export async function listTagsForContent(database: ContentExecutor, contentId: s
 export async function changeModerationStatus(database: QiahaoDatabase, id: string, status: Exclude<ContentStatus, 'draft'>, reviewerId: string, reason?: string): Promise<ContentItem> {
   return database.transaction(async (connection) => {
     const current = await requireContent(connection, id);
+    if (current.status === status) return current;
     if (!isAllowedStatusTransition(current.status, status)) {
       throw new ContentRepositoryError('INVALID_STATUS_TRANSITION', `不能从 ${current.status} 变更为 ${status}`);
     }
@@ -277,7 +310,17 @@ export async function changeModerationStatus(database: QiahaoDatabase, id: strin
         WHERE id=?`,
       [status, reviewerId, now, reason?.trim() || null, status, now, now, id],
     );
-    return requireContent(connection, id);
+    const updated = await requireContent(connection, id);
+    await recordContentAudit(connection, {
+      contentId: id,
+      contentType: current.contentType,
+      actorId: reviewerId,
+      eventType: status === 'archived' ? 'archived' : 'status_changed',
+      reason,
+      before: current,
+      after: updated,
+    });
+    return updated;
   });
 }
 

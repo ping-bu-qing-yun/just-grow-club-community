@@ -1,23 +1,19 @@
 import { useState } from 'react';
 import { ArrowLeft, ImagePlus, Mic } from 'lucide-react';
 import { useQiahao } from '../state/QiahaoContext';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../api/client';
+import { queryKeys } from '../data/queryClient';
 
-const guides = [
-  '想认识能自然聊天、不用硬找话题的人。',
-  '周末想找附近的人，一起散步或喝杯咖啡。',
-  '不想一上来就交换微信，先舒服地认识。',
-  '想找能认真聊价值观、不止聊工作的人。',
-];
-const tagOptions = [
-  { value: '自然聊天', ref: 'natural-chat' },
-  { value: '少人数', ref: 'small-group' },
-  { value: '周末', ref: 'weekend' },
-  { value: '附近', ref: 'nearby' },
-  { value: 'deep talk', ref: 'deep-talk' },
-];
+const previewTags = [
+  ['natural-chat', '自然聊天'], ['small-group', '少人数'], ['weekend', '周末'], ['nearby', '附近'], ['deep-talk', 'deep talk'],
+].map(([slug, label]) => ({ id: slug, contentType: 'need' as const, slug, label, enabled: true }));
 
 export function CreateNeedPage({ onBack, onPublished }: { onBack: () => void; onPublished: () => void }) {
-  const { createNeed } = useQiahao();
+  const { createNeed, localMode } = useQiahao();
+  const tagQuery = useQuery({ queryKey: [...queryKeys.config, 'content-tags', 'need'], queryFn: () => api.tags('need'), enabled: !localMode });
+  const tagOptions = tagQuery.data?.tags ?? (localMode ? previewTags : []);
+  const guides = tagOptions.slice(0, 4).map((tag) => `想认识也在意「${tag.label}」的人。`);
   const [text, setText] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState('');
@@ -51,7 +47,7 @@ export function CreateNeedPage({ onBack, onPublished }: { onBack: () => void; on
       <textarea aria-label="需求内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：最近想找能慢慢聊天的人……" />
       {error && <p className="field-error" role="alert">{error}</p>}
       <div className="need-tools"><button type="button" onClick={() => setText(text || '我想先轻松认识，不急着定义关系。')}><Mic size={18} />语音说一段</button><button type="button"><ImagePlus size={18} />加图片</button></div>
-      <div className="tag-picks">{tagOptions.map((tag) => <button type="button" className={tags.includes(tag.ref) ? 'is-active' : ''} onClick={() => setTags((current) => current.includes(tag.ref) ? current.filter((item) => item !== tag.ref) : [...current, tag.ref])} key={tag.ref}>#{tag.value}</button>)}</div>
+      <div className="tag-picks">{tagOptions.map((tag) => <button type="button" className={tags.includes(tag.slug) ? 'is-active' : ''} onClick={() => setTags((current) => current.includes(tag.slug) ? current.filter((item) => item !== tag.slug) : [...current, tag.slug])} key={tag.id}>#{tag.label}</button>)}</div>
       <button type="button" className="primary-button primary-button--wide" onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</button>
     </main>
   );

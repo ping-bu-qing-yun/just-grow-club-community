@@ -9,6 +9,8 @@
     "dev:api": "npm run build:server && node --env-file-if-exists=.env .server-dist/index.js",
     "dev:all": "concurrently -k \"npm:dev:api\" \"npm:dev -- --host 127.0.0.1 --port 5174\"",
     "db:migrate": "node --env-file-if-exists=.env --import tsx server/migrations/run.ts",
+    "db:schema:export": "node --env-file-if-exists=.env scripts/export-mysql-schema.mjs",
+    "db:config:audit": "node --env-file-if-exists=.env scripts/audit-dynamic-config-compatibility.mjs",
     "build": "tsc -b && vite build",
     "test": "vitest",
     "test:server": "vitest server --run --no-file-parallelism --maxWorkers=1",

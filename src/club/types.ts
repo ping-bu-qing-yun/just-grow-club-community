@@ -15,6 +15,7 @@ export interface BasicProfile {
 
 export interface Need {
   id: string;
+  authorId?: string;
   author: string;
   subtitle: string;
   tags: string[];
@@ -33,6 +34,7 @@ export interface Need {
 
 export interface LifePost {
   id: string;
+  authorId?: string;
   author: string;
   meta: string;
   kind: string;
@@ -52,6 +54,8 @@ export interface ClubActivityFlowStep {
 
 export interface ClubActivity {
   id: string;
+  hostId?: string;
+  categoryKey?: string;
   theme: 'low' | 'deep' | 'walk' | 'workshop' | 'other';
   status: '成熟活动' | '预活动';
   title: string;

@@ -1,4 +1,4 @@
-import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Utensils } from 'lucide-react';
+import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Sparkles, Utensils, type LucideIcon } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Activity, ActivityCategory, CreateActivityInput } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
@@ -26,14 +26,18 @@ const initialDraft: Draft = {
   price: 0,
 };
 
-const categoryOptions = [
-  { label: '饭搭子' as const, Icon: Utensils },
-  { label: '咖啡' as const, Icon: Coffee },
-  { label: '运动' as const, Icon: Dumbbell },
-  { label: '徒步' as const, Icon: Footprints },
-  { label: '看展' as const, Icon: Palette },
-  { label: '桌游' as const, Icon: Dices },
-];
+const categoryIcons: Record<string, LucideIcon> = {
+  utensils: Utensils,
+  coffee: Coffee,
+  dumbbell: Dumbbell,
+  footprints: Footprints,
+  palette: Palette,
+  dices: Dices,
+};
+const previewCategories = [
+  ['dinner', '饭搭子', 'utensils'], ['coffee', '咖啡', 'coffee'], ['sport', '运动', 'dumbbell'],
+  ['hike', '徒步', 'footprints'], ['art', '看展', 'palette'], ['board', '桌游', 'dices'],
+].map(([key, label, iconKey], sortOrder) => ({ key, label, iconKey, themeKey: 'other', description: '', enabled: true, sortOrder, updatedAt: '' }));
 
 const weekdayLabels = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] as const;
 
@@ -70,11 +74,12 @@ function validateDraft(draft: Draft): DraftErrors {
 }
 
 export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; onCreated: (activity: Activity) => void }) {
-  const { createActivity } = useQiahao();
+  const { businessConfig, createActivity, localMode } = useQiahao();
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [errors, setErrors] = useState<DraftErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const minDate = useMemo(() => todayIsoDate(), []);
+  const categoryOptions = businessConfig?.activityCategories ?? (localMode ? previewCategories : []);
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -117,17 +122,20 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
         <fieldset className="form-section">
           <legend>想找什么搭子？</legend>
           <div className="category-grid">
-            {categoryOptions.map(({ label, Icon }) => (
+            {categoryOptions.map(({ key, label, iconKey }) => {
+              const Icon = categoryIcons[iconKey] ?? Sparkles;
+              return (
               <button
-                key={label}
+                key={key}
                 type="button"
-                className={draft.category === label ? 'is-active' : ''}
-                onClick={() => update('category', label)}
+                className={draft.category === key ? 'is-active' : ''}
+                onClick={() => update('category', key)}
               >
                 <Icon size={20} />
                 <span>{label}</span>
               </button>
-            ))}
+              );
+            })}
           </div>
           {errors.category && <p className="field-error">{errors.category}</p>}
         </fieldset>

@@ -1,9 +1,9 @@
-import { BadgeCheck, Bookmark, ChevronRight, CircleHelp, Heart, LogOut, MessageCircle, MoonStar, PenLine, ShieldCheck, Sparkles, UsersRound, Shield } from 'lucide-react';
+import { BadgeCheck, Bookmark, ChevronRight, CircleHelp, Heart, LogOut, MessageCircle, MoonStar, PenLine, Settings2, ShieldCheck, Sparkles, UsersRound, Shield } from 'lucide-react';
 import { useClub } from '../club/ClubContext';
 import { useQiahao } from '../state/QiahaoContext';
 import { nextThemePreference, themeLabels, useThemePreference } from '../theme/theme';
 
-export type ProfileDestination = 'editor' | 'messages' | 'saved-activities' | 'saved-needs' | 'dynamics' | 'portrait' | 'attended' | 'admin-content';
+export type ProfileDestination = 'editor' | 'messages' | 'saved-activities' | 'saved-needs' | 'dynamics' | 'portrait' | 'attended' | 'admin-content' | 'operator-business';
 
 export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: string) => void; onNavigate?: (destination: ProfileDestination) => void }) {
   const { state, resetOnboarding } = useClub();
@@ -30,7 +30,7 @@ export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: stri
       <section className="profile-promos"><button onClick={() => { resetOnboarding(); onNavigate?.('portrait'); }}><Sparkles /><b>画像成长</b><span>继续认识自己</span></button><button className="orange" onClick={() => onNavigate?.('saved-needs')}><Bookmark /><b>需求收藏</b><span>查看收藏的需求</span></button></section>
       <section className="profile-stats" aria-label="活动统计"><div><strong>{joinedCount}</strong><span>参与活动</span></div><div><strong>{hosted}</strong><span>发起活动</span></div><div><strong>{needs.length}</strong><span>公开需求</span></div></section>
       <section className="club-profile-section"><h2>我的记录</h2>{rows.map(({ label, sub, Icon, d }) => <button key={label} onClick={() => onNavigate?.(d)}><span className="profile-row-icon"><Icon size={18} /></span><span><b>{label}</b><small>{sub}</small></span><ChevronRight size={17} /></button>)}</section>
-      {user?.role === 'operator' && <section className="club-profile-section"><h2>运营工作台</h2><button onClick={() => onNavigate?.('admin-content')}><span className="profile-row-icon"><Shield size={18} /></span><span><b>内容治理</b><small>审核、驳回、归档内容与维护标签</small></span><ChevronRight size={17} /></button></section>}
+      {user?.role === 'operator' && <section className="club-profile-section"><h2>运营工作台</h2><button onClick={() => onNavigate?.('admin-content')}><span className="profile-row-icon"><Shield size={18} /></span><span><b>内容治理</b><small>审核、驳回、归档内容与维护标签</small></span><ChevronRight size={17} /></button><button onClick={() => onNavigate?.('operator-business')}><span className="profile-row-icon"><Settings2 size={18} /></span><span><b>业务配置</b><small>活动分类、问卷、资料、反馈、推荐和提案</small></span><ChevronRight size={17} /></button></section>}
       <section className="club-profile-section"><button onClick={() => onNavigate?.('messages')}><span className="profile-row-icon"><MessageCircle size={18} /></span><span><b>我的消息</b><small>报名、缴费、互动与系统通知</small></span><ChevronRight size={17} /></button></section>
       <section className="club-profile-section"><h2>更多服务</h2><button onClick={() => onNotice('帮助与客服已打开')}><span className="profile-row-icon"><CircleHelp size={18} /></span><span><b>帮助与客服</b><small>遇到问题可以找小CC</small></span><ChevronRight size={17} /></button><button onClick={() => onNotice('安全中心已打开')}><span className="profile-row-icon"><ShieldCheck size={18} /></span><span><b>安全中心</b><small>隐私、举报与活动边界</small></span><ChevronRight size={17} /></button><button onClick={() => setPreference(nextThemePreference(preference))}><span className="profile-row-icon"><MoonStar size={18} /></span><span><b>外观</b><small>{themeLabels[preference]}，点击切换</small></span><ChevronRight size={17} /></button><button className="danger" onClick={() => void logout()}><span className="profile-row-icon"><LogOut size={18} /></span><span><b>退出当前账号</b><small>退出后回到登录页</small></span><ChevronRight size={17} /></button></section>
       <p className="profile-id">恰好号：78135154</p>
