@@ -11,6 +11,7 @@ export function ActivityDetail({ activity, onBack }: { activity: Activity; onBac
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const joined = joinedIds.has(activity.id);
   const saved = savedIds.has(activity.id);
+  const isPreActivity = activity.lifecycle === 'pre';
 
   return (
     <main className="page detail-page">
@@ -48,8 +49,8 @@ export function ActivityDetail({ activity, onBack }: { activity: Activity; onBac
         </section>
 
         <section className="detail-section">
-          <div className="section-title-row"><h2>已经加入</h2><span>{activity.participants.length}/{activity.capacity} 人</span></div>
-          <div className="participant-row"><AvatarStack users={activity.participants} max={5} /><span><UsersRound size={16} />还差 {Math.max(activity.capacity - activity.participants.length, 0)} 人成行</span></div>
+          <div className="section-title-row"><h2>{isPreActivity ? '已经表达兴趣' : '已经加入'}</h2><span>{activity.participants.length}/{activity.capacity} 人</span></div>
+          <div className="participant-row"><AvatarStack users={activity.participants} max={5} /><span><UsersRound size={16} />{isPreActivity ? `已有 ${activity.participants.length} 人关注后续` : `还差 ${Math.max(activity.capacity - activity.participants.length, 0)} 人成行`}</span></div>
         </section>
 
         <section className="safety-panel">
@@ -63,7 +64,7 @@ export function ActivityDetail({ activity, onBack }: { activity: Activity; onBac
       <div className="detail-action">
         <div><span>{activity.price === 0 ? '免费参加' : `¥${activity.price}`}</span>{activity.price > 0 && <small>/ 人</small>}</div>
         <button type="button" className="primary-button" disabled={joined} onClick={() => setShowJoinSheet(true)}>
-          {joined ? '已申请' : '申请加入'}
+          {joined ? (isPreActivity ? '已预约' : '已报名') : (isPreActivity ? '预约兴趣' : '报名')}
         </button>
       </div>
 

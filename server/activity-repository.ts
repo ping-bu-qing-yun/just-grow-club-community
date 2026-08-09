@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { RowDataPacket } from 'mysql2/promise';
-import type { ActivityCategory, CreateActivityInput } from '../src/domain/types';
+import type { ActivityCategory, ActivityLifecycle, CreateActivityInput, ParticipationStatus } from '../src/domain/types';
 import { toMysqlDateTime } from './db';
 import type { QiahaoConnection, QiahaoDatabase } from './db';
 import { createContent, listTagsForContent } from './content-repository';
@@ -36,6 +36,7 @@ type ActivityRow = RowDataPacket & {
   host_verified: number | boolean;
   host_bio: string;
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
+  lifecycle: ActivityLifecycle;
 };
 
 function toUser(row: UserRow | { id: string; name: string; avatar: string; verified: number | boolean; bio: string }) {
@@ -59,7 +60,7 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
       [row.id],
     ),
     database.query<RowDataPacket[]>('SELECT 1 FROM favorites WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
-    database.query<RowDataPacket[]>('SELECT 1 FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
+    database.query<Array<RowDataPacket & { status: ParticipationStatus }>>('SELECT status FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
     listTagsForContent(database, row.id),
     countComments(database, 'activity', row.id),
   ]);
@@ -85,6 +86,8 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     price: Number(row.price),
     featured: Boolean(row.featured),
     note: row.note,
+    lifecycle: row.lifecycle,
+    participationStatus: joinedRows[0]?.status ?? null,
     status: row.status,
     tags,
     commentCount,
@@ -103,14 +106,14 @@ const activityWithHost = `
 
 export async function listActivities(database: QiahaoDatabase, userId: string) {
   const rows = await database.query<ActivityRow[]>(
-    `${activityWithHost} ORDER BY a.featured DESC,a.created_at DESC`,
+    `${activityWithHost} WHERE a.lifecycle<>'archived' ORDER BY a.featured DESC,a.created_at DESC`,
   );
   return Promise.all(rows.map((row) => toActivity(database, row, userId)));
 }
 
 export async function getActivity(database: QiahaoDatabase, userId: string, id: string) {
   const rows = await database.query<ActivityRow[]>(
-    `${activityWithHost} WHERE a.id=? LIMIT 1`,
+    `${activityWithHost} WHERE a.id=? AND a.lifecycle<>'archived' LIMIT 1`,
     [id],
   );
   return rows[0] ? toActivity(database, rows[0], userId) : null;
@@ -149,8 +152,8 @@ export async function createActivity(database: QiahaoDatabase, userId: string, i
     });
     await connection.query(
       `INSERT INTO activities
-        (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,created_at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,lifecycle,created_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         id,
         userId,
@@ -166,9 +169,36 @@ export async function createActivity(database: QiahaoDatabase, userId: string, i
         input.price,
         0,
         '请在活动开始前与参与者确认集合信息。',
+        'pre',
         now,
       ],
     );
   });
   return getActivity(database, userId, id);
+}
+
+export type ActivityLifecycleResult =
+  | { kind: 'missing' }
+  | { kind: 'invalid-transition'; current: ActivityLifecycle }
+  | { kind: 'ok'; lifecycle: ActivityLifecycle };
+
+export async function changeActivityLifecycle(
+  database: QiahaoDatabase,
+  id: string,
+  next: ActivityLifecycle,
+): Promise<ActivityLifecycleResult> {
+  return database.transaction(async (connection) => {
+    const rows = await connection.query<Array<RowDataPacket & { lifecycle: ActivityLifecycle }>>(
+      'SELECT lifecycle FROM activities WHERE id=? FOR UPDATE',
+      [id],
+    );
+    const current = rows[0]?.lifecycle;
+    if (!current) return { kind: 'missing' as const };
+    if (current === next) return { kind: 'ok' as const, lifecycle: current };
+    const allowed = (current === 'pre' && next === 'formal')
+      || ((current === 'pre' || current === 'formal') && next === 'archived');
+    if (!allowed) return { kind: 'invalid-transition' as const, current };
+    await connection.query('UPDATE activities SET lifecycle=? WHERE id=?', [next, id]);
+    return { kind: 'ok' as const, lifecycle: next };
+  });
 }

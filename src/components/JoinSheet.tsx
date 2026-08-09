@@ -7,13 +7,14 @@ export function JoinSheet({ activity, onCancel, onConfirm }: {
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const isPreActivity = activity.lifecycle === 'pre';
   return (
     <Sheet label="确认加入活动" onClose={onCancel}>
         <span className="sheet-icon"><ShieldCheck size={25} /></span>
-        <h2>确认加入这个活动？</h2>
+        <h2>{isPreActivity ? '确认预约这个预活动？' : '确认报名这个活动？'}</h2>
         <p>{activity.dateLabel} {activity.time}，在{activity.location}见。</p>
         <div className="sheet-note">首次见面请在公共场所集合，行程有变化及时在消息里沟通。</div>
-        <button type="button" className="primary-button primary-button--wide" onClick={onConfirm}>确认申请</button>
+        <button type="button" className="primary-button primary-button--wide" onClick={onConfirm}>{isPreActivity ? '确认预约' : '确认报名'}</button>
     </Sheet>
   );
 }

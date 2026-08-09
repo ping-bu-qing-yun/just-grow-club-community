@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { lifePosts, seedNeeds } from '../club/seed';
 import type { LifePost, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
@@ -15,8 +16,24 @@ export function NeedsPage({
 }) {
   const { state } = useClub();
   const qiahao = useQiahaoOptional();
-  const [mode, setMode] = useState<'needs' | 'life'>('needs');
-  const [filter, setFilter] = useState('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode = searchParams.get('view') === 'life' ? 'life' : 'needs';
+  const filter = searchParams.get('filter') === 'similar' ? 'similar' : 'all';
+
+  function updateView(nextMode: 'needs' | 'life') {
+    const params = new URLSearchParams(searchParams);
+    if (nextMode === 'life') params.set('view', 'life');
+    else params.delete('view');
+    if (nextMode === 'life') params.delete('filter');
+    setSearchParams(params, { replace: true });
+  }
+
+  function updateFilter(nextFilter: 'all' | 'similar') {
+    const params = new URLSearchParams(searchParams);
+    if (nextFilter === 'similar') params.set('filter', 'similar');
+    else params.delete('filter');
+    setSearchParams(params, { replace: true });
+  }
   const needs = useMemo(() => {
     const source = qiahao?.needs ?? [...state.publishedNeeds, ...seedNeeds];
     return [...new Map(source.map((item) => [item.id, item])).values()].filter((item) => filter !== 'similar' || item.similar);
@@ -38,10 +55,10 @@ export function NeedsPage({
       </section>
 
       <div className="needs-mode">
-        <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => setMode('needs')}>
+        <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => updateView('needs')}>
           需求
         </button>
-        <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => setMode('life')}>
+        <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => updateView('life')}>
           生活
         </button>
       </div>
@@ -54,13 +71,13 @@ export function NeedsPage({
               <p>看看谁和你想的一样</p>
             </div>
             <div>
-              <button type="button" className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}>
+              <button type="button" className={filter === 'all' ? 'is-active' : ''} onClick={() => updateFilter('all')}>
                 全部需求
               </button>
               <button
                 type="button"
                 className={filter === 'similar' ? 'is-active' : ''}
-                onClick={() => setFilter('similar')}
+                onClick={() => updateFilter('similar')}
               >
                 和你相似
               </button>

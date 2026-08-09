@@ -7,6 +7,8 @@ import type { UserRole } from '../src/domain/types';
 import { normalizeUserRole } from '../src/domain/roles';
 
 const scrypt = promisify(scryptCallback);
+export const SESSION_COOKIE_NAME = 'qiahao_session';
+export const CSRF_COOKIE_NAME = 'qiahao_csrf';
 
 export interface AuthenticatedUser {
   id: string;
@@ -52,6 +54,29 @@ export function tokenHash(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+export function parseCookieHeader(header?: string): Record<string, string> {
+  if (!header) return {};
+  return header.split(';').reduce<Record<string, string>>((cookies, part) => {
+    const separator = part.indexOf('=');
+    if (separator <= 0) return cookies;
+    const name = part.slice(0, separator).trim();
+    const value = part.slice(separator + 1).trim();
+    if (!name) return cookies;
+    try {
+      cookies[name] = decodeURIComponent(value);
+    } catch {
+      cookies[name] = value;
+    }
+    return cookies;
+  }, {});
+}
+
+export function sessionTokenFromHeaders(authorization?: string, cookieHeader?: string): string {
+  const bearer = authorization?.startsWith('Bearer ') ? authorization.slice(7).trim() : '';
+  if (bearer) return bearer;
+  return parseCookieHeader(cookieHeader)[SESSION_COOKIE_NAME] ?? '';
+}
+
 export async function createSession(database: QiahaoDatabase, userId: string): Promise<string> {
   const token = randomBytes(32).toString('base64url');
   const createdAt = new Date();
@@ -64,8 +89,8 @@ export async function createSession(database: QiahaoDatabase, userId: string): P
   return token;
 }
 
-export async function authenticateToken(database: QiahaoDatabase, header?: string): Promise<AuthenticatedUser | null> {
-  const token = header?.startsWith('Bearer ') ? header.slice(7).trim() : '';
+export async function authenticateToken(database: QiahaoDatabase, authorization?: string, cookieHeader?: string): Promise<AuthenticatedUser | null> {
+  const token = sessionTokenFromHeaders(authorization, cookieHeader);
   if (!token) return null;
   const rows = await database.query<UserRow[]>(
     `SELECT u.id,u.phone,u.name,u.avatar,u.bio,u.verified,u.role,s.expires_at

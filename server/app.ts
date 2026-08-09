@@ -1,11 +1,21 @@
-import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
+import { randomBytes } from 'node:crypto';
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyRequest } from 'fastify';
 import cors from '@fastify/cors';
 import type { RowDataPacket } from 'mysql2/promise';
-import { authenticateToken, createSession, revokeSession, verifyPassword } from './auth';
+import {
+  CSRF_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  authenticateToken,
+  createSession,
+  parseCookieHeader,
+  revokeSession,
+  sessionTokenFromHeaders,
+  verifyPassword,
+} from './auth';
 import type { QiahaoDatabase } from './db';
 import { seedDatabase } from './seed';
-import { createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
-import type { CreateActivityInput, UserRole } from '../src/domain/types';
+import { changeActivityLifecycle, createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
+import type { ActivityLifecycle, CreateActivityInput, UserRole } from '../src/domain/types';
 import { normalizeUserRole } from '../src/domain/roles';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
@@ -40,6 +50,33 @@ function fail(reply: ErrorReply, status: number, code: string, message: string) 
   return reply.code(status).send({ error: { code, message } });
 }
 
+const sessionMaxAgeSeconds = 30 * 24 * 60 * 60;
+
+function cookieValue(name: string, value: string, options: { httpOnly?: boolean; maxAge: number }): string {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  const httpOnly = options.httpOnly ? '; HttpOnly' : '';
+  return `${name}=${encodeURIComponent(value)}; Path=/; Max-Age=${options.maxAge}; SameSite=Lax${httpOnly}${secure}`;
+}
+
+function setSessionCookies(reply: FastifyReply, token: string, csrfToken: string): void {
+  reply.header('set-cookie', [
+    cookieValue(SESSION_COOKIE_NAME, token, { httpOnly: true, maxAge: sessionMaxAgeSeconds }),
+    cookieValue(CSRF_COOKIE_NAME, csrfToken, { maxAge: sessionMaxAgeSeconds }),
+  ]);
+}
+
+function clearSessionCookies(reply: FastifyReply): void {
+  reply.header('set-cookie', [
+    cookieValue(SESSION_COOKIE_NAME, '', { httpOnly: true, maxAge: 0 }),
+    cookieValue(CSRF_COOKIE_NAME, '', { maxAge: 0 }),
+  ]);
+}
+
+function csrfHeader(request: FastifyRequest): string {
+  const value = request.headers['x-csrf-token'];
+  return Array.isArray(value) ? value[0] ?? '' : value ?? '';
+}
+
 function parseTagRefs(value: unknown): string[] | null {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.length > 20 || value.some((item) => typeof item !== 'string' || item.length > 120)) return null;
@@ -67,12 +104,23 @@ function parseOptionalReason(value: unknown): string | undefined | null {
 }
 
 async function userFrom(request: FastifyRequest, database: QiahaoDatabase) {
-  return authenticateToken(database, request.headers.authorization);
+  return authenticateToken(database, request.headers.authorization, request.headers.cookie);
 }
 
 export function buildApp({ database, notificationHub = new NotificationHub() }: Options): FastifyInstance {
   const app = Fastify({ logger: false });
-  app.register(cors, { origin: ['http://127.0.0.1:5174', 'http://localhost:5174'] });
+  app.register(cors, { origin: ['http://127.0.0.1:5174', 'http://localhost:5174'], credentials: true });
+  app.addHook('preHandler', async (request, reply) => {
+    const pathname = request.raw.url?.split('?', 1)[0] ?? '';
+    const method = request.method.toUpperCase();
+    const safeMethod = method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+    const isSessionLogin = method === 'POST' && pathname === '/api/v2/session';
+    if (!pathname.startsWith('/api/v2/') || safeMethod || isSessionLogin) return;
+    const cookieToken = parseCookieHeader(request.headers.cookie)[CSRF_COOKIE_NAME] ?? '';
+    if (!cookieToken || csrfHeader(request) !== cookieToken) {
+      return fail(reply, 403, 'CSRF_INVALID', '请求校验已失效，请刷新页面后重试');
+    }
+  });
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof AuthorizationError) return fail(reply, error.status, error.code, error.message);
     if (error instanceof ContentRepositoryError) return fail(reply, error.status, error.code, error.message);
@@ -83,7 +131,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     throw error;
   });
 
-  app.get('/api/health', async (_request, reply) => {
+  app.get('/api/v2/health', async (_request, reply) => {
     try {
       await database.query('SELECT 1');
       return { data: { status: 'ok' } };
@@ -92,7 +140,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     }
   });
 
-  app.post<{ Body: { phone?: string; password?: string } }>('/api/auth/login', async (request, reply) => {
+  app.post<{ Body: { phone?: string; password?: string } }>('/api/v2/session', async (request, reply) => {
     const phone = typeof request.body?.phone === 'string' ? request.body.phone.trim() : undefined;
     const password = typeof request.body?.password === 'string' ? request.body.password : '';
     const rows = phone
@@ -103,9 +151,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
       return fail(reply, 401, 'INVALID_CREDENTIALS', '手机号或密码错误');
     }
     const token = await createSession(database, row.id);
+    setSessionCookies(reply, token, randomBytes(32).toString('base64url'));
     return {
       data: {
-        token,
         user: {
           id: row.id,
           phone: row.phone,
@@ -119,15 +167,16 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     };
   });
 
-  app.post('/api/auth/logout', async (request, reply) => {
+  app.delete('/api/v2/session', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    const token = request.headers.authorization!.slice(7).trim();
+    const token = sessionTokenFromHeaders(request.headers.authorization, request.headers.cookie);
     await revokeSession(database, token);
+    clearSessionCookies(reply);
     return reply.code(204).send();
   });
 
-  app.get('/api/me', async (request, reply) => {
+  app.get('/api/v2/session', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const [joinedRows, hostedRows, savedRows] = await Promise.all([
@@ -147,13 +196,13 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     };
   });
 
-  app.get('/api/activities', async (request, reply) => {
+  app.get('/api/v2/activities', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     return { data: { activities: await listActivities(database, user.id) } };
   });
 
-  app.get<{ Params: { id: string } }>('/api/activities/:id', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/api/v2/activities/:id', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const item = await getActivity(database, user.id, request.params.id);
@@ -161,7 +210,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { activity: item } };
   });
 
-  app.post<{ Body: Partial<CreateActivityInput> }>('/api/activities', async (request, reply) => {
+  app.post<{ Body: Partial<CreateActivityInput> }>('/api/v2/activities', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     if (user.role !== 'operator') return fail(reply, 403, 'FORBIDDEN', '只有运营者可以发布活动');
@@ -173,13 +222,28 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(201).send({ data: { activity: item } });
   });
 
-  app.get('/api/needs', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { lifecycle?: ActivityLifecycle } }>('/api/v2/activities/:id/lifecycle', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    requireRole(user, 'operator');
+    const lifecycle = request.body?.lifecycle;
+    if (!lifecycle || !['pre', 'formal', 'archived'].includes(lifecycle)) {
+      return fail(reply, 400, 'VALIDATION_ERROR', '活动生命周期无效');
+    }
+    const result = await changeActivityLifecycle(database, request.params.id, lifecycle);
+    if (result.kind === 'missing') return fail(reply, 404, 'NOT_FOUND', '活动不存在');
+    if (result.kind === 'invalid-transition') {
+      return fail(reply, 409, 'INVALID_TRANSITION', `活动不能从 ${result.current} 变更为 ${lifecycle}`);
+    }
+    return { data: { id: request.params.id, lifecycle: result.lifecycle } };
+  });
+
+  app.get('/api/v2/needs', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     return { data: { needs: await listNeeds(database) } };
   });
 
-  app.get<{ Params: { id: string } }>('/api/needs/:id', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/api/v2/needs/:id', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const need = await getNeed(database, request.params.id);
@@ -187,7 +251,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { need } };
   });
 
-  app.post<{ Body: { body?: string; tags?: string[] } }>('/api/needs', async (request, reply) => {
+  app.post<{ Body: { body?: string; tags?: string[] } }>('/api/v2/needs', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const body = parseContentBody(request.body?.body);
     if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
@@ -197,7 +261,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(201).send({ data: { need } });
   });
 
-  app.patch<{ Params: { id: string }; Body: { body?: string; tags?: string[] } }>('/api/needs/:id', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { body?: string; tags?: string[] } }>('/api/v2/needs/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
@@ -211,7 +275,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { need } };
   });
 
-  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/needs/:id', async (request, reply) => {
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/v2/needs/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
@@ -222,13 +286,13 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(204).send();
   });
 
-  app.get('/api/life-posts', async (request, reply) => {
+  app.get('/api/v2/life-posts', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     return { data: { lifePosts: await listLifePosts(database) } };
   });
 
-  app.get<{ Params: { id: string } }>('/api/life-posts/:id', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/api/v2/life-posts/:id', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const lifePost = await getLifePost(database, request.params.id);
@@ -236,7 +300,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { lifePost } };
   });
 
-  app.post<{ Body: { body?: string; image?: string; tags?: string[] } }>('/api/life-posts', async (request, reply) => {
+  app.post<{ Body: { body?: string; image?: string; tags?: string[] } }>('/api/v2/life-posts', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const body = parseContentBody(request.body?.body);
     if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
@@ -247,7 +311,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(201).send({ data: { lifePost } });
   });
 
-  app.patch<{ Params: { id: string }; Body: { body?: string; image?: string; tags?: string[] } }>('/api/life-posts/:id', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { body?: string; image?: string; tags?: string[] } }>('/api/v2/life-posts/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
@@ -262,7 +326,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { lifePost } };
   });
 
-  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/life-posts/:id', async (request, reply) => {
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/v2/life-posts/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
@@ -273,7 +337,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(204).send();
   });
 
-  app.get<{ Querystring: { contentType?: string; contentId?: string; limit?: string; cursor?: string } }>('/api/comments', async (request, reply) => {
+  app.get<{ Querystring: { contentType?: string; contentId?: string; limit?: string; cursor?: string } }>('/api/v2/comments', async (request, reply) => {
     const contentType = typeof request.query.contentType === 'string' ? request.query.contentType.trim() : '';
     const contentId = typeof request.query.contentId === 'string' ? request.query.contentId.trim() : '';
     if (request.query.contentType !== undefined && typeof request.query.contentType !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '评论内容类型无效');
@@ -288,7 +352,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: page };
   });
 
-  app.post<{ Body: { contentType?: string; contentId?: string; body?: string } }>('/api/comments', async (request, reply) => {
+  app.post<{ Body: { contentType?: string; contentId?: string; body?: string } }>('/api/v2/comments', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const contentType = typeof request.body?.contentType === 'string' ? request.body.contentType.trim() : '';
     const contentId = typeof request.body?.contentId === 'string' ? request.body.contentId.trim() : '';
@@ -297,7 +361,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(201).send({ data: { comment } });
   });
 
-  app.delete<{ Params: { commentId: string } }>('/api/comments/:commentId', async (request, reply) => {
+  app.delete<{ Params: { commentId: string } }>('/api/v2/comments/:commentId', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await getComment(database, request.params.commentId);
     if (!current) return fail(reply, 404, 'COMMENT_NOT_FOUND', '评论不存在');
@@ -306,7 +370,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(204).send();
   });
 
-  app.get<{ Querystring: { type?: string; status?: string; tag?: string } }>('/api/admin/content', async (request, reply) => {
+  app.get<{ Querystring: { type?: string; status?: string; tag?: string } }>('/api/v2/admin/content', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     requireRole(user, 'operator');
     const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
@@ -317,7 +381,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { items: await listAdminContent(database, { type, status, tag: request.query.tag?.trim() || undefined }) } };
   });
 
-  app.patch<{ Params: { id: string }; Body: { status?: 'approved' | 'rejected' | 'archived' | 'pending'; reason?: string } }>('/api/admin/content/:id/status', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { status?: 'approved' | 'rejected' | 'archived' | 'pending'; reason?: string } }>('/api/v2/admin/content/:id/status', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     requireRole(user, 'operator');
     const status = request.body?.status;
@@ -330,7 +394,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { item: updated ?? item } };
   });
 
-  app.get<{ Querystring: { type?: string } }>('/api/admin/tags', async (request, reply) => {
+  app.get<{ Querystring: { type?: string } }>('/api/v2/admin/tags', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     requireRole(user, 'operator');
     const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
@@ -338,7 +402,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { tags: await listContentTags(database, type) } };
   });
 
-  app.post<{ Body: { type?: 'activity' | 'need' | 'life'; slug?: string; label?: string } }>('/api/admin/tags', async (request, reply) => {
+  app.post<{ Body: { type?: 'activity' | 'need' | 'life'; slug?: string; label?: string } }>('/api/v2/admin/tags', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     requireRole(user, 'operator');
     const { type, slug, label } = request.body ?? {};
@@ -347,44 +411,44 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(201).send({ data: { tag } });
   });
 
-  app.patch<{ Params: { id: string }; Body: { slug?: string; label?: string; enabled?: boolean } }>('/api/admin/tags/:id', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { slug?: string; label?: string; enabled?: boolean } }>('/api/v2/admin/tags/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     requireRole(user, 'operator');
     const tag = await updateContentTag(database, request.params.id, request.body ?? {});
     return { data: { tag } };
   });
 
-  app.put<{ Params: { id: string } }>('/api/activities/:id/favorite', async (request, reply) => {
+  app.put<{ Params: { id: string } }>('/api/v2/activities/:id/favorite', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     if (!(await setFavorite(database, user.id, request.params.id, true))) return fail(reply, 404, 'NOT_FOUND', '活动不存在');
     return { data: { saved: true } };
   });
 
-  app.delete<{ Params: { id: string } }>('/api/activities/:id/favorite', async (request, reply) => {
+  app.delete<{ Params: { id: string } }>('/api/v2/activities/:id/favorite', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     if (!(await setFavorite(database, user.id, request.params.id, false))) return fail(reply, 404, 'NOT_FOUND', '活动不存在');
     return { data: { saved: false } };
   });
 
-  app.post<{ Params: { id: string } }>('/api/activities/:id/join', async (request, reply) => {
+  app.post<{ Params: { id: string } }>('/api/v2/activities/:id/join', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const result = await joinActivity(database, user.id, request.params.id);
     if (result.kind === 'missing') return fail(reply, 404, 'NOT_FOUND', '活动不存在');
     if (result.kind === 'full') return fail(reply, 409, 'ACTIVITY_FULL', '活动名额已满');
-    if (!result.thread) return fail(reply, 500, 'PERSISTENCE_ERROR', '活动群聊创建失败');
-    return { data: { thread: result.thread } };
+    if (result.participationStatus === 'joined' && !result.thread) return fail(reply, 500, 'PERSISTENCE_ERROR', '活动群聊创建失败');
+    return { data: { thread: result.thread, participationStatus: result.participationStatus } };
   });
 
-  app.get('/api/threads', async (request, reply) => {
+  app.get('/api/v2/threads', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     return { data: { threads: await listThreads(database, user.id) } };
   });
 
-  app.get<{ Params: { id: string } }>('/api/threads/:id/messages', async (request, reply) => {
+  app.get<{ Params: { id: string } }>('/api/v2/threads/:id/messages', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const result = await listMessages(database, user.id, request.params.id);
@@ -393,14 +457,14 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { messages: result.messages } };
   });
 
-  app.get('/api/notifications', async (request, reply) => {
+  app.get('/api/v2/notifications', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const notifications = await listNotifications(database, user.id);
     return { data: { notifications, unreadCount: notifications.filter((item) => !item.read).length } };
   });
 
-  app.patch<{ Params: { id: string } }>('/api/notifications/:id/read', async (request, reply) => {
+  app.patch<{ Params: { id: string } }>('/api/v2/notifications/:id/read', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     const updated = await markNotificationRead(database, user.id, request.params.id);
@@ -416,10 +480,10 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     if (ids.length) notificationHub.publish(user.id, { type: 'archive', ids });
     return { data: { archivedCount: ids.length } };
   };
-  app.post('/api/notifications/read/archive', archiveHandler);
-  app.delete('/api/notifications/read', archiveHandler);
+  app.post('/api/v2/notifications/read/archive', archiveHandler);
+  app.delete('/api/v2/notifications/read', archiveHandler);
 
-  app.get('/api/notifications/stream', async (request, reply) => {
+  app.get('/api/v2/notifications/stream', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
     reply.hijack();

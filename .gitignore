@@ -1,4 +1,8 @@
 node_modules/
+.idea/
+.ccg/
+.tmp-*
+.DS_Store
 .env
 .env.*
 !.env.example

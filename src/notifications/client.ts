@@ -1,4 +1,4 @@
-import { AUTH_TOKEN_KEY, ApiError, request } from '../api/client';
+import { ApiError, request } from '../api/client';
 import type { AppNotification } from './types';
 
 type NotificationListResponse = { notifications: AppNotification[]; unreadCount: number };
@@ -25,9 +25,8 @@ export async function listenForNotifications({
   onNotification: (notification: AppNotification) => void;
   onArchive?: (ids: string[]) => void;
 }): Promise<void> {
-  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
-  const response = await fetch('/api/notifications/stream', {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const response = await fetch('/api/v2/notifications/stream', {
+    credentials: 'include',
     signal,
   });
   if (!response.ok || !response.body) throw new ApiError(response.status, 'NOTIFICATION_STREAM_FAILED', '通知实时连接失败');

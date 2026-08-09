@@ -75,7 +75,7 @@ export interface AdminContentItem {
 }
 export interface ApiThread extends MessageThread { }
 export interface QiahaoApi {
-  login(phone: string, password: string): Promise<{ token: string; user: ApiUser }>;
+  login(phone: string, password: string): Promise<{ user: ApiUser }>;
   logout(): Promise<void>;
   me(): Promise<{ user: ApiUser }>;
   activities(): Promise<{ activities: ApiActivity[] }>;
@@ -94,7 +94,7 @@ export interface QiahaoApi {
   createTag(input: { type: ContentType; slug: string; label: string }): Promise<{ tag: ApiContentTag }>;
   updateTag(id: string, input: { slug?: string; label?: string; enabled?: boolean }): Promise<{ tag: ApiContentTag }>;
   favorite(id: string, saved: boolean): Promise<{ saved: boolean }>;
-  join(id: string): Promise<{ thread: ApiThread }>;
+  join(id: string): Promise<{ thread: ApiThread | null; participationStatus: 'interested' | 'joined' }>;
   threads(): Promise<{ threads: ApiThread[] }>;
   listComments(input: { contentType: CommentContentType; contentId: string; limit?: number; cursor?: string | null }): Promise<CommentPage>;
   createComment(input: { contentType: CommentContentType; contentId: string; body: string }): Promise<{ comment: ApiComment }>;

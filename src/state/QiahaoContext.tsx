@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, AUTH_TOKEN_KEY } from '../api/client';
+import { api } from '../api/client';
 import type { ApiUser, QiahaoApi, ApiNeed, ApiLifePost } from '../api/types';
 import { categoryImages, currentUser, seedActivities, seedMessages } from '../domain/seed';
 import type { Activity, CreateActivityInput, MessageThread, PersistedState } from '../domain/types';
@@ -73,7 +73,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
   const [localNeeds, setLocalNeeds] = useState<Need[]>(seedNeeds);
   const [localLifePosts, setLocalLifePosts] = useState<LifePost[]>(seededLifePosts);
   const [user, setUser] = useState<ApiUser | null>(localMode ? { ...currentUser, phone: '13800000000', role: 'operator' } : null);
-  const [status, setStatus] = useState<QiahaoStatus>(localMode ? 'authenticated' : (window.localStorage.getItem(AUTH_TOKEN_KEY) ? 'loading' : 'anonymous'));
+  const [status, setStatus] = useState<QiahaoStatus>(localMode ? 'authenticated' : 'loading');
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -86,7 +86,6 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       setStatus('authenticated');
     }).catch((reason) => {
       if (!alive) return;
-      window.localStorage.removeItem(AUTH_TOKEN_KEY);
       setError(reason instanceof Error ? reason.message : '登录状态已失效');
       setStatus('anonymous');
     });
@@ -151,7 +150,6 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     },
     async logout() {
       try { await apiClient.logout(); } finally {
-        window.localStorage.removeItem(AUTH_TOKEN_KEY);
         setUser(null);
         setStatus('anonymous');
         setServerActivities([]);
@@ -162,7 +160,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     },
     retry() {
       setError(null);
-      setStatus(window.localStorage.getItem(AUTH_TOKEN_KEY) ? 'authenticated' : 'anonymous');
+      setStatus(localMode ? 'authenticated' : 'loading');
       setRefreshKey((key) => key + 1);
     },
     toggleSaved(activityId) {
@@ -173,12 +171,18 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     joinActivity(activityId) {
       const activity = activities.find((item) => item.id === activityId);
       if (!activity) return;
-      setState((current) => current.joinedIds.includes(activityId) ? current : { ...current, joinedIds: [...current.joinedIds, activityId], messages: [{ id: `thread-${activityId}`, activityId, title: `${activity.title}群聊`, lastMessage: `${activity.host.name}：欢迎加入，出发前会在这里同步集合信息。`, time: '刚刚', unread: 1, image: activity.image }, ...current.messages] });
+      setState((current) => current.joinedIds.includes(activityId) ? current : {
+        ...current,
+        joinedIds: [...current.joinedIds, activityId],
+        messages: activity.lifecycle === 'formal'
+          ? [{ id: `thread-${activityId}`, activityId, title: `${activity.title}群聊`, lastMessage: `${activity.host.name}：欢迎加入，出发前会在这里同步集合信息。`, time: '刚刚', unread: 1, image: activity.image }, ...current.messages]
+          : current.messages,
+      });
       if (!localMode && status === 'authenticated') void apiClient.join(activityId).catch((reason) => setError(reason instanceof Error ? reason.message : '报名失败'));
     },
     async createActivity(input) {
       if (localMode) {
-        const activity: Activity = { ...input, id: `created-${Date.now()}`, image: categoryImages[input.category], distance: '由你发起', host: user ?? currentUser, participants: [], note: '请在活动开始前与参与者确认集合信息。' };
+        const activity: Activity = { ...input, id: `created-${Date.now()}`, image: categoryImages[input.category], distance: '由你发起', host: user ?? currentUser, participants: [], note: '请在活动开始前与参与者确认集合信息。', lifecycle: 'pre', participationStatus: null };
         setState((current) => ({ ...current, customActivities: [activity, ...current.customActivities] }));
         return activity;
       }

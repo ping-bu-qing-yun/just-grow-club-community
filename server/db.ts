@@ -19,6 +19,7 @@ export const REQUIRED_MIGRATIONS = [
   '005_content_tags.sql',
   '006_comments.sql',
   '007_canonical_roles.sql',
+  '008_activity_lifecycle.sql',
 ] as const;
 
 export function toMysqlDateTime(value: Date | string = new Date()): string {

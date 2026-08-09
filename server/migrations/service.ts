@@ -81,6 +81,8 @@ async function verifyColumns(database: QiahaoDatabase): Promise<void> {
   const requiredColumns = new Map([
     ['users', ['role']],
     ['content_items', ['author_id', 'content_type', 'status', 'reviewed_by', 'reviewed_at', 'rejection_reason', 'published_at']],
+    ['activities', ['lifecycle']],
+    ['activity_members', ['status']],
     ['needs', ['body', 'author_id']],
     ['life_posts', ['body', 'image', 'author_id']],
     ['content_tags', ['content_type', 'slug', 'label', 'enabled']],
@@ -141,6 +143,8 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
     orphan_activities: number | string;
     invalid_tag_types: number | string;
     invalid_roles: number | string;
+    invalid_activity_lifecycle: number | string;
+    invalid_participation_status: number | string;
   }>>(
     `SELECT
        (SELECT COUNT(*)
@@ -152,13 +156,17 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
           JOIN content_items ci ON ci.id=it.content_id
           JOIN content_tags t ON t.id=it.tag_id
          WHERE it.content_type<>ci.content_type OR it.content_type<>t.content_type) AS invalid_tag_types,
-       (SELECT COUNT(*) FROM users WHERE role IS NULL OR role NOT IN ('member','host','operator')) AS invalid_roles`,
+       (SELECT COUNT(*) FROM users WHERE role IS NULL OR role NOT IN ('member','host','operator')) AS invalid_roles,
+       (SELECT COUNT(*) FROM activities WHERE lifecycle IS NULL OR lifecycle NOT IN ('pre','formal','archived')) AS invalid_activity_lifecycle,
+       (SELECT COUNT(*) FROM activity_members WHERE status IS NULL OR status NOT IN ('interested','joined')) AS invalid_participation_status`,
   );
   const row = rows[0];
   if (!row) throw new Error('迁移校验未返回数据一致性结果');
   if (Number(row.orphan_activities) > 0) throw new Error(`迁移后存在 ${row.orphan_activities} 条活动缺少统一内容父记录`);
   if (Number(row.invalid_tag_types) > 0) throw new Error(`迁移后存在 ${row.invalid_tag_types} 条内容标签类型不一致`);
   if (Number(row.invalid_roles) > 0) throw new Error(`迁移后存在 ${row.invalid_roles} 个非法用户角色`);
+  if (Number(row.invalid_activity_lifecycle) > 0) throw new Error(`迁移后存在 ${row.invalid_activity_lifecycle} 条非法活动生命周期`);
+  if (Number(row.invalid_participation_status) > 0) throw new Error(`迁移后存在 ${row.invalid_participation_status} 条非法参与状态`);
   const demoRows = await database.query<Array<RowDataPacket & { role: string }>>('SELECT role FROM users WHERE id=? LIMIT 1', ['me']);
   if (demoRows[0] && demoRows[0].role !== 'operator') throw new Error('演示账号 me 必须映射为 operator');
 }
