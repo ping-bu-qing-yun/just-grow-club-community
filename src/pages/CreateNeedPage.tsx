@@ -4,6 +4,8 @@ import { useQiahao } from '../state/QiahaoContext';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api/client';
 import { queryKeys } from '../data/queryClient';
+import { Button } from '../components/ui/Button';
+import styles from './CreateNeedPage.module.css';
 
 const previewTags = [
   ['natural-chat', '自然聊天'], ['small-group', '少人数'], ['weekend', '周末'], ['nearby', '附近'], ['deep-talk', 'deep talk'],
@@ -37,18 +39,32 @@ export function CreateNeedPage({ onBack, onPublished }: { onBack: () => void; on
   }
 
   return (
-    <main className="create-need page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}><ArrowLeft /></button>
         <div><small>发布需求</small><h1>写下你想遇见什么</h1></div>
       </header>
-      <p className="create-need-lead">不用写得很正式，像给朋友发一句消息就好。</p>
-      <div className="guide-chips">{guides.map((guide) => <button type="button" onClick={() => setText(guide)} key={guide}>{guide}</button>)}</div>
-      <textarea aria-label="需求内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：最近想找能慢慢聊天的人……" />
-      {error && <p className="field-error" role="alert">{error}</p>}
-      <div className="need-tools"><button type="button" onClick={() => setText(text || '我想先轻松认识，不急着定义关系。')}><Mic size={18} />语音说一段</button><button type="button"><ImagePlus size={18} />加图片</button></div>
-      <div className="tag-picks">{tagOptions.map((tag) => <button type="button" className={tags.includes(tag.slug) ? 'is-active' : ''} onClick={() => setTags((current) => current.includes(tag.slug) ? current.filter((item) => item !== tag.slug) : [...current, tag.slug])} key={tag.id}>#{tag.label}</button>)}</div>
-      <button type="button" className="primary-button primary-button--wide" onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</button>
+      <p className={styles.lead}>不用写得很正式，像给朋友发一句消息就好。</p>
+      <div className={styles.guideChips}>{guides.map((guide) => <button type="button" onClick={() => setText(guide)} key={guide}>{guide}</button>)}</div>
+      <textarea className={styles.textarea} aria-label="需求内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：最近想找能慢慢聊天的人……" />
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      <div className={styles.tools}>
+        <button type="button" onClick={() => setText(text || '我想先轻松认识，不急着定义关系。')}><Mic size={18} />语音说一段</button>
+        <button type="button"><ImagePlus size={18} />加图片</button>
+      </div>
+      <div className={styles.tagPicks}>
+        {tagOptions.map((tag) => (
+          <button
+            type="button"
+            className={tags.includes(tag.slug) ? styles.active : ''}
+            onClick={() => setTags((current) => current.includes(tag.slug) ? current.filter((item) => item !== tag.slug) : [...current, tag.slug])}
+            key={tag.id}
+          >
+            #{tag.label}
+          </button>
+        ))}
+      </div>
+      <Button wide onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</Button>
     </main>
   );
 }

@@ -1,5 +1,8 @@
 import { ChevronLeft } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useState } from 'react';
+import { quick } from '../motion/springs';
+import styles from './LoginPage.module.css';
 
 const DEMO_PHONE = '13800000000';
 const DEMO_PASSWORD = 'qiahao123';
@@ -7,6 +10,7 @@ const DEMO_PASSWORD = 'qiahao123';
 export function LoginPage({ login }: { login: (phone: string, password: string) => Promise<void> }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const reducedMotion = useReducedMotion();
 
   async function start() {
     if (pending) return;
@@ -22,8 +26,8 @@ export function LoginPage({ login }: { login: (phone: string, password: string) 
   }
 
   return (
-    <main className="login-page welcome-login-page">
-      <header className="welcome-login-nav">
+    <main className={styles.page}>
+      <header className={styles.nav}>
         <button type="button" aria-label="返回" disabled>
           <ChevronLeft size={20} />
         </button>
@@ -34,21 +38,24 @@ export function LoginPage({ login }: { login: (phone: string, password: string) 
         <span aria-hidden="true" />
       </header>
 
-      <section className="welcome-screen" aria-label="恰好欢迎页">
-        <div className="welcome-logo" aria-label="Just Grow Club">
-          <span>Just</span>
-          <small>Grow Club</small>
-        </div>
-        <div className="welcome-face" aria-hidden="true">
+      <section className={styles.screen} aria-label="恰好欢迎页">
+        <div className={styles.face} aria-hidden="true">
           <span />
           <i />
           <span />
         </div>
         <h1>让恰好的关系<br />从见面开始</h1>
-        <button type="button" className="welcome-start" onClick={() => void start()} disabled={pending}>
+        <motion.button
+          type="button"
+          className={styles.start}
+          onClick={() => void start()}
+          disabled={pending}
+          whileTap={reducedMotion ? { opacity: 0.7 } : { scale: 0.97 }}
+          transition={quick}
+        >
           {pending ? '正在打开…' : '开始认识彼此'}
-        </button>
-        {error ? <p className="welcome-error" role="alert">{error}</p> : null}
+        </motion.button>
+        {error ? <p className={styles.error} role="alert">{error}</p> : null}
       </section>
     </main>
   );

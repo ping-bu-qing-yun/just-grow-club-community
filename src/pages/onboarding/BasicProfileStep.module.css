@@ -1,0 +1,31 @@
+/* BasicProfileStep — basic profile form step. */
+
+.avatarEdit {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 28px 0;
+}
+
+.changePhoto {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap);
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-callout-size);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fields {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 22px;
+}
+
+.submit {
+  margin-top: 8px;
+}

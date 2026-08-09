@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { ArrowLeft, Camera } from 'lucide-react';
 import { useClub } from '../club/ClubContext';
+import { Avatar } from '../components/ui/Avatar';
+import { Button } from '../components/ui/Button';
+import { Input, Select, Textarea } from '../components/ui/Input';
 import { useQiahao } from '../state/QiahaoContext';
+import styles from './ProfileEditorPage.module.css';
 
 export function ProfileEditorPage({ onBack }: { onBack: () => void }) {
   const { state, saveBasicProfile } = useClub();
@@ -63,31 +67,55 @@ export function ProfileEditorPage({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <main className="profile-editor page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+    <main className={`${styles.editor} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}><ArrowLeft /></button>
         <div><small>我的资料</small><h1>让别人慢慢了解你</h1></div>
       </header>
-      <div className="editor-score"><b>资料完成度</b><i><em /></i><span>80</span></div>
-      <section className="editor-cover"><img src="/assets/avatar-me.jpg" alt="" /><button type="button"><Camera size={17} />更换头像</button><h2>{profile.nickname}</h2><p>先立体认识自己，再让别人慢慢了解你。</p></section>
-      <section className="editor-fields">
+      <div className={styles.score}><b>资料完成度</b><i><em /></i><span>80</span></div>
+      <section className={styles.cover}>
+        <Avatar src="/assets/avatar-me.jpg" name={profile.nickname} size={82} />
+        <button type="button" className={styles.changeAvatar}><Camera size={17} />更换头像</button>
+        <h2>{profile.nickname}</h2>
+        <p>先立体认识自己，再让别人慢慢了解你。</p>
+      </section>
+      <section className={styles.fields}>
         <h2>基础资料</h2>
         {([['nickname', '昵称'], ['birthDate', '生日'], ['height', '身高'], ['city', '居住地'], ['hometown', '家乡']] as const).map(([key, label]) => (
-          <label key={key}>{label}<input value={String(profile[key])} onChange={(event) => set(key, event.target.value)} /></label>
+          <Input key={key} label={label} value={String(profile[key])} onChange={(event) => set(key, event.target.value)} />
         ))}
         {([['gender', '性别'], ['education', '学历'], ['relationship', '情感状态']] as const).map(([key, label]) => (
-          <label key={key}>{label}<select value={profile[key]} onChange={(event) => set(key, event.target.value)}><option value="">请选择</option>{scalarOptions(key, profile[key]).map((option) => <option key={option.key} value={option.value}>{option.label}{option.enabled ? '' : '（已停用）'}</option>)}</select></label>
+          <Select key={key} label={label} value={profile[key]} onChange={(event) => set(key, event.target.value)}>
+            <option value="">请选择</option>
+            {scalarOptions(key, profile[key]).map((option) => (
+              <option key={option.key} value={option.value}>{option.label}{option.enabled ? '' : '（已停用）'}</option>
+            ))}
+          </Select>
         ))}
-        <label>职业<input value={profile.occupation} onChange={(event) => set('occupation', event.target.value)} /></label>
+        <Input label="职业" value={profile.occupation} onChange={(event) => set('occupation', event.target.value)} />
       </section>
-      <section className="editor-copy">
+      <section className={styles.copySection}>
         <h2>关于我</h2>
-        <textarea value={profile.bio} onChange={(event) => set('bio', event.target.value)} />
-        <h2>我的标签</h2><div className="club-tags">{listOptions('profile_tag', profile.tags).map((option) => <button type="button" className={profile.tags.includes(option.value) ? 'is-active' : ''} key={option.key} onClick={() => toggleList('tags', option.value)}>{option.label}{option.enabled ? '' : '（已停用）'}</button>)}</div>
-        <h2>我的见面偏好</h2><div className="club-tags">{listOptions('preference', profile.preferences).map((option) => <button type="button" className={profile.preferences.includes(option.value) ? 'is-active' : ''} key={option.key} onClick={() => toggleList('preferences', option.value)}>{option.label}{option.enabled ? '' : '（已停用）'}</button>)}</div>
+        <Textarea value={profile.bio} onChange={(event) => set('bio', event.target.value)} />
+        <h2>我的标签</h2>
+        <div className={styles.tagPicks}>
+          {listOptions('profile_tag', profile.tags).map((option) => (
+            <button type="button" className={profile.tags.includes(option.value) ? styles.active : ''} key={option.key} onClick={() => toggleList('tags', option.value)}>
+              {option.label}{option.enabled ? '' : '（已停用）'}
+            </button>
+          ))}
+        </div>
+        <h2>我的见面偏好</h2>
+        <div className={styles.tagPicks}>
+          {listOptions('preference', profile.preferences).map((option) => (
+            <button type="button" className={profile.preferences.includes(option.value) ? styles.active : ''} key={option.key} onClick={() => toggleList('preferences', option.value)}>
+              {option.label}{option.enabled ? '' : '（已停用）'}
+            </button>
+          ))}
+        </div>
       </section>
-      {error ? <p className="field-error" role="alert">{error}</p> : null}
-      <button type="button" className="primary-button primary-button--wide" disabled={pending} onClick={() => void save()}>{pending ? '保存中…' : '保存资料'}</button>
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      <Button wide disabled={pending} onClick={() => void save()} className={styles.submit}>{pending ? '保存中…' : '保存资料'}</Button>
     </main>
   );
 }

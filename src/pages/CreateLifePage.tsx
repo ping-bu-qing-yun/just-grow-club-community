@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ArrowLeft, ImagePlus } from 'lucide-react';
 import { useQiahao } from '../state/QiahaoContext';
+import { Button } from '../components/ui/Button';
+import styles from './CreateNeedPage.module.css';
 
 const lifeTemplates = [
   '周末想找人一起去梧桐区散步，先轻松认识，不急着定义关系。',
@@ -44,20 +46,20 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
   }
 
   return (
-    <main className="create-need page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}><ArrowLeft /></button>
         <div><small>发布生活</small><h1>分享此刻的日常</h1></div>
       </header>
-      <p className="create-need-lead">不用很正式，像给朋友发一条近况就好。</p>
-      <div className="guide-chips">{lifeTemplates.map((template) => <button type="button" onClick={() => { setText(template); setError(''); }} key={template}>{template}</button>)}</div>
-      <textarea aria-label="生活内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：周末想找人一起去梧桐区散步……" />
-      {error && <p className="field-error" role="alert">{error}</p>}
-      <div className="publish-photo-grid" aria-label="选择生活照片">
+      <p className={styles.lead}>不用很正式，像给朋友发一条近况就好。</p>
+      <div className={styles.guideChips}>{lifeTemplates.map((template) => <button type="button" onClick={() => { setText(template); setError(''); }} key={template}>{template}</button>)}</div>
+      <textarea className={styles.textarea} aria-label="生活内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：周末想找人一起去梧桐区散步……" />
+      {error && <p className={styles.error} role="alert">{error}</p>}
+      <div className={styles.photoGrid} aria-label="选择生活照片">
         {photoOptions.map((image) => (
           <button
             type="button"
-            className={selectedImage === image ? 'is-active' : ''}
+            className={selectedImage === image ? styles.active : ''}
             onClick={() => setSelectedImage(image)}
             key={image}
           >
@@ -65,15 +67,15 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
           </button>
         ))}
       </div>
-      <div className="need-tools">
+      <div className={styles.tools}>
         <button type="button" onClick={() => setSelectedImage(photoOptions[(photoOptions.indexOf(selectedImage) + 1) % photoOptions.length])}><ImagePlus size={18} />换一张图</button>
       </div>
-      <small className="publish-helper">照片和标签会直接出现在生活动态卡片里。</small>
-      <div className="tag-picks">
+      <small className={styles.helper}>照片和标签会直接出现在生活动态卡片里。</small>
+      <div className={styles.tagPicks}>
         {tagOptions.map((tag) => (
           <button
             type="button"
-            className={tags.includes(tag.ref) ? 'is-active' : ''}
+            className={tags.includes(tag.ref) ? styles.active : ''}
             onClick={() => setTags((current) => current.includes(tag.ref) ? current.filter((item) => item !== tag.ref) : [...current, tag.ref])}
             key={tag.ref}
           >
@@ -81,7 +83,7 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
           </button>
         ))}
       </div>
-      <button type="button" className="primary-button primary-button--wide" onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</button>
+      <Button wide onClick={() => void submit()} disabled={pending}>{pending ? '发布中…' : '确认发布'}</Button>
     </main>
   );
 }

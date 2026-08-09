@@ -1,7 +1,11 @@
 import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Utensils } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Activity, ActivityCategory, CreateActivityInput } from '../domain/types';
+import { Button } from '../components/ui/Button';
+import { Input, Textarea } from '../components/ui/Input';
 import { useQiahao } from '../state/QiahaoContext';
+import shared from './CreateForm.module.css';
+import styles from './CreateActivityPage.module.css';
 
 type Draft = {
   title: string;
@@ -108,26 +112,26 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
   }
 
   return (
-    <main className="page standard-page create-page">
-      <header className="subpage-header create-page__header">
-        <button type="button" aria-label="返回" onClick={onBack}>
+    <main className={`page ${styles.page}`}>
+      <header className={shared.header}>
+        <button type="button" className={shared.backButton} aria-label="返回" onClick={onBack}>
           <ArrowLeft />
         </button>
         <div>
-          <span className="eyebrow">CREATE</span>
+          <span className={shared.eyebrow}>CREATE</span>
           <h1>发起一次恰好的见面</h1>
           <p>信息越清楚，越容易遇到同频的人。</p>
         </div>
       </header>
-      <form className="create-form" onSubmit={submit} noValidate>
-        <fieldset className="form-section">
+      <form className={shared.form} onSubmit={submit} noValidate>
+        <fieldset className={shared.section}>
           <legend>想找什么搭子？</legend>
-          <div className="category-grid">
+          <div className={styles.categoryGrid}>
             {categoryOptions.map(({ label, Icon }) => (
               <button
                 key={label}
                 type="button"
-                className={draft.category === label ? 'is-active' : ''}
+                className={draft.category === label ? styles.active : ''}
                 onClick={() => update('category', label)}
               >
                 <Icon size={20} />
@@ -135,82 +139,64 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
               </button>
             ))}
           </div>
-          {errors.category && <p className="field-error">{errors.category}</p>}
+          {errors.category && <p className={shared.error}>{errors.category}</p>}
         </fieldset>
 
-        <label className="form-field">
-          <span>活动标题</span>
-          <input
-            aria-label="活动标题"
-            value={draft.title}
-            onChange={(event) => update('title', event.target.value)}
-            placeholder="例如：周日城市散步"
-            aria-describedby={errors.title ? 'title-error' : undefined}
-          />
-          {errors.title && (
-            <small className="field-error" id="title-error">
-              {errors.title}
-            </small>
-          )}
-        </label>
+        <Input
+          label="活动标题"
+          aria-label="活动标题"
+          value={draft.title}
+          onChange={(event) => update('title', event.target.value)}
+          placeholder="例如：周日城市散步"
+          error={errors.title}
+        />
 
-        <label className="form-field">
-          <span>活动介绍</span>
-          <textarea
-            aria-label="活动介绍"
-            value={draft.description}
-            onChange={(event) => update('description', event.target.value)}
-            placeholder="路线、节奏、适合什么样的人……"
-            rows={4}
-          />
-          <small className={errors.description ? 'field-error' : 'field-help'}>
-            {errors.description ?? `${draft.description.length}/160`}
-          </small>
-        </label>
+        <Textarea
+          label="活动介绍"
+          aria-label="活动介绍"
+          value={draft.description}
+          onChange={(event) => update('description', event.target.value)}
+          placeholder="路线、节奏、适合什么样的人……"
+          rows={4}
+          error={errors.description}
+          hint={errors.description ? undefined : `${draft.description.length}/160`}
+        />
 
-        <div className="form-row">
-          <label className="form-field">
-            <span>日期</span>
-            <input
-              type="date"
-              aria-label="日期"
-              value={draft.date}
-              min={minDate}
-              onChange={(event) => update('date', event.target.value)}
-            />
-            {draft.date && !errors.date && (
-              <small className="field-help field-help--left">{formatActivityDateLabel(draft.date)}</small>
-            )}
-            {errors.date && <small className="field-error">{errors.date}</small>}
-          </label>
-          <label className="form-field">
-            <span>时间</span>
-            <input
-              type="time"
-              aria-label="时间"
-              value={draft.time}
-              step={300}
-              onChange={(event) => update('time', event.target.value)}
-            />
-            {errors.time && <small className="field-error">{errors.time}</small>}
-          </label>
+        <div className={styles.row}>
+          <Input
+            label="日期"
+            type="date"
+            aria-label="日期"
+            value={draft.date}
+            min={minDate}
+            onChange={(event) => update('date', event.target.value)}
+            error={errors.date}
+            hint={draft.date && !errors.date ? formatActivityDateLabel(draft.date) : undefined}
+          />
+          <Input
+            label="时间"
+            type="time"
+            aria-label="时间"
+            value={draft.time}
+            step={300}
+            onChange={(event) => update('time', event.target.value)}
+            error={errors.time}
+          />
         </div>
 
-        <label className="form-field">
-          <span>集合地点</span>
-          <input
-            aria-label="集合地点"
-            value={draft.location}
-            onChange={(event) => update('location', event.target.value)}
-            placeholder="输入具体、好找的公共场所"
-          />
-          {errors.location && <small className="field-error">{errors.location}</small>}
-        </label>
+        <Input
+          label="集合地点"
+          aria-label="集合地点"
+          value={draft.location}
+          onChange={(event) => update('location', event.target.value)}
+          placeholder="输入具体、好找的公共场所"
+          error={errors.location}
+        />
 
-        <div className="form-row form-row--controls">
-          <div className="form-control-block">
-            <span>总人数</span>
-            <div className="stepper">
+        <div className={`${styles.row} ${styles.rowControls}`}>
+          <div className={styles.controlBlock}>
+            <span className={shared.fieldLabel}>总人数</span>
+            <div className={styles.stepper}>
               <button type="button" aria-label="减少人数" onClick={() => update('capacity', Math.max(2, draft.capacity - 1))}>
                 <Minus size={17} />
               </button>
@@ -220,9 +206,9 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
               </button>
             </div>
           </div>
-          <label className="form-field form-field--price">
-            <span>费用 / 人</span>
-            <div className="price-input">
+          <div className={styles.controlBlock}>
+            <span className={shared.fieldLabel}>费用 / 人</span>
+            <div className={styles.priceInput}>
               <b>¥</b>
               <input
                 type="number"
@@ -233,14 +219,14 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
                 aria-label="费用"
               />
             </div>
-          </label>
+          </div>
         </div>
 
-        <div className="publish-note">发布即代表你愿意遵守恰好社区公约，并对活动信息的真实性负责。</div>
-        {submitError && <p className="field-error" role="alert">{submitError}</p>}
-        <button type="submit" className="primary-button primary-button--wide publish-button">
+        <div className={shared.note}>发布即代表你愿意遵守恰好社区公约，并对活动信息的真实性负责。</div>
+        {submitError && <p className={shared.error} role="alert">{submitError}</p>}
+        <Button type="submit" wide>
           确认发布
-        </button>
+        </Button>
       </form>
     </main>
   );

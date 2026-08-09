@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useClub } from '../../club/ClubContext';
+import { Button } from '../../components/ui/Button';
 import { useQiahao } from '../../state/QiahaoContext';
+import shared from './Onboarding.module.css';
+import styles from './LightQuestionsStep.module.css';
 
 const previewQuestions = [
   ['你最近最想解决什么？', ['想认识靠谱的人', '想自然一点脱单', '想找能深聊的人', '想扩大线下社交圈', '想理解关系模式', '暂时不确定']],
@@ -15,6 +18,7 @@ export function LightQuestionsStep({ onNext }: { onNext: () => void }) {
   const [error, setError] = useState('');
   const questions = businessConfig?.onboarding.filter((question) => question.sectionKey === 'light') ?? (localMode ? previewQuestions : []);
   const valid = questions.length > 0 && questions.every((question, index) => !question.required || (state.lightAnswers[index] ?? []).length > 0);
+
   async function continueFlow() {
     setPending(true);
     setError('');
@@ -27,5 +31,39 @@ export function LightQuestionsStep({ onNext }: { onNext: () => void }) {
       setPending(false);
     }
   }
-  return <section className="onboarding-body"><div className="onboarding-intro"><span>三问入门 · 约30秒</span><h1>你的回答就是最好的自我介绍</h1><p>先用三个轻问题，让我们知道你最近真正想要什么。</p></div>{questions.map((question,index)=><div className="question-section" key={question.key}><div className="question-title"><b>{index+1}</b><h2>{question.prompt}</h2></div><div className="answer-grid">{question.options.map(option=><button type="button" className={(state.lightAnswers[index] ?? []).includes(option.value)?'is-active':''} onClick={()=>toggleLightAnswer(index,option.value)} key={option.key}>{option.label}</button>)}</div></div>)}{!questions.length ? <p className="form-error" role="alert">问卷配置暂时不可用，请稍后重试。</p> : null}{error ? <p className="form-error" role="alert">{error}</p> : null}<button type="button" className="primary-button primary-button--wide" disabled={!valid || pending} onClick={() => void continueFlow()}>{pending ? '保存中…' : '继续到 QA 问答'}</button></section>;
+
+  return (
+    <section className={shared.body}>
+      <div className={shared.intro}>
+        <span>三问入门 · 约30秒</span>
+        <h1>你的回答就是最好的自我介绍</h1>
+        <p>先用三个轻问题，让我们知道你最近真正想要什么。</p>
+      </div>
+      {questions.map((question, index) => (
+        <div className={styles.question} key={question.key}>
+          <div className={styles.questionTitle}>
+            <b>{index + 1}</b>
+            <h2>{question.prompt}</h2>
+          </div>
+          <div className={styles.answerGrid}>
+            {question.options.map((option) => (
+              <button
+                type="button"
+                className={(state.lightAnswers[index] ?? []).includes(option.value) ? styles.active : ''}
+                onClick={() => toggleLightAnswer(index, option.value)}
+                key={option.key}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {!questions.length ? <p className={shared.formError} role="alert">问卷配置暂时不可用，请稍后重试。</p> : null}
+      {error ? <p className={shared.formError} role="alert">{error}</p> : null}
+      <Button wide disabled={!valid || pending} onClick={() => void continueFlow()} className={styles.continue}>
+        {pending ? '保存中…' : '继续到 QA 问答'}
+      </Button>
+    </section>
+  );
 }

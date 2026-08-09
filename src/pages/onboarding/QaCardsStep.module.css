@@ -1,0 +1,55 @@
+/* QaCardsStep — the QA cards step. */
+
+.focus {
+  padding: 26px 0;
+}
+
+.focus small {
+  color: var(--brand);
+  font-weight: 750;
+  font-size: var(--text-caption-size);
+}
+
+.focus h2 {
+  min-height: 65px;
+  margin: 12px 0 20px;
+  font-size: var(--text-title-size);
+  line-height: 1.4;
+  letter-spacing: var(--text-title-tracking);
+}
+
+.focus textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  outline: 0;
+  background: var(--surface-secondary);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--text-body-size);
+  line-height: 1.75;
+  resize: none;
+}
+
+.voice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  min-height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-callout-size);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
