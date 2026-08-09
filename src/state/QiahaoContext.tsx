@@ -1,5 +1,5 @@
 import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { api, AUTH_TOKEN_KEY } from '../api/client';
+import { api, ApiError, AUTH_TOKEN_KEY } from '../api/client';
 import type { ApiUser, QiahaoApi, ApiNeed, ApiLifePost } from '../api/types';
 import { categoryImages, currentUser, seedActivities, seedMessages } from '../domain/seed';
 import type { Activity, CreateActivityInput, MessageThread, PersistedState } from '../domain/types';
@@ -12,6 +12,10 @@ export type { QiahaoContextValue, QiahaoStatus };
 export { QiahaoContext };
 
 const CONTENT_CACHE_KEY = 'qiahao-content-cache-v1';
+const lifeTagLabels: Record<string, string> = {
+  weekend: '周末的一百种过法',
+  relationship: '关系里的松弛感',
+};
 
 function toNeed(item: ApiNeed): Need {
   const firstLine = item.body.split(/\r?\n/, 1)[0].trim();
@@ -66,6 +70,8 @@ function writeContentCache(needs: Need[], lifePosts: LifePost[]): void {
 
 export function QiahaoProvider({ children, apiClient = api }: { children: ReactNode; apiClient?: QiahaoApi }) {
   const localMode = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom') && apiClient === api;
+  const [demoMode, setDemoMode] = useState(localMode);
+  const effectiveLocalMode = localMode || demoMode;
   const [state, setState] = useState<PersistedState>(() => localMode ? readPersistedState() : { customActivities: [], savedIds: [], joinedIds: [], messages: [] });
   const [serverActivities, setServerActivities] = useState<Activity[]>([]);
   const [serverNeeds, setServerNeeds] = useState<Need[]>([]);
@@ -77,8 +83,15 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  function enterDemoMode(message = '已进入本地演示模式') {
+    setDemoMode(true);
+    setUser({ ...currentUser, phone: '13800000000', role: 'operator' });
+    setStatus('authenticated');
+    setError(message);
+  }
+
   useEffect(() => {
-    if (localMode || status !== 'loading') return;
+    if (effectiveLocalMode || status !== 'loading') return;
     let alive = true;
     apiClient.me().then(({ user: nextUser }) => {
       if (!alive) return;
@@ -86,15 +99,19 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       setStatus('authenticated');
     }).catch((reason) => {
       if (!alive) return;
+      if (!(reason instanceof ApiError)) {
+        enterDemoMode('API 未启动，已切换到本地演示模式');
+        return;
+      }
       window.localStorage.removeItem(AUTH_TOKEN_KEY);
       setError(reason instanceof Error ? reason.message : '登录状态已失效');
       setStatus('anonymous');
     });
     return () => { alive = false; };
-  }, [apiClient, localMode, status]);
+  }, [apiClient, effectiveLocalMode, status]);
 
   useEffect(() => {
-    if (localMode || status !== 'authenticated') return;
+    if (effectiveLocalMode || status !== 'authenticated') return;
     let alive = true;
     Promise.all([apiClient.activities(), apiClient.threads()]).then(([activities, threads]) => {
       if (!alive) return;
@@ -103,6 +120,10 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       setError(null);
     }).catch((reason) => {
       if (!alive) return;
+      if (!(reason instanceof ApiError)) {
+        enterDemoMode('API 暂不可用，已切换到本地演示模式');
+        return;
+      }
       setError(reason instanceof Error ? reason.message : '活动加载失败');
       setStatus('error');
     });
@@ -123,13 +144,13 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       }
     });
     return () => { alive = false; };
-  }, [apiClient, localMode, refreshKey, status]);
+  }, [apiClient, effectiveLocalMode, refreshKey, status]);
 
-  useEffect(() => { if (localMode) writePersistedState(state); }, [localMode, state]);
+  useEffect(() => { if (effectiveLocalMode) writePersistedState(state); }, [effectiveLocalMode, state]);
 
-  const activities = useMemo(() => localMode ? [...state.customActivities, ...seedActivities] : serverActivities, [localMode, serverActivities, state.customActivities]);
-  const needs = localMode ? localNeeds : serverNeeds;
-  const lifeFeed = localMode ? localLifePosts : serverLifePosts;
+  const activities = useMemo(() => effectiveLocalMode ? [...state.customActivities, ...seedActivities] : serverActivities, [effectiveLocalMode, serverActivities, state.customActivities]);
+  const needs = effectiveLocalMode ? localNeeds : serverNeeds;
+  const lifeFeed = effectiveLocalMode ? localLifePosts : serverLifePosts;
 
   const value = useMemo<QiahaoContextValue>(() => ({
     activities,
@@ -137,22 +158,29 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     lifePosts: lifeFeed,
     savedIds: new Set(state.savedIds),
     joinedIds: new Set(state.joinedIds),
-    messages: localMode ? [...state.messages, ...seedMessages] : state.messages,
+    messages: effectiveLocalMode ? [...state.messages, ...seedMessages] : state.messages,
     user,
     status,
     error,
     loading: status === 'loading',
-    localMode,
+    localMode: effectiveLocalMode,
     async login(phone, password) {
-      const result = await apiClient.login(phone, password);
-      setUser(result.user);
-      setStatus('authenticated');
-      setRefreshKey((key) => key + 1);
+      try {
+        const result = await apiClient.login(phone, password);
+        setDemoMode(false);
+        setUser(result.user);
+        setStatus('authenticated');
+        setRefreshKey((key) => key + 1);
+      } catch (reason) {
+        if (reason instanceof ApiError) throw reason;
+        enterDemoMode('API 未启动，已进入本地演示模式');
+      }
     },
     async logout() {
-      try { await apiClient.logout(); } finally {
+      try { if (!effectiveLocalMode) await apiClient.logout(); } finally {
         window.localStorage.removeItem(AUTH_TOKEN_KEY);
         setUser(null);
+        setDemoMode(false);
         setStatus('anonymous');
         setServerActivities([]);
         setServerNeeds([]);
@@ -168,16 +196,16 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     toggleSaved(activityId) {
       const saved = state.savedIds.includes(activityId);
       setState((current) => ({ ...current, savedIds: saved ? current.savedIds.filter((id) => id !== activityId) : [...current.savedIds, activityId] }));
-      if (!localMode && status === 'authenticated') void apiClient.favorite(activityId, !saved).catch((reason) => setError(reason instanceof Error ? reason.message : '收藏失败'));
+      if (!effectiveLocalMode && status === 'authenticated') void apiClient.favorite(activityId, !saved).catch((reason) => setError(reason instanceof Error ? reason.message : '收藏失败'));
     },
     joinActivity(activityId) {
       const activity = activities.find((item) => item.id === activityId);
       if (!activity) return;
       setState((current) => current.joinedIds.includes(activityId) ? current : { ...current, joinedIds: [...current.joinedIds, activityId], messages: [{ id: `thread-${activityId}`, activityId, title: `${activity.title}群聊`, lastMessage: `${activity.host.name}：欢迎加入，出发前会在这里同步集合信息。`, time: '刚刚', unread: 1, image: activity.image }, ...current.messages] });
-      if (!localMode && status === 'authenticated') void apiClient.join(activityId).catch((reason) => setError(reason instanceof Error ? reason.message : '报名失败'));
+      if (!effectiveLocalMode && status === 'authenticated') void apiClient.join(activityId).catch((reason) => setError(reason instanceof Error ? reason.message : '报名失败'));
     },
     async createActivity(input) {
-      if (localMode) {
+      if (effectiveLocalMode) {
         const activity: Activity = { ...input, id: `created-${Date.now()}`, image: categoryImages[input.category], distance: '由你发起', host: user ?? currentUser, participants: [], note: '请在活动开始前与参与者确认集合信息。' };
         setState((current) => ({ ...current, customActivities: [activity, ...current.customActivities] }));
         return activity;
@@ -186,20 +214,20 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       setServerActivities((current) => [activity, ...current]);
       return activity;
     },
-    async createNeed(body, tags = []) {
-      if (localMode) {
-        const need: Need = { id: `mine-${Date.now()}`, author: `${user?.name ?? currentUser.name} · 刚刚`, subtitle: '我发布的需求', tags: tags.length ? tags : ['自然认识'], title: body.slice(0, 80), copy: body, image: '/assets/coffee.jpg', resonance: 0, comments: 0, response: '等待同频的人回应', similar: true };
+    async createNeed(body, tags = [], image = '/assets/coffee.jpg') {
+      if (effectiveLocalMode) {
+        const need: Need = { id: `mine-${Date.now()}`, author: `${user?.name ?? currentUser.name} · 刚刚`, subtitle: '我发布的需求', tags: tags.length ? tags : ['自然认识'], title: body.slice(0, 80), copy: body, image, resonance: 0, comments: 0, response: '等待同频的人回应', similar: true };
         setLocalNeeds((current) => [need, ...current]);
         return need;
       }
       const { need } = await apiClient.createNeed(body, tags);
-      const mapped = toNeed(need);
+      const mapped = { ...toNeed(need), image };
       setServerNeeds((current) => [mapped, ...current]);
       return mapped;
     },
     async createLifePost(body, image, tags = []) {
-      if (localMode) {
-        const post: LifePost = { id: `life-${Date.now()}`, author: user?.name ?? currentUser.name, meta: '刚刚 · 恰好社区', kind: '生活分享', text: body, images: image ? [image] : [], tag: tags[0] ? `#${tags[0]}` : '#生活记录', comments: 0, resonance: 0 };
+      if (effectiveLocalMode) {
+        const post: LifePost = { id: `life-${Date.now()}`, author: user?.name ?? currentUser.name, meta: '刚刚 · 恰好社区', kind: '生活分享', text: body, images: image ? [image] : [], tag: tags[0] ? `#${lifeTagLabels[tags[0]] ?? tags[0]}` : '#生活记录', comments: 0, resonance: 0 };
         setLocalLifePosts((current) => [post, ...current]);
         return post;
       }
@@ -208,7 +236,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       setServerLifePosts((current) => [mapped, ...current]);
       return mapped;
     },
-  }), [activities, apiClient, error, lifeFeed, localMode, needs, state, status, user]);
+  }), [activities, apiClient, effectiveLocalMode, error, lifeFeed, needs, state, status, user]);
 
   return <QiahaoContext.Provider value={value}>{children}</QiahaoContext.Provider>;
 }

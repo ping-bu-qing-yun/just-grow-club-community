@@ -177,6 +177,35 @@ async function ensureActivitiesContentForeignKey(database: QiahaoDatabase): Prom
   await database.query('ALTER TABLE activities ADD CONSTRAINT fk_activities_content_item FOREIGN KEY (id) REFERENCES content_items(id)');
 }
 
+async function ensureForeignKey(
+  database: QiahaoDatabase,
+  table: string,
+  column: string,
+  referencedTable: string,
+  referencedColumn: string,
+  constraint: string,
+): Promise<void> {
+  const rows = await database.query<Array<RowDataPacket & { count: number | string }>>(
+    `SELECT COUNT(*) AS count
+       FROM information_schema.KEY_COLUMN_USAGE
+      WHERE CONSTRAINT_SCHEMA=DATABASE()
+        AND TABLE_NAME=?
+        AND COLUMN_NAME=?
+        AND REFERENCED_TABLE_NAME=?
+        AND REFERENCED_COLUMN_NAME=?`,
+    [table, column, referencedTable, referencedColumn],
+  );
+  if (Number(rows[0]?.count ?? 0) > 0) return;
+  await database.query(
+    `ALTER TABLE \`${table}\` ADD CONSTRAINT \`${constraint}\` FOREIGN KEY (\`${column}\`) REFERENCES \`${referencedTable}\`(\`${referencedColumn}\`)`,
+  );
+}
+
+async function ensureContentAuthorForeignKeys(database: QiahaoDatabase): Promise<void> {
+  await ensureForeignKey(database, 'needs', 'author_id', 'users', 'id', 'fk_needs_author');
+  await ensureForeignKey(database, 'life_posts', 'author_id', 'users', 'id', 'fk_life_posts_author');
+}
+
 export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
   await database.query(
     `CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -191,16 +220,37 @@ export async function applyMigrations(database: QiahaoDatabase): Promise<void> {
     );
     if (rows.length) continue;
     const sql = await readFile(join(migrationRoot, version), 'utf8');
-    for (const statement of splitMigrationStatements(sql)) await database.query(statement);
+    for (const statement of splitMigrationStatements(sql)) await executeMigrationStatement(database, statement);
     await database.query(
       'INSERT INTO schema_migrations (version, applied_at) VALUES (?, NOW(3))',
       [version],
     );
   }
   await ensureActivitiesContentForeignKey(database);
+  await ensureContentAuthorForeignKeys(database);
   await verifyTables(database);
   await verifyColumns(database);
   await verifyIndexes(database);
   await verifyForeignKeys(database);
   await verifyContentData(database);
+}
+
+async function executeMigrationStatement(database: QiahaoDatabase, statement: string): Promise<void> {
+  const addColumn = statement.match(/^ALTER\s+TABLE\s+`?([A-Za-z0-9_]+)`?\s+ADD\s+COLUMN\s+IF\s+NOT\s+EXISTS\s+`?([A-Za-z0-9_]+)`?\s+(.+)$/is);
+  if (!addColumn) {
+    await database.query(statement);
+    return;
+  }
+
+  const [, table, column, definition] = addColumn;
+  const rows = await database.query<Array<RowDataPacket & { count: number | string }>>(
+    `SELECT COUNT(*) AS count
+       FROM information_schema.columns
+      WHERE table_schema=DATABASE()
+        AND table_name=?
+        AND column_name=?`,
+    [table, column],
+  );
+  if (Number(rows[0]?.count ?? 0) > 0) return;
+  await database.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${column}\` ${definition}`);
 }

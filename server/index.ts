@@ -2,12 +2,14 @@ import { buildApp } from './app';
 import { createDatabase } from './db';
 import { NotificationHub } from './notification-hub';
 import { connectNotificationRedis } from './notification-redis';
+import { seedDatabase } from './seed';
 
 async function main(): Promise<void> {
   const database = await createDatabase();
   let notificationRedis: Awaited<ReturnType<typeof connectNotificationRedis>> = null;
   try {
     await database.assertMigrations();
+    await seedDatabase(database);
     const notificationHub = new NotificationHub();
     notificationRedis = await connectNotificationRedis(notificationHub);
     const app = buildApp({ database, notificationHub });

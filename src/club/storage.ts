@@ -27,6 +27,8 @@ export const defaultClubState: ClubState = {
   resonatedNeedIds: [],
   publishedNeeds: [],
   publishedLifePosts: [],
+  followedLifeAuthorIds: [],
+  resonatedLifePostIds: [],
   savedClubActivityIds: [],
   joinedClubActivityIds: [],
 };
@@ -46,6 +48,8 @@ function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
     resonatedNeedIds: Array.isArray(raw?.resonatedNeedIds) ? raw!.resonatedNeedIds : [],
     publishedNeeds: Array.isArray(raw?.publishedNeeds) ? raw!.publishedNeeds : [],
     publishedLifePosts: Array.isArray(raw?.publishedLifePosts) ? raw!.publishedLifePosts : [],
+    followedLifeAuthorIds: Array.isArray(raw?.followedLifeAuthorIds) ? raw!.followedLifeAuthorIds : [],
+    resonatedLifePostIds: Array.isArray(raw?.resonatedLifePostIds) ? raw!.resonatedLifePostIds : [],
     savedClubActivityIds: Array.isArray(raw?.savedClubActivityIds) ? raw!.savedClubActivityIds : [],
     joinedClubActivityIds: Array.isArray(raw?.joinedClubActivityIds) ? raw!.joinedClubActivityIds : [],
   };

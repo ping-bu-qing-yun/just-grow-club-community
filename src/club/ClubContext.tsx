@@ -15,6 +15,10 @@ export interface ClubContextValue {
   publishLife(text: string): LifePost;
   toggleNeedSaved(id: string): void;
   toggleNeedResonance(id: string): void;
+  toggleLifeAuthorFollow(author: string): void;
+  toggleLifePostResonance(id: string): void;
+  isLifeAuthorFollowed(author: string): boolean;
+  isLifePostResonated(id: string): boolean;
   toggleClubActivitySaved(id: string): void;
   joinClubActivity(id: string): void;
   isClubActivitySaved(id: string): boolean;
@@ -132,6 +136,24 @@ export function ClubProvider({ children }: { children: ReactNode }) {
           ...current,
           resonatedNeedIds: toggleId(current.resonatedNeedIds, id),
         }));
+      },
+      toggleLifeAuthorFollow(author) {
+        setState((current) => ({
+          ...current,
+          followedLifeAuthorIds: toggleId(current.followedLifeAuthorIds, author),
+        }));
+      },
+      toggleLifePostResonance(id) {
+        setState((current) => ({
+          ...current,
+          resonatedLifePostIds: toggleId(current.resonatedLifePostIds, id),
+        }));
+      },
+      isLifeAuthorFollowed(author) {
+        return state.followedLifeAuthorIds.includes(author);
+      },
+      isLifePostResonated(id) {
+        return state.resonatedLifePostIds.includes(id);
       },
       toggleClubActivitySaved(id) {
         setState((current) => ({

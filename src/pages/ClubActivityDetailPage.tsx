@@ -2,6 +2,7 @@ import { ArrowLeft, Heart, Share2, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
+import { getClubActivityStats } from '../club/activityStats';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
 import { CommentSection } from '../components/CommentSection';
 import { shareActivity } from '../lib/activityShare';
@@ -50,6 +51,7 @@ export function ClubActivityDetailPage({
   const feeLabel = activity.fee === '免费' ? '免费参加' : activity.fee;
   const needsText = activity.needs.join('、');
   const peopleText = `${activity.people}${activity.people.includes('男女') ? '' : '，男女比例尽量均衡'}`;
+  const stats = getClubActivityStats(activity, joined);
 
   useEffect(() => {
     if (!focusComments) return;
@@ -134,6 +136,7 @@ export function ClubActivityDetailPage({
           <span className="category-label category-label--muted">{activity.status}</span>
         </div>
         <h1>{activity.title}</h1>
+        <div className="activity-stat-line activity-stat-line--detail">{stats.views}看过｜{stats.joined}人已报名</div>
         <p className="detail-pitch">{activity.pitch || activity.description}</p>
 
         <section className="detail-info-rows" aria-label="活动关键信息">

@@ -6,16 +6,23 @@ import { useQiahaoOptional } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { LifePostCard } from '../components/LifePostCard';
 
+export type NeedsMode = 'needs' | 'life';
+
 export function NeedsPage({
   onOpenNeed,
   onOpenLifePost,
+  mode,
+  onModeChange,
+  onNotice,
 }: {
   onOpenNeed: (need: Need, focusComments?: boolean) => void;
   onOpenLifePost?: (post: LifePost, focusComments?: boolean) => void;
+  mode: NeedsMode;
+  onModeChange: (mode: NeedsMode) => void;
+  onNotice?: (message: string) => void;
 }) {
   const { state } = useClub();
   const qiahao = useQiahaoOptional();
-  const [mode, setMode] = useState<'needs' | 'life'>('needs');
   const [filter, setFilter] = useState('all');
   const needs = useMemo(() => {
     const source = qiahao?.needs ?? [...state.publishedNeeds, ...seedNeeds];
@@ -33,16 +40,18 @@ export function NeedsPage({
     <main className="needs-page page">
       <section className="needs-hero">
         <span>需求与生活</span>
-        <h1>先说出你想遇见什么</h1>
-        <p>也许刚好有人和你想的一样。点底部「+」发布需求或生活。</p>
+        <h1>先被看见，再慢慢靠近</h1>
+        <p>需求，是你想遇见谁；生活，是你愿意先展示什么。都会被同频的人接住。</p>
       </section>
 
       <div className="needs-mode">
-        <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => setMode('needs')}>
-          需求
+        <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => onModeChange('needs')}>
+          <b>需求</b>
+          <span>寻找同频的人</span>
         </button>
-        <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => setMode('life')}>
-          生活
+        <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => onModeChange('life')}>
+          <b>生活</b>
+          <span>像朋友圈一样分享</span>
         </button>
       </div>
 
@@ -82,7 +91,7 @@ export function NeedsPage({
           </header>
           <div className="life-feed">
             {lifeFeed.map((post) => (
-              <LifePostCard post={post} key={post.id} onOpen={onOpenLifePost} />
+              <LifePostCard post={post} key={post.id} onOpen={onOpenLifePost} onNotice={onNotice} />
             ))}
           </div>
         </>

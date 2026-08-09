@@ -20,7 +20,7 @@ export interface QiahaoContextValue {
   toggleSaved: (activityId: string) => void;
   joinActivity: (activityId: string) => void;
   createActivity: (input: CreateActivityInput) => Promise<Activity>;
-  createNeed: (body: string, tags?: string[]) => Promise<Need>;
+  createNeed: (body: string, tags?: string[], image?: string) => Promise<Need>;
   createLifePost: (body: string, image?: string, tags?: string[]) => Promise<LifePost>;
   login: (phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;

@@ -10,15 +10,17 @@ export function SavedPage({
   onExplore,
   onOpenActivity,
   onOpenClubActivity,
+  clubActivityOptions = clubActivities,
 }: {
   onExplore: () => void;
   onOpenActivity: (id: string) => void;
   onOpenClubActivity?: (activity: ClubActivity) => void;
+  clubActivityOptions?: ClubActivity[];
 }) {
   const { activities, savedIds, toggleSaved } = useQiahao();
   const { state } = useClub();
   const savedDomain = activities.filter((activity) => savedIds.has(activity.id));
-  const savedClub = clubActivities.filter((activity) => state.savedClubActivityIds.includes(activity.id));
+  const savedClub = clubActivityOptions.filter((activity) => state.savedClubActivityIds.includes(activity.id));
   const empty = savedDomain.length === 0 && savedClub.length === 0;
 
   return (

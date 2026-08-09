@@ -85,6 +85,8 @@ export interface ClubState {
   publishedNeeds: Need[];
   /** 用户发布的生活动态（本地） */
   publishedLifePosts: LifePost[];
+  followedLifeAuthorIds: string[];
+  resonatedLifePostIds: string[];
   /** 俱乐部活动收藏 id */
   savedClubActivityIds: string[];
   /** 俱乐部活动报名/预约 id */

@@ -14,18 +14,26 @@ const filters = [
   ['pre', '预活动'],
 ] as const;
 
-export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenActivity: (activity: ClubActivity) => void; onOpenNotifications: () => void }) {
+export function ExplorePage({
+  activities = clubActivities,
+  onOpenActivity,
+  onOpenNotifications,
+}: {
+  activities?: ClubActivity[];
+  onOpenActivity: (activity: ClubActivity) => void;
+  onOpenNotifications: () => void;
+}) {
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
 
   const visible = useMemo(
     () =>
-      clubActivities.filter(
+      activities.filter(
         (item) =>
           (filter === 'all' || item.theme === filter || (filter === 'pre' && item.status === '预活动')) &&
           `${item.title}${item.tags.join('')}${item.location}`.includes(query),
       ),
-    [filter, query],
+    [activities, filter, query],
   );
 
   return (

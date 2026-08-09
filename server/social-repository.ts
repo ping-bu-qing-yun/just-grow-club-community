@@ -80,7 +80,7 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
       [userId, activityId, 'joined', now],
     );
     await connection.query(
-      `INSERT INTO threads (id,activity_id,title,system,image,created_at)
+      `INSERT INTO threads (id,activity_id,title,is_system,image,created_at)
        VALUES (?,?,?,?,?,?)
        ON DUPLICATE KEY UPDATE title=VALUES(title),image=VALUES(image)`,
       [threadId, activityId, `${activity.title}群聊`, 0, activity.image, now],
@@ -108,7 +108,7 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
 
 async function readThread(connection: QiahaoDatabase | QiahaoConnection, id: string, userId?: string): Promise<MessageThread | null> {
   const rows = await connection.query<ThreadRow[]>(
-    `SELECT t.id,t.activity_id,t.title,t.image,t.system,
+    `SELECT t.id,t.activity_id,t.title,t.image,t.is_system AS \`system\`,
             latest.body AS last_message,latest.created_at AS message_created_at,
             tm.unread
        FROM threads t

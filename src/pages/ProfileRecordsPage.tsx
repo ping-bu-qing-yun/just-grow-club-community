@@ -11,11 +11,13 @@ export function ProfileRecordsPage({
   onBack,
   onOpenNeed,
   onOpenClubActivity,
+  clubActivityOptions = clubActivities,
 }: {
   kind: string;
   onBack: () => void;
   onOpenNeed?: (need: Need) => void;
   onOpenClubActivity?: (activity: ClubActivity) => void;
+  clubActivityOptions?: ClubActivity[];
 }) {
   const { state } = useClub();
   const { activities, savedIds, joinedIds } = useQiahao();
@@ -43,7 +45,7 @@ export function ProfileRecordsPage({
   } else if (kind === 'attended') {
     title = '参加过活动';
     const domainItems = activities.filter((item) => joinedIds.has(item.id));
-    const clubItems = clubActivities.filter((item) => state.joinedClubActivityIds.includes(item.id));
+    const clubItems = clubActivityOptions.filter((item) => state.joinedClubActivityIds.includes(item.id));
     content =
       domainItems.length || clubItems.length ? (
         <div className="record-list club-card-list">
@@ -70,7 +72,7 @@ export function ProfileRecordsPage({
   } else {
     title = '活动收藏';
     const domainItems = activities.filter((item) => savedIds.has(item.id));
-    const clubItems = clubActivities.filter((item) => state.savedClubActivityIds.includes(item.id));
+    const clubItems = clubActivityOptions.filter((item) => state.savedClubActivityIds.includes(item.id));
     content =
       domainItems.length || clubItems.length ? (
         <div className="record-list club-card-list">

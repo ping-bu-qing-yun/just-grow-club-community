@@ -1,19 +1,22 @@
 import { useMemo } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { clubActivities, seedNeeds } from '../club/seed';
-import type { ClubActivity } from '../club/types';
+import type { ClubActivity, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { buildUserPortrait } from '../club/portrait';
 import { rankClubActivities } from '../club/recommend';
+import { getClubActivityStats } from '../club/activityStats';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
 
 export function ActivitiesHomePage({
-  onNeeds,
+  activities = clubActivities,
+  onOpenNeed,
   onOpenActivity,
   onOpenNotifications,
 }: {
-  onNeeds: () => void;
+  activities?: ClubActivity[];
+  onOpenNeed: (need: Need) => void;
   onOpenActivity: (activity: ClubActivity) => void;
   onOpenNotifications: () => void;
 }) {
@@ -21,15 +24,18 @@ export function ActivitiesHomePage({
   const portrait = useMemo(() => buildUserPortrait(state), [state]);
   const ranked = useMemo(
     () =>
-      rankClubActivities(portrait, clubActivities, {
+      rankClubActivities(portrait, activities, {
         penalizeIds: state.joinedClubActivityIds,
       }),
-    [portrait, state.joinedClubActivityIds],
+    [activities, portrait, state.joinedClubActivityIds],
   );
   const featuredRanked = ranked[0];
-  const featured = featuredRanked?.activity ?? clubActivities[0];
-  const forYou = ranked.slice(1, 4);
+  const pinnedCreated = activities.find((activity) => activity.matchLabel === '新发布');
+  const featured = pinnedCreated ?? featuredRanked?.activity ?? activities[0] ?? clubActivities[0];
+  const forYou = ranked.filter((item) => item.activity.id !== featured.id).slice(0, 3);
   const highlightTags = portrait.highlightTags.slice(0, 3);
+  const featuredStats = getClubActivityStats(featured, state.joinedClubActivityIds.includes(featured.id));
+  const featuredNeed = seedNeeds[0];
 
   return (
     <main className="club-home page">
@@ -74,6 +80,7 @@ export function ActivitiesHomePage({
           <p>
             {featured.people} · {featured.location.split('/')[0].trim()} · {featured.date.replace(' · ', '')}
           </p>
+          <span className="activity-stat-line">{featuredStats.views}看过｜{featuredStats.joined}人已报名</span>
         </div>
       </button>
 
@@ -96,18 +103,23 @@ export function ActivitiesHomePage({
         </div>
       </section>
 
-      <section className="need-recommend" onClick={onNeeds}>
-        <img src={seedNeeds[0].image} alt="" />
+      <button
+        type="button"
+        className="need-recommend"
+        onClick={() => onOpenNeed(featuredNeed)}
+        aria-label={`查看需求详情：${featuredNeed.title}`}
+      >
+        <img src={featuredNeed.image} alt="" />
         <div>
-          <small>需求广场 · 72人共鸣</small>
-          <h2>不想尴尬交换微信，但想认真认识人</h2>
-          <p>如果暂时没有合适活动，可以先看见同频的人。</p>
-          <button type="button">
+          <small>需求卡 · {featuredNeed.resonance}人共鸣</small>
+          <h2>{featuredNeed.title}</h2>
+          <p>{featuredNeed.copy}</p>
+          <span>
             去看看
             <ArrowRight size={15} />
-          </button>
+          </span>
         </div>
-      </section>
+      </button>
     </main>
   );
 }

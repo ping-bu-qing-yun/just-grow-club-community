@@ -155,7 +155,7 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
     }
   }
   await database.query(
-    `INSERT IGNORE INTO threads (id,title,system,created_at)
+    `INSERT IGNORE INTO threads (id,title,is_system,created_at)
      VALUES (?,?,?,?)`,
     ['system-safety', '恰好安全助手', 1, now],
   );
