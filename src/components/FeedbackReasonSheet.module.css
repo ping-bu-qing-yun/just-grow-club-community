@@ -1,0 +1,44 @@
+/* DislikeReasonSheet — option grid inside a Sheet. */
+
+.sheet {
+  text-align: left;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  gap: 8px;
+}
+
+.option {
+  min-height: 46px;
+  width: 100%;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-body-size);
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.option:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}

@@ -1,0 +1,116 @@
+/* LifePostCard — text-forward social card with image grid + action footer. */
+
+.card {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.identity {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.identity b {
+  font-size: var(--text-callout-size);
+}
+
+.identity small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.follow {
+  min-height: 32px;
+  border: 0;
+  background: none;
+  color: var(--brand);
+  font-size: var(--text-caption-size);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.open {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kind {
+  display: inline-block;
+  margin-top: 15px;
+  color: var(--brand);
+  font-size: 9px;
+  font-style: normal;
+}
+
+.text {
+  margin: 6px 0 0;
+  font-size: var(--text-body-size);
+  line-height: 1.75;
+}
+
+.images {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.images img {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.tag {
+  display: block;
+  margin-top: 10px;
+  color: #527265;
+  font-size: var(--text-caption-size);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.footer button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  cursor: pointer;
+  transition: color var(--dur-fast) ease-out;
+}
+
+.footer button.active {
+  color: var(--brand);
+  font-weight: 750;
+}
