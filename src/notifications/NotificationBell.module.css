@@ -1,0 +1,26 @@
+/* NotificationBell — a circular material icon button with an unread dot. */
+
+.bell {
+  position: relative;
+  display: inline-grid;
+  width: var(--tap);
+  height: var(--tap);
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  will-change: transform;
+}
+
+.dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--brand);
+}

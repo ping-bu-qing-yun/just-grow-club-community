@@ -5,6 +5,9 @@ import type { LifePost, Need } from '../club/types';
 import { useQiahaoOptional } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { LifePostCard } from '../components/LifePostCard';
+import { Button } from '../components/ui/Button';
+import { Segmented } from '../components/ui/Segmented';
+import styles from './NeedsPage.module.css';
 
 export function NeedsPage({
   onOpenNeed,
@@ -45,70 +48,71 @@ export function NeedsPage({
   }, [qiahao]);
 
   return (
-    <main className="needs-page page">
-      <section className="needs-hero">
+    <main className={`${styles.page} page`}>
+      <section className={styles.hero}>
         <span>需求与生活</span>
         <h1>先说出你想遇见什么</h1>
         <p>也许刚好有人和你想的一样。点底部「+」发布需求或生活。</p>
       </section>
 
-      <div className="needs-mode">
-        <button type="button" className={mode === 'needs' ? 'is-active' : ''} onClick={() => updateView('needs')}>
-          需求
-        </button>
-        <button type="button" className={mode === 'life' ? 'is-active' : ''} onClick={() => updateView('life')}>
-          生活
-        </button>
-      </div>
+      <Segmented
+        label="需求或生活"
+        value={mode}
+        onChange={(value) => updateView(value as 'needs' | 'life')}
+        options={[
+          { value: 'needs', label: '需求' },
+          { value: 'life', label: '生活' },
+        ]}
+      />
 
       {mode === 'needs' ? (
         <>
-          <header className="needs-subhead">
+          <header className={styles.subhead}>
             <div>
               <h2>大家正在寻找</h2>
               <p>看看谁和你想的一样</p>
             </div>
-            <div>
-              <button type="button" className={filter === 'all' ? 'is-active' : ''} onClick={() => updateFilter('all')}>
+            <div className={styles.subheadFilters}>
+              <button type="button" className={filter === 'all' ? styles.active : ''} onClick={() => updateFilter('all')}>
                 全部需求
               </button>
               <button
                 type="button"
-                className={filter === 'similar' ? 'is-active' : ''}
+                className={filter === 'similar' ? styles.active : ''}
                 onClick={() => updateFilter('similar')}
               >
                 和你相似
               </button>
             </div>
           </header>
-          <div className="needs-list">
+          <div className={styles.list}>
             {needs.map((need) => (
               <NeedCard need={need} onOpen={onOpenNeed} key={need.id} />
             ))}
           </div>
           {qiahao?.hasMoreNeeds ? (
-            <button className="secondary-button feed-load-more" type="button" disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('need')}>
+            <Button variant="secondary" wide className={styles.loadMore} disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('need')}>
               {qiahao.loadingMoreContent ? '正在加载…' : '加载更多需求'}
-            </button>
+            </Button>
           ) : null}
         </>
       ) : (
         <>
-          <header className="needs-subhead">
+          <header className={styles.subhead}>
             <div>
               <h2>生活动态</h2>
               <p>先看见彼此</p>
             </div>
           </header>
-          <div className="life-feed">
+          <div className={styles.list}>
             {lifeFeed.map((post) => (
               <LifePostCard post={post} key={post.id} onOpen={onOpenLifePost} />
             ))}
           </div>
           {qiahao?.hasMoreLifePosts ? (
-            <button className="secondary-button feed-load-more" type="button" disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('life')}>
+            <Button variant="secondary" wide className={styles.loadMore} disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('life')}>
               {qiahao.loadingMoreContent ? '正在加载…' : '加载更多生活'}
-            </button>
+            </Button>
           ) : null}
         </>
       )}

@@ -4,7 +4,9 @@ import { useSearchParams } from 'react-router-dom';
 import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { ClubActivityCard } from '../components/ClubActivityCard';
+import { Button } from '../components/ui/Button';
 import { NotificationBell } from '../notifications/NotificationBell';
+import styles from './ExplorePage.module.css';
 
 const filters = [
   ['all', '全部'],
@@ -61,12 +63,16 @@ export function ExplorePage({
   );
 
   return (
-    <main className="explore-page page">
-      <header className="page-hero page-hero--with-action">
-        <div><span>EXPLORE</span><h1>发现其他活动</h1><p>按出门阻力和见面方式，挑一场刚刚好的局。</p></div>
+    <main className={`${styles.page} page`}>
+      <header className={styles.hero}>
+        <div>
+          <span>EXPLORE</span>
+          <h1>发现其他活动</h1>
+          <p>按出门阻力和见面方式，挑一场刚刚好的局。</p>
+        </div>
         <NotificationBell onOpen={onOpenNotifications} />
       </header>
-      <label className="club-search">
+      <label className={styles.search}>
         <Search size={18} />
         <input
           aria-label="搜索活动"
@@ -75,28 +81,29 @@ export function ExplorePage({
           placeholder="搜索活动、地点或场景"
         />
       </label>
-      <div className="club-filter-strip">
+      <div className={styles.filterStrip}>
         {filters.map(([id, label]) => (
-          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => updateFilter(id)} type="button">
+          <button
+            className={filter === id ? styles.active : ''}
+            key={id}
+            onClick={() => updateFilter(id)}
+            type="button"
+          >
             {label}
           </button>
         ))}
       </div>
-      <div className="club-card-list">
+      <div className={styles.cardList}>
         {visible.map((activity) => (
           <ClubActivityCard key={activity.id} activity={activity} onOpen={onOpenActivity} />
         ))}
       </div>
       {!visible.length && (
-        <div className="empty-state">
+        <div className={styles.empty}>
           <h3>没有找到合适活动</h3>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={clearFilters}
-          >
+          <Button variant="secondary" onClick={clearFilters}>
             清除筛选
-          </button>
+          </Button>
         </div>
       )}
     </main>
