@@ -201,6 +201,232 @@ img { display: block; max-width: 100%; }
   text-align: left;
   cursor: pointer;
 }
+
+.bottom-nav__item {
+  cursor: default;
+}
+
+.intro-letter-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 26px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #1f5e44, #143a2c);
+  text-align: center;
+}
+
+.intro-letter-card {
+  width: 100%;
+  max-width: 360px;
+  padding: 20px 18px 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 24px 70px rgba(62, 49, 30, .18);
+  color: var(--ink);
+  text-align: left;
+  transform-origin: center top;
+  animation: intro-letter-card .7s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.intro-letter-salute {
+  display: block;
+  margin-bottom: 12px;
+  color: #4a6b4a;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .05em;
+}
+
+.intro-letter-columns {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.intro-letter-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.intro-letter-body p,
+.intro-letter-purpose {
+  color: #3f4e47;
+  font-size: 12px;
+  text-align: justify;
+}
+
+.intro-letter-body p {
+  margin: 0 0 8px;
+  line-height: 1.65;
+}
+
+.intro-letter-purpose {
+  margin: 0 0 6px;
+  line-height: 1.7;
+}
+
+.intro-letter-purpose strong {
+  color: #4a6b4a;
+  font-weight: 850;
+}
+
+.intro-letter-photos {
+  display: flex;
+  flex: 0 0 90px;
+  width: 90px;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.intro-letter-photo {
+  display: block;
+  width: auto;
+  max-width: 90px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #f4f7f5;
+  box-shadow: 0 4px 12px rgba(36, 95, 73, .12);
+}
+
+.intro-letter-photo--portrait {
+  max-height: 136px;
+}
+
+.intro-letter-photo--cat {
+  max-height: 96px;
+}
+
+.intro-letter-sign {
+  margin: 6px 0 10px;
+  color: #3f4e47;
+  font-size: 12px;
+  text-align: right;
+}
+
+.intro-letter-card h2 {
+  margin: 10px 0 8px;
+  color: #4a6b4a;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.intro-letter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.intro-letter-tags span {
+  padding: 5px 10px;
+  border: 1px solid rgba(26, 26, 46, .1);
+  border-radius: 999px;
+  background: #fff;
+  color: #4a6b4a;
+  font-size: 11.5px;
+  font-weight: 650;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: intro-letter-tag .5s ease forwards;
+  animation-delay: calc(.45s + var(--i) * .08s);
+}
+
+.intro-letter-button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #6b8e6b;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+  box-shadow: 0 14px 30px rgba(45, 72, 52, .22);
+  transition: transform .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.intro-letter-button:hover,
+.intro-letter-button:focus-visible {
+  background: #5f7f5e;
+  box-shadow: 0 16px 34px rgba(45, 72, 52, .28);
+}
+
+.intro-letter-button:active {
+  transform: translateY(1px) scale(.98);
+}
+
+@keyframes intro-letter-card {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(.92);
+  }
+
+  60% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes intro-letter-tag {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 380px) {
+  .intro-letter-page {
+    padding: 26px 16px;
+  }
+
+  .intro-letter-card {
+    padding: 18px 16px;
+  }
+
+  .intro-letter-columns {
+    gap: 12px;
+  }
+
+  .intro-letter-photos {
+    flex-basis: 82px;
+    width: 82px;
+  }
+
+  .intro-letter-photo {
+    max-width: 82px;
+  }
+
+  .intro-letter-photo--portrait {
+    max-height: 128px;
+  }
+
+  .intro-letter-photo--cat {
+    max-height: 88px;
+  }
+
+  .intro-letter-body p,
+  .intro-letter-purpose {
+    font-size: 11.5px;
+  }
+
+  .intro-letter-tags span {
+    font-size: 11px;
+  }
+}
 .reason-option:active { transform: scale(0.98); background: #fff3e4; }
 
 

@@ -94,7 +94,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
         setState((current) => ({ ...current, onboardingStep: step }));
       },
       completeOnboarding() {
-        setState((current) => ({ ...current, onboardingComplete: true, onboardingStep: 3 }));
+        setState((current) => ({ ...current, onboardingComplete: true, onboardingStep: 4 }));
       },
       resetOnboarding() {
         setState((current) => ({ ...current, onboardingComplete: false, onboardingStep: 0 }));
