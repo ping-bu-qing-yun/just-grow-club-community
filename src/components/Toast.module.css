@@ -1,0 +1,51 @@
+/* Toast — a floating material notification pill. */
+
+.toast {
+  position: fixed;
+  z-index: var(--z-toast);
+  top: max(14px, env(safe-area-inset-top));
+  left: 50%;
+  display: grid;
+  width: calc(min(100%, 460px) - 28px);
+  min-height: 48px;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 6px 6px 14px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-control);
+  background: rgba(31, 31, 31, 0.92);
+  color: #fff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+  -webkit-backdrop-filter: var(--blur-nav);
+  backdrop-filter: var(--blur-nav);
+  font-size: var(--text-callout-size);
+  font-weight: 680;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.toast > span {
+  pointer-events: none;
+}
+
+.icon {
+  color: #7fd2ad;
+}
+
+.close {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.close:hover {
+  background: rgba(255, 255, 255, 0.12);
+}

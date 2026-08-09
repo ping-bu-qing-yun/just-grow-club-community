@@ -21,6 +21,7 @@ import { Toast } from '../components/Toast';
 import { domainActivityToClub } from '../club/activity-adapter';
 import { useClub } from '../club/ClubContext';
 import { canPublishActivity, isOperator } from '../domain/roles';
+import { reducedFade, snappy } from '../motion/springs';
 import { useNotifications } from '../notifications/NotificationContext';
 import type { AppNotification } from '../notifications/types';
 import { toLifePost, toNeed, useQiahao } from '../state/QiahaoContext';
@@ -173,10 +174,10 @@ function ProductShell() {
         <motion.div
           className="route-stage"
           key={pathname}
-          initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+          initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
-          transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.22, 0.8, 0.28, 1] }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+          transition={reducedMotion ? reducedFade : snappy}
         >
           <Outlet context={{ notify: setToast } satisfies ShellContext} />
         </motion.div>

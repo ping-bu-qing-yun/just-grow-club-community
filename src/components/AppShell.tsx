@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { BottomNav, type AppTab } from './BottomNav';
 import { Sidebar } from './Sidebar';
+import styles from './AppShell.module.css';
 
 export function AppShell({
   children,
@@ -16,10 +17,10 @@ export function AppShell({
   showBottomNav?: boolean;
 }) {
   return (
-    <div className="app-canvas">
-      <div className="app-shell">
+    <div className={styles.canvas}>
+      <div className={styles.shell}>
         <Sidebar activeTab={activeTab} onChange={onTabChange} onPublish={onPublish} />
-        <div className="app-shell__content">{children}</div>
+        <div className={styles.content}>{children}</div>
         {showBottomNav ? <BottomNav activeTab={activeTab} onChange={onTabChange} onPublish={onPublish} /> : null}
       </div>
     </div>
