@@ -1,56 +1,39 @@
-import { useMemo } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
-import { useQiahao } from '../state/QiahaoContext';
-import { domainActivityToClub } from '../club/activity-adapter';
-import { discoverActivityQueryOptions, type DiscoverActivityFilter } from '../data/activityQueries';
 
-export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenActivity: (activity: ClubActivity) => void; onOpenNotifications: () => void }) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { activities, businessConfig, localMode } = useQiahao();
-  const filters: Array<readonly [DiscoverActivityFilter, string]> = useMemo(() => [
-    ['all', '全部'],
-    ...(businessConfig?.activityCategories ?? []).map((item) => [`category:${item.key}` as const, item.label] as const),
-    ['pre', '预活动'],
-  ], [businessConfig?.activityCategories]);
-  const requestedFilter = searchParams.get('filter');
-  const filter = filters.some(([id]) => id === requestedFilter) ? requestedFilter as DiscoverActivityFilter : 'all';
-  const query = searchParams.get('q') ?? '';
-  const remoteCatalog = useInfiniteQuery({
-    ...discoverActivityQueryOptions(filter, query),
-    enabled: !localMode,
-  });
-  const remoteActivities = remoteCatalog.data?.pages.flatMap((page) => page.activities) ?? [];
-  const catalog = useMemo(
-    () => (localMode || (remoteCatalog.isError && !remoteActivities.length) ? activities : remoteActivities).map(domainActivityToClub),
-    [activities, localMode, remoteActivities, remoteCatalog.isError],
-  );
+const filters = [
+  ['all', '全部'],
+  ['low', '低压力'],
+  ['deep', '深聊'],
+  ['walk', '散步'],
+  ['workshop', '工作坊'],
+  ['pre', '预活动'],
+] as const;
 
-  function updateSearch(next: { filter?: string; query?: string }) {
-    const params = new URLSearchParams(searchParams);
-    const nextFilter = next.filter ?? filter;
-    const nextQuery = next.query ?? query;
-    if (nextFilter === 'all') params.delete('filter');
-    else params.set('filter', nextFilter);
-    if (nextQuery.trim()) params.set('q', nextQuery);
-    else params.delete('q');
-    setSearchParams(params, { replace: true });
-  }
+export function ExplorePage({
+  activities = clubActivities,
+  onOpenActivity,
+  onOpenNotifications,
+}: {
+  activities?: ClubActivity[];
+  onOpenActivity: (activity: ClubActivity) => void;
+  onOpenNotifications: () => void;
+}) {
+  const [filter, setFilter] = useState('all');
+  const [query, setQuery] = useState('');
 
   const visible = useMemo(
     () =>
-      catalog.filter(
+      activities.filter(
         (item) =>
-          (filter === 'all'
-            || (filter.startsWith('category:') && (!localMode || activities.find((activity) => activity.id === item.id)?.categoryKey === filter.slice('category:'.length)))
-            || (filter === 'pre' && item.status === '预活动')) &&
+          (filter === 'all' || item.theme === filter || (filter === 'pre' && item.status === '预活动')) &&
           `${item.title}${item.tags.join('')}${item.location}`.includes(query),
       ),
-    [activities, catalog, filter, localMode, query],
+    [activities, filter, query],
   );
 
   return (
@@ -64,13 +47,13 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
         <input
           aria-label="搜索活动"
           value={query}
-          onChange={(event) => updateSearch({ query: event.target.value })}
+          onChange={(event) => setQuery(event.target.value)}
           placeholder="搜索活动、地点或场景"
         />
       </label>
       <div className="club-filter-strip">
         {filters.map(([id, label]) => (
-          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => updateSearch({ filter: id })} type="button">
+          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => setFilter(id)} type="button">
             {label}
           </button>
         ))}
@@ -80,17 +63,6 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
           <ClubActivityCard key={activity.id} activity={activity} onOpen={onOpenActivity} />
         ))}
       </div>
-      {!localMode && remoteCatalog.hasNextPage ? (
-        <button
-          className="secondary-button discover-load-more"
-          type="button"
-          disabled={remoteCatalog.isFetchingNextPage}
-          onClick={() => void remoteCatalog.fetchNextPage()}
-        >
-          {remoteCatalog.isFetchingNextPage ? '正在加载…' : '加载更多活动'}
-        </button>
-      ) : null}
-      {!localMode && remoteCatalog.isError ? <p className="form-error" role="alert">活动目录暂时无法继续加载，已保留当前结果。</p> : null}
       {!visible.length && (
         <div className="empty-state">
           <h3>没有找到合适活动</h3>
@@ -98,7 +70,8 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
             className="secondary-button"
             type="button"
             onClick={() => {
-              setSearchParams({}, { replace: true });
+              setFilter('all');
+              setQuery('');
             }}
           >
             清除筛选

@@ -1,40 +1,41 @@
 import { useMemo } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import type { ClubActivity } from '../club/types';
+import { clubActivities, seedNeeds } from '../club/seed';
+import type { ClubActivity, Need } from '../club/types';
 import { useClub } from '../club/ClubContext';
-import { computePortraitCompleteness } from '../club/portrait';
+import { buildUserPortrait } from '../club/portrait';
+import { rankClubActivities } from '../club/recommend';
+import { getClubActivityStats } from '../club/activityStats';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
-import { useQiahao } from '../state/QiahaoContext';
-import { domainActivityToClub } from '../club/activity-adapter';
 
 export function ActivitiesHomePage({
-  onNeeds,
+  activities = clubActivities,
+  onOpenNeed,
   onOpenActivity,
   onOpenNotifications,
 }: {
-  onNeeds: () => void;
+  activities?: ClubActivity[];
+  onOpenNeed: (need: Need) => void;
   onOpenActivity: (activity: ClubActivity) => void;
   onOpenNotifications: () => void;
 }) {
   const { state } = useClub();
-  const { activities, localMode, recommendations, needs } = useQiahao();
-  const ranked = useMemo(() => recommendations.length
-    ? recommendations.map((item) => ({ ...item, activity: domainActivityToClub(item.activity) }))
-    : localMode
-      ? activities.map((activity) => ({ activity: domainActivityToClub(activity), score: 50, matchedTags: [activity.category], reasons: ['预览模式推荐'], matchLabel: activity.matchLabel ?? '可以了解' }))
-      : [], [activities, localMode, recommendations]);
+  const portrait = useMemo(() => buildUserPortrait(state), [state]);
+  const ranked = useMemo(
+    () =>
+      rankClubActivities(portrait, activities, {
+        penalizeIds: state.joinedClubActivityIds,
+      }),
+    [activities, portrait, state.joinedClubActivityIds],
+  );
   const featuredRanked = ranked[0];
-  const featured = featuredRanked?.activity;
-  const forYou = ranked.slice(1, 4);
-  const highlightTags = featuredRanked?.matchedTags.slice(0, 3) ?? [];
-  const summaryLabel = featuredRanked?.reasons[0] ?? '先从一场低压力的见面开始';
-  const completeness = computePortraitCompleteness(state);
-  const highlightedNeed = needs[0];
-
-  if (!featured) {
-    return <main className="club-home page"><div className="empty-state"><h3>正在准备适合你的活动</h3><p>活动目录加载完成后会自动出现。</p></div></main>;
-  }
+  const pinnedCreated = activities.find((activity) => activity.matchLabel === '新发布');
+  const featured = pinnedCreated ?? featuredRanked?.activity ?? activities[0] ?? clubActivities[0];
+  const forYou = ranked.filter((item) => item.activity.id !== featured.id).slice(0, 3);
+  const highlightTags = portrait.highlightTags.slice(0, 3);
+  const featuredStats = getClubActivityStats(featured, state.joinedClubActivityIds.includes(featured.id));
+  const featuredNeed = seedNeeds[0];
 
   return (
     <main className="club-home page">
@@ -52,9 +53,9 @@ export function ActivitiesHomePage({
             <Sparkles size={15} />
             刚刚懂你一点
           </span>
-          <b>{completeness}%</b>
+          <b>{portrait.completeness}%</b>
         </div>
-        <h2>{summaryLabel}</h2>
+        <h2>{portrait.summaryLabel}</h2>
         <p>先看清自己的社交需求，再挑一场舒服的见面。</p>
         <div>
           {highlightTags.map((tag) => (
@@ -79,6 +80,7 @@ export function ActivitiesHomePage({
           <p>
             {featured.people} · {featured.location.split('/')[0].trim()} · {featured.date.replace(' · ', '')}
           </p>
+          <span className="activity-stat-line">{featuredStats.views}看过｜{featuredStats.joined}人已报名</span>
         </div>
       </button>
 
@@ -101,18 +103,23 @@ export function ActivitiesHomePage({
         </div>
       </section>
 
-      <section className="need-recommend" onClick={onNeeds}>
-        <img src={highlightedNeed?.image ?? '/assets/coffee.jpg'} alt="" />
+      <button
+        type="button"
+        className="need-recommend"
+        onClick={() => onOpenNeed(featuredNeed)}
+        aria-label={`查看需求详情：${featuredNeed.title}`}
+      >
+        <img src={featuredNeed.image} alt="" />
         <div>
-          <small>需求广场{highlightedNeed ? ` · ${highlightedNeed.resonance}人共鸣` : ''}</small>
-          <h2>{highlightedNeed?.title ?? '说出你想遇见什么'}</h2>
-          <p>如果暂时没有合适活动，可以先看见同频的人。</p>
-          <button type="button">
+          <small>需求卡 · {featuredNeed.resonance}人共鸣</small>
+          <h2>{featuredNeed.title}</h2>
+          <p>{featuredNeed.copy}</p>
+          <span>
             去看看
             <ArrowRight size={15} />
-          </button>
+          </span>
         </div>
-      </section>
+      </button>
     </main>
   );
 }

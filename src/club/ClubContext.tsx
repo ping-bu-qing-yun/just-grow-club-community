@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { BasicProfile, ClubState } from './types';
+import type { BasicProfile, ClubState, LifePost, Need } from './types';
 import { defaultClubState, readClubState, writeClubState } from './storage';
 import { QiahaoContext } from '../state/qiahao-context';
 
@@ -11,9 +11,25 @@ export interface ClubContextValue {
   setOnboardingStep(step: number): void;
   completeOnboarding(): void;
   resetOnboarding(): void;
+  publishNeed(title: string, tags: string[]): Need;
+  publishLife(text: string): LifePost;
+  toggleNeedSaved(id: string): void;
+  toggleNeedResonance(id: string): void;
+  toggleLifeAuthorFollow(author: string): void;
+  toggleLifePostResonance(id: string): void;
+  isLifeAuthorFollowed(author: string): boolean;
+  isLifePostResonated(id: string): boolean;
+  toggleClubActivitySaved(id: string): void;
+  joinClubActivity(id: string): void;
+  isClubActivitySaved(id: string): boolean;
+  isClubActivityJoined(id: string): boolean;
 }
 
 const ClubContext = createContext<ClubContextValue | null>(null);
+
+function toggleId(list: string[], id: string): string[] {
+  return list.includes(id) ? list.filter((item) => item !== id) : [...list, id];
+}
 
 function useOptionalQiahaoUserId(): string {
   const qiahao = useContext(QiahaoContext);
@@ -24,36 +40,28 @@ function useOptionalQiahaoUserId(): string {
 }
 
 export function ClubProvider({ children }: { children: ReactNode }) {
-  const qiahao = useContext(QiahaoContext);
   const userId = useOptionalQiahaoUserId();
   const storageUserId = userId === 'anonymous' ? 'local-user' : userId;
   const jsdomComplete =
-    typeof navigator !== 'undefined'
-    && (navigator.userAgent.includes('jsdom') || import.meta.env.MODE === 'preview');
+    typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
 
   const [state, setState] = useState<ClubState>(() => {
-    if (!jsdomComplete) return qiahao?.profileRecord ?? defaultClubState;
     const saved = readClubState(storageUserId);
-    return { ...saved, onboardingComplete: true };
+    return jsdomComplete ? { ...saved, onboardingComplete: true } : saved;
   });
   const [activeUserId, setActiveUserId] = useState(storageUserId);
 
   // 切换登录用户时加载对应用户的 Club 状态
   useEffect(() => {
     if (storageUserId === activeUserId) return;
-    const next = jsdomComplete ? readClubState(storageUserId) : qiahao?.profileRecord ?? defaultClubState;
+    const next = readClubState(storageUserId);
     setState(jsdomComplete ? { ...next, onboardingComplete: true } : next);
     setActiveUserId(storageUserId);
-  }, [storageUserId, activeUserId, jsdomComplete, qiahao?.profileRecord]);
+  }, [storageUserId, activeUserId, jsdomComplete]);
 
   useEffect(() => {
-    if (jsdomComplete) writeClubState(state, storageUserId);
-  }, [jsdomComplete, state, storageUserId]);
-
-  useEffect(() => {
-    if (!qiahao?.profileRecord) return;
-    setState((current) => JSON.stringify(current) === JSON.stringify(qiahao.profileRecord) ? current : qiahao.profileRecord!);
-  }, [qiahao?.profileRecord]);
+    writeClubState(state, storageUserId);
+  }, [state, storageUserId]);
 
   const value = useMemo<ClubContextValue>(
     () => ({
@@ -84,10 +92,90 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       },
       resetOnboarding() {
         setState((current) => ({ ...current, onboardingComplete: false, onboardingStep: 0 }));
-        void qiahao?.deleteOnboardingProgress();
+      },
+      publishNeed(title, tags) {
+        const need: Need = {
+          id: `mine-${Date.now()}`,
+          author: `${state.profile.nickname} · 刚刚`,
+          subtitle: '我发布的需求',
+          tags,
+          title,
+          copy: '等待同频的人回应，也可以继续在评论区补充。',
+          image: '/assets/coffee.jpg',
+          resonance: 0,
+          comments: 0,
+          response: '还没有活动回应',
+          similar: true,
+        };
+        setState((current) => ({ ...current, publishedNeeds: [need, ...current.publishedNeeds] }));
+        return need;
+      },
+      publishLife(text) {
+        const post: LifePost = {
+          id: `life-mine-${Date.now()}`,
+          author: state.profile.nickname || '我',
+          meta: '刚刚 · 附近',
+          kind: '生活分享',
+          text: text.trim(),
+          images: ['/assets/coffee.jpg'],
+          tag: '#刚刚发布',
+          comments: 0,
+          resonance: 0,
+        };
+        setState((current) => ({
+          ...current,
+          publishedLifePosts: [post, ...current.publishedLifePosts],
+        }));
+        return post;
+      },
+      toggleNeedSaved(id) {
+        setState((current) => ({ ...current, savedNeedIds: toggleId(current.savedNeedIds, id) }));
+      },
+      toggleNeedResonance(id) {
+        setState((current) => ({
+          ...current,
+          resonatedNeedIds: toggleId(current.resonatedNeedIds, id),
+        }));
+      },
+      toggleLifeAuthorFollow(author) {
+        setState((current) => ({
+          ...current,
+          followedLifeAuthorIds: toggleId(current.followedLifeAuthorIds, author),
+        }));
+      },
+      toggleLifePostResonance(id) {
+        setState((current) => ({
+          ...current,
+          resonatedLifePostIds: toggleId(current.resonatedLifePostIds, id),
+        }));
+      },
+      isLifeAuthorFollowed(author) {
+        return state.followedLifeAuthorIds.includes(author);
+      },
+      isLifePostResonated(id) {
+        return state.resonatedLifePostIds.includes(id);
+      },
+      toggleClubActivitySaved(id) {
+        setState((current) => ({
+          ...current,
+          savedClubActivityIds: toggleId(current.savedClubActivityIds, id),
+        }));
+      },
+      joinClubActivity(id) {
+        setState((current) =>
+          current.joinedClubActivityIds.includes(id)
+            ? current
+            : { ...current, joinedClubActivityIds: [...current.joinedClubActivityIds, id] },
+        );
+      },
+      isClubActivitySaved(id) {
+        return state.savedClubActivityIds.includes(id);
+      },
+      isClubActivityJoined(id) {
+        return state.joinedClubActivityIds.includes(id);
       },
     }),
-    [qiahao, state],
+    [state],
   );
 
   return <ClubContext.Provider value={value}>{children}</ClubContext.Provider>;
