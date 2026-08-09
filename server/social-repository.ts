@@ -191,7 +191,7 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
 
 async function readThread(connection: QiahaoDatabase | QiahaoConnection, id: string, userId?: string): Promise<MessageThread | null> {
   const rows = await connection.query<ThreadRow[]>(
-    `SELECT t.id,t.activity_id,t.title,t.image,t.is_system AS system,
+    `SELECT t.id,t.activity_id,t.title,t.image,t.is_system AS \`system\`,
             CASE WHEN latest.deleted_at IS NULL THEN latest.body ELSE '消息已撤回' END AS last_message,
             latest.created_at AS message_created_at,
             tm.unread

@@ -480,15 +480,21 @@ export function buildApp({ database, notificationHub = new NotificationHub(), co
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
     const hasPatch = request.body && ['body', 'image', 'tags'].some((key) => Object.prototype.hasOwnProperty.call(request.body, key));
     if (!hasPatch) return fail(reply, 400, 'VALIDATION_ERROR', '请至少提供一个可修改字段');
-    const existing = current.contentType === 'need'
-      ? await getNeed(database, current.id, false, user.id)
-      : await getLifePost(database, current.id, false, user.id);
+    if (current.contentType === 'need') {
+      const existing = await getNeed(database, current.id, false, user.id);
+      if (!existing) return fail(reply, 404, 'NOT_FOUND', '内容不存在');
+      const body = request.body?.body === undefined ? existing.body : parseContentBody(request.body.body);
+      const tags = request.body?.tags === undefined ? existing.tags.map((tag) => tag.id) : parseTagRefs(request.body.tags);
+      if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '内容不能为空且不能超过 5000 字');
+      if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
+      return { data: { item: await updateNeed(database, current.id, body, tags, user.id) } };
+    }
+    const existing = await getLifePost(database, current.id, false, user.id);
     if (!existing) return fail(reply, 404, 'NOT_FOUND', '内容不存在');
     const body = request.body?.body === undefined ? existing.body : parseContentBody(request.body.body);
     const tags = request.body?.tags === undefined ? existing.tags.map((tag) => tag.id) : parseTagRefs(request.body.tags);
     if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '内容不能为空且不能超过 5000 字');
     if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
-    if (current.contentType === 'need') return { data: { item: await updateNeed(database, current.id, body, tags, user.id) } };
     const image = request.body?.image === undefined ? existing.image ?? undefined : parseOptionalImage(request.body.image);
     if (image === null) return fail(reply, 400, 'VALIDATION_ERROR', '图片格式无效');
     return { data: { item: await updateLifePost(database, current.id, body, image, tags, user.id) } };

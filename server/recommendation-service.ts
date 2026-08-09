@@ -1,5 +1,4 @@
 import type { RowDataPacket } from 'mysql2/promise';
-import type { ApiActivity } from '../src/api/types';
 import type { RecommendationRuleConfig } from '../src/config/types';
 import { getActivity } from './activity-repository';
 import { BusinessConfigService } from './config-service';
@@ -109,7 +108,8 @@ export async function recommendActivities(
   const weights = numericSettings(settings.get('weights'), safeWeights);
   const cold = numericPair(settings.get('cold_start'), safeColdStart);
   const joined = new Set(joinedRows.map((row) => row.activity_id));
-  const activities = (await Promise.all(activityRows.map((row) => getActivity(database, userId, row.id)))).filter((item): item is ApiActivity => item !== null);
+  const loadedActivities = await Promise.all(activityRows.map((row) => getActivity(database, userId, row.id)));
+  const activities = loadedActivities.filter((item): item is NonNullable<typeof item> => item !== null);
   const signalCount = groups.intent.length + groups.scene.length + groups.profile.length;
   const ranked = activities.map((activity) => {
     const blob = [activity.title, activity.description, activity.location, activity.category, ...(activity.tags ?? []).flatMap((tag) => [tag.label, tag.slug])]

@@ -1,0 +1,372 @@
+# global.css 类名 → 使用方映射（Phase 5 拆分对照表）
+
+- `.activity-admin-hero` → pages/AdminContentPage.tsx
+- `.activity-card` → components/ClubActivityCard.tsx
+- `.activity-confirm-page` → pages/AdminContentPage.tsx
+- `.activity-feedback-summary` → pages/ActivityFeedbackPage.tsx
+- `.activity-flow-mini` → pages/AdminContentPage.tsx
+- `.activity-kpi-grid` → pages/AdminContentPage.tsx
+- `.activity-list` → pages/AdminContentPage.tsx
+- `.activity-manage-detail` → pages/AdminContentPage.tsx
+- `.activity-manage-page` → pages/AdminContentPage.tsx
+- `.activity-stage-filter` → pages/AdminContentPage.tsx
+- `.admin-action-card` → pages/AdminContentPage.tsx
+- `.admin-action-icon` → pages/AdminContentPage.tsx
+- `.admin-activity-list` → pages/AdminContentPage.tsx
+- `.admin-content-page` → pages/AdminContentPage.tsx
+- `.admin-field` → pages/AdminContentPage.tsx
+- `.admin-preview-card` → pages/AdminContentPage.tsx
+- `.admin-proposal-card-head` → pages/AdminContentPage.tsx
+- `.admin-proposal-list` → pages/AdminContentPage.tsx
+- `.admin-proposal-page` → pages/AdminContentPage.tsx
+- `.answer-grid` → pages/onboarding/LightQuestionsStep.tsx
+- `.app-canvas` → components/AppShell.tsx
+- `.app-shell` → components/AppShell.tsx
+- `.app-shell__content` → components/AppShell.tsx
+- `.app-sidebar` → components/Sidebar.tsx
+- `.app-sidebar__brand` → components/Sidebar.tsx
+- `.app-sidebar__nav` → components/Sidebar.tsx
+- `.app-sidebar__publish` → components/Sidebar.tsx
+- `.app-state` → app/AppRouter.tsx
+- `.avatar-stack` → components/AvatarStack.tsx
+- `.avoid` → pages/onboarding/PortraitStep.tsx
+- `.bottom-nav` → components/BottomNav.tsx
+- `.bottom-nav__icon` → components/BottomNav.tsx
+- `.bottom-nav__item` → components/BottomNav.tsx
+- `.bottom-nav__item--create` → components/BottomNav.tsx
+- `.bottom-sheet` → components/Sheet.tsx
+- `.category-grid` → pages/CreateActivityPage.tsx
+- `.category-label` → pages/ClubActivityDetailPage.tsx
+- `.category-label--muted` → pages/ClubActivityDetailPage.tsx
+- `.cc-brief` → pages/AdminContentPage.tsx
+- `.cc-daily-hero` → pages/AdminContentPage.tsx
+- `.cc-daily-metrics` → pages/AdminContentPage.tsx
+- `.cc-daily-page` → pages/AdminContentPage.tsx
+- `.cc-note` → pages/AdminContentPage.tsx
+- `.cc-pending-list` → pages/AdminContentPage.tsx
+- `.cc-suggest` → pages/AdminContentPage.tsx
+- `.club-activity-card` → components/ClubActivityCard.tsx
+- `.club-activity-comment-link` → components/ClubActivityCard.tsx
+- `.club-activity-copy` → components/ClubActivityCard.tsx
+- `.club-activity-media` → components/ClubActivityCard.tsx
+- `.club-activity-meta` → components/ClubActivityCard.tsx
+- `.club-activity-title` → components/ClubActivityCard.tsx
+- `.club-card-list` → pages/ActivitiesHomePage.tsx, pages/ExplorePage.tsx, pages/ProfileRecordsPage.tsx
+- `.club-feature` → pages/ActivitiesHomePage.tsx, pages/AdminContentPage.tsx
+- `.club-filter-strip` → pages/ExplorePage.tsx
+- `.club-home` → pages/ActivitiesHomePage.tsx
+- `.club-home-header` → pages/ActivitiesHomePage.tsx
+- `.club-profile` → pages/ProfilePage.tsx
+- `.club-profile-section` → pages/ProfilePage.tsx
+- `.club-search` → pages/ExplorePage.tsx
+- `.club-section` → pages/ActivitiesHomePage.tsx
+- `.club-tag-match` → components/ClubActivityCard.tsx
+- `.club-tags` → components/ClubActivityCard.tsx, components/NeedCard.tsx, pages/AdminContentPage.tsx, pages/NeedDetailPage.tsx, pages/ProfileEditorPage.tsx
+- `.comment-section` → components/CommentSection.tsx
+- `.comment-section__avatar` → components/CommentSection.tsx
+- `.comment-section__avatar--initial` → components/CommentSection.tsx
+- `.comment-section__composer` → components/CommentSection.tsx
+- `.comment-section__copy` → components/CommentSection.tsx
+- `.comment-section__delete` → components/CommentSection.tsx
+- `.comment-section__empty` → components/CommentSection.tsx
+- `.comment-section__error` → components/CommentSection.tsx
+- `.comment-section__header` → components/CommentSection.tsx
+- `.comment-section__item` → components/CommentSection.tsx
+- `.comment-section__list` → components/CommentSection.tsx
+- `.comment-section__spinner` → components/CommentSection.tsx
+- `.comment-section__state` → components/CommentSection.tsx
+- `.comment-section__toggle` → components/CommentSection.tsx
+- `.confirm-checks` → pages/AdminContentPage.tsx
+- `.content-inline-editor` → pages/ClubActivityDetailPage.tsx, pages/LifePostDetailPage.tsx, pages/NeedDetailPage.tsx
+- `.content-owner-actions` → pages/ClubActivityDetailPage.tsx, pages/LifePostDetailPage.tsx, pages/NeedDetailPage.tsx
+- `.create-form` → pages/CreateActivityPage.tsx
+- `.create-need` → pages/ActivityFeedbackPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx
+- `.create-need-lead` → pages/ActivityFeedbackPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx
+- `.create-page` → pages/CreateActivityPage.tsx
+- `.create-page__header` → pages/CreateActivityPage.tsx
+- `.css` → main.tsx
+- `.danger` → pages/AdminContentPage.tsx, pages/ProfilePage.tsx
+- `.detail-action` → pages/ClubActivityDetailPage.tsx, pages/NeedDetailPage.tsx
+- `.detail-content` → pages/ClubActivityDetailPage.tsx, pages/NeedDetailPage.tsx
+- `.detail-flow` → pages/ClubActivityDetailPage.tsx
+- `.detail-flow-step` → pages/ClubActivityDetailPage.tsx
+- `.detail-info-rows` → pages/ClubActivityDetailPage.tsx
+- `.detail-label-row` → pages/ClubActivityDetailPage.tsx
+- `.detail-media` → pages/ClubActivityDetailPage.tsx, pages/NeedDetailPage.tsx
+- `.detail-media__actions` → pages/ClubActivityDetailPage.tsx
+- `.detail-media__bar` → pages/ClubActivityDetailPage.tsx
+- `.detail-page` → pages/ClubActivityDetailPage.tsx
+- `.detail-pitch` → pages/ClubActivityDetailPage.tsx
+- `.detail-secondary-actions` → pages/ClubActivityDetailPage.tsx
+- `.detail-section` → pages/ClubActivityDetailPage.tsx
+- `.editor-copy` → pages/ProfileEditorPage.tsx
+- `.editor-cover` → pages/ProfileEditorPage.tsx
+- `.editor-fields` → pages/ProfileEditorPage.tsx
+- `.editor-score` → pages/ProfileEditorPage.tsx
+- `.empty-state` → pages/ActivitiesHomePage.tsx, pages/AdminContentPage.tsx, pages/ExplorePage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileRecordsPage.tsx
+- `.explore-page` → pages/ExplorePage.tsx
+- `.eyebrow` → pages/CreateActivityPage.tsx, pages/MessagesPage.tsx
+- `.feed-load-more` → pages/NeedsPage.tsx
+- `.feedback-reason-sheet` → components/FeedbackReasonSheet.tsx
+- `.field-error` → pages/ActivityFeedbackPage.tsx, pages/ClubActivityDetailPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/LifePostDetailPage.tsx, pages/MessagesPage.tsx, pages/NeedDetailPage.tsx, pages/ProfileEditorPage.tsx, pages/onboarding/PortraitStep.tsx
+- `.field-help` → pages/CreateActivityPage.tsx
+- `.field-help--left` → pages/CreateActivityPage.tsx
+- `.floating-button` → pages/ClubActivityDetailPage.tsx
+- `.form-control-block` → pages/CreateActivityPage.tsx
+- `.form-field` → pages/CreateActivityPage.tsx
+- `.form-row` → pages/CreateActivityPage.tsx
+- `.form-row--controls` → pages/CreateActivityPage.tsx
+- `.form-section` → pages/CreateActivityPage.tsx
+- `.guide-chips` → pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx
+- `.icon-button` → components/Sheet.tsx, components/Toast.tsx, notifications/NotificationBell.tsx, pages/AdminContentPage.tsx, pages/ClubActivityDetailPage.tsx, pages/NotificationCenterPage.tsx, pages/NotificationDetailPage.tsx, pages/ProfilePage.tsx
+- `.icon-button--small` → components/Toast.tsx
+- `.info-row` → pages/ClubActivityDetailPage.tsx
+- `.is-active` → components/BottomNav.tsx, components/LifePostCard.tsx, components/NeedCard.tsx, components/Sidebar.tsx, pages/ActivityFeedbackPage.tsx, pages/AdminContentPage.tsx, pages/ClubActivityDetailPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/ExplorePage.tsx, pages/LifePostDetailPage.tsx, pages/NeedDetailPage.tsx, pages/NeedsPage.tsx, pages/NotificationCenterPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileEditorPage.tsx, pages/onboarding/LightQuestionsStep.tsx, pages/onboarding/OnboardingFlow.tsx, pages/onboarding/QaCardsStep.tsx
+- `.is-closing` → components/Sheet.tsx
+- `.is-cool` → pages/AdminContentPage.tsx
+- `.is-danger` → pages/AdminContentPage.tsx
+- `.is-empty` → pages/NeedDetailPage.tsx
+- `.is-mine` → pages/MessagesPage.tsx
+- `.is-money` → pages/AdminContentPage.tsx
+- `.is-muted` → pages/AdminContentPage.tsx
+- `.is-read` → pages/NotificationCenterPage.tsx
+- `.is-waiting` → pages/NeedDetailPage.tsx
+- `.is-warm` → pages/AdminContentPage.tsx
+- `.is-zero` → pages/NeedDetailPage.tsx
+- `.life-detail` → pages/LifePostDetailPage.tsx
+- `.life-detail__actions` → pages/LifePostDetailPage.tsx
+- `.life-detail__author` → pages/LifePostDetailPage.tsx
+- `.life-detail__body` → pages/LifePostDetailPage.tsx
+- `.life-detail__content` → pages/LifePostDetailPage.tsx
+- `.life-detail__header` → pages/LifePostDetailPage.tsx
+- `.life-detail__hero` → pages/LifePostDetailPage.tsx
+- `.life-detail__images` → pages/LifePostDetailPage.tsx
+- `.life-detail__tag` → pages/LifePostDetailPage.tsx
+- `.life-feed` → pages/NeedsPage.tsx
+- `.life-post` → api/client.ts, components/LifePostCard.tsx
+- `.life-post-images` → components/LifePostCard.tsx
+- `.life-post__open` → components/LifePostCard.tsx
+- `.login-page` → pages/LoginPage.tsx
+- `.message-avatar` → pages/MessagesPage.tsx
+- `.message-avatar--system` → pages/MessagesPage.tsx
+- `.message-composer` → pages/MessagesPage.tsx
+- `.message-copy` → pages/MessagesPage.tsx
+- `.message-list` → pages/MessagesPage.tsx
+- `.message-meta` → pages/MessagesPage.tsx
+- `.message-row` → pages/MessagesPage.tsx
+- `.message-safety-note` → pages/MessagesPage.tsx
+- `.message-thread-card` → pages/MessagesPage.tsx
+- `.message-thread-list` → pages/MessagesPage.tsx
+- `.message-thread-page` → pages/MessagesPage.tsx
+- `.need-card-actions` → components/NeedCard.tsx
+- `.need-card-content` → components/NeedCard.tsx
+- `.need-card-large` → components/NeedCard.tsx
+- `.need-card-media` → components/NeedCard.tsx
+- `.need-card-title` → components/NeedCard.tsx
+- `.need-detail` → pages/NeedDetailPage.tsx
+- `.need-detail-actions` → pages/NeedDetailPage.tsx
+- `.need-detail-content` → pages/NeedDetailPage.tsx
+- `.need-detail-media` → pages/NeedDetailPage.tsx
+- `.need-empty-panel` → components/CommentSection.tsx, pages/NeedDetailPage.tsx
+- `.need-empty-panel--inline` → pages/NeedDetailPage.tsx
+- `.need-recommend` → pages/ActivitiesHomePage.tsx
+- `.need-response` → pages/NeedDetailPage.tsx
+- `.need-response-link` → pages/NeedDetailPage.tsx
+- `.need-response-stats` → pages/NeedDetailPage.tsx
+- `.need-tools` → pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx
+- `.needs-hero` → pages/NeedsPage.tsx
+- `.needs-list` → pages/NeedsPage.tsx
+- `.needs-mode` → pages/NeedsPage.tsx
+- `.needs-page` → pages/NeedsPage.tsx
+- `.needs-subhead` → pages/NeedsPage.tsx
+- `.notification-bell` → notifications/NotificationBell.tsx
+- `.notification-bell__dot` → notifications/NotificationBell.tsx
+- `.notification-clear` → pages/NotificationCenterPage.tsx
+- `.notification-copy` → pages/NotificationCenterPage.tsx
+- `.notification-copy__title` → pages/NotificationCenterPage.tsx
+- `.notification-detail` → pages/NotificationDetailPage.tsx
+- `.notification-detail__body` → pages/NotificationDetailPage.tsx
+- `.notification-detail__header` → pages/NotificationDetailPage.tsx
+- `.notification-detail__link` → pages/NotificationDetailPage.tsx
+- `.notification-detail__note` → pages/NotificationDetailPage.tsx
+- `.notification-empty` → pages/NotificationCenterPage.tsx
+- `.notification-error` → pages/NotificationCenterPage.tsx
+- `.notification-filters` → pages/NotificationCenterPage.tsx
+- `.notification-header` → pages/NotificationCenterPage.tsx
+- `.notification-icon` → pages/NotificationCenterPage.tsx, pages/NotificationDetailPage.tsx
+- `.notification-list` → pages/NotificationCenterPage.tsx
+- `.notification-loading` → pages/NotificationCenterPage.tsx
+- `.notification-page` → pages/NotificationCenterPage.tsx
+- `.notification-row` → pages/NotificationCenterPage.tsx
+- `.onboarding-actions` → pages/onboarding/QaCardsStep.tsx
+- `.onboarding-body` → pages/onboarding/BasicProfileStep.tsx, pages/onboarding/LightQuestionsStep.tsx, pages/onboarding/PortraitStep.tsx, pages/onboarding/QaCardsStep.tsx
+- `.onboarding-header` → pages/onboarding/OnboardingFlow.tsx
+- `.onboarding-intro` → pages/onboarding/BasicProfileStep.tsx, pages/onboarding/LightQuestionsStep.tsx, pages/onboarding/QaCardsStep.tsx
+- `.onboarding-page` → pages/onboarding/OnboardingFlow.tsx
+- `.onboarding-progress` → pages/onboarding/OnboardingFlow.tsx
+- `.operator-audit-list` → pages/OperatorBusinessConfigPage.tsx
+- `.operator-business` → app/AppRouter.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfilePage.tsx
+- `.operator-clusters` → pages/AdminContentPage.tsx
+- `.operator-config-form` → pages/OperatorBusinessConfigPage.tsx
+- `.operator-config-preview` → pages/OperatorBusinessConfigPage.tsx
+- `.operator-domain-tabs` → pages/OperatorBusinessConfigPage.tsx
+- `.operator-metrics` → pages/AdminContentPage.tsx
+- `.operator-notice` → pages/AdminContentPage.tsx, pages/OperatorBusinessConfigPage.tsx
+- `.operator-panel` → pages/AdminContentPage.tsx, pages/OperatorBusinessConfigPage.tsx
+- `.operator-proposal-list` → pages/OperatorBusinessConfigPage.tsx
+- `.operator-title-row` → pages/AdminContentPage.tsx
+- `.orange` → pages/ProfilePage.tsx, pages/onboarding/PortraitStep.tsx
+- `.page` → api/client.ts, app/AppRouter.tsx, components/BottomNav.tsx, components/Sidebar.tsx, data/activityQueries.ts, hooks/useComments.ts, pages/ActivitiesHomePage.tsx, pages/ActivityFeedbackPage.tsx, pages/AdminContentPage.tsx, pages/ClubActivityDetailPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/ExplorePage.tsx, pages/LifePostDetailPage.tsx, pages/LoginPage.tsx, pages/MessagesPage.tsx, pages/NeedDetailPage.tsx, pages/NeedsPage.tsx, pages/NotificationCenterPage.tsx, pages/NotificationDetailPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileEditorPage.tsx, pages/ProfilePage.tsx, pages/ProfileRecordsPage.tsx, pages/onboarding/OnboardingFlow.tsx, state/QiahaoContext.tsx, theme/theme.ts
+- `.page-header` → pages/ActivityFeedbackPage.tsx, pages/AdminContentPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/LifePostDetailPage.tsx, pages/MessagesPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileEditorPage.tsx, pages/ProfileRecordsPage.tsx
+- `.page-header--padded` → pages/MessagesPage.tsx
+- `.page-hero` → pages/ExplorePage.tsx
+- `.page-hero--with-action` → pages/ExplorePage.tsx
+- `.portrait-compare` → pages/onboarding/PortraitStep.tsx
+- `.portrait-cover` → pages/onboarding/PortraitStep.tsx
+- `.portrait-progress` → pages/ProfilePage.tsx
+- `.portrait-step` → pages/onboarding/PortraitStep.tsx
+- `.portrait-strip` → pages/ActivitiesHomePage.tsx
+- `.portrait-strip-head` → pages/ActivitiesHomePage.tsx
+- `.portrait-tags` → pages/onboarding/PortraitStep.tsx
+- `.price-input` → pages/CreateActivityPage.tsx
+- `.primary-button` → app/AppRouter.tsx, components/JoinSheet.tsx, pages/ActivityFeedbackPage.tsx, pages/ClubActivityDetailPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/LifePostDetailPage.tsx, pages/NeedDetailPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileEditorPage.tsx, pages/onboarding/BasicProfileStep.tsx, pages/onboarding/LightQuestionsStep.tsx, pages/onboarding/PortraitStep.tsx, pages/onboarding/QaCardsStep.tsx
+- `.primary-button--wide` → components/JoinSheet.tsx, pages/ActivityFeedbackPage.tsx, pages/ClubActivityDetailPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/ProfileEditorPage.tsx, pages/onboarding/BasicProfileStep.tsx, pages/onboarding/LightQuestionsStep.tsx, pages/onboarding/PortraitStep.tsx
+- `.profile-avatar-edit` → pages/onboarding/BasicProfileStep.tsx
+- `.profile-cover` → pages/ProfilePage.tsx
+- `.profile-editor` → pages/ProfileEditorPage.tsx
+- `.profile-fields` → pages/onboarding/BasicProfileStep.tsx
+- `.profile-id` → pages/ProfilePage.tsx
+- `.profile-identity` → pages/ProfilePage.tsx
+- `.profile-promos` → pages/ProfilePage.tsx
+- `.profile-row-icon` → pages/ProfilePage.tsx
+- `.profile-stats` → pages/ProfilePage.tsx
+- `.proposal-actions` → pages/AdminContentPage.tsx
+- `.proposal-block` → pages/AdminContentPage.tsx
+- `.proposal-bullet-list` → pages/AdminContentPage.tsx
+- `.proposal-core` → pages/AdminContentPage.tsx
+- `.proposal-detail` → pages/AdminContentPage.tsx
+- `.proposal-detail-hero` → pages/AdminContentPage.tsx
+- `.proposal-info-table` → pages/AdminContentPage.tsx
+- `.proposal-stage-list` → pages/AdminContentPage.tsx
+- `.proposal-status` → pages/AdminContentPage.tsx
+- `.proposal-verdict` → pages/AdminContentPage.tsx
+- `.publish-button` → pages/CreateActivityPage.tsx
+- `.publish-helper` → pages/CreateLifePage.tsx
+- `.publish-note` → pages/CreateActivityPage.tsx
+- `.publish-photo-grid` → pages/CreateLifePage.tsx
+- `.publish-type-list` → components/PublishTypeSheet.tsx
+- `.publish-type-option` → components/PublishTypeSheet.tsx
+- `.publish-type-option__copy` → components/PublishTypeSheet.tsx
+- `.publish-type-option__icon` → components/PublishTypeSheet.tsx
+- `.publish-type-sheet` → components/PublishTypeSheet.tsx
+- `.push-page` → pages/AdminContentPage.tsx
+- `.push-preview` → pages/AdminContentPage.tsx
+- `.qa-focus` → pages/onboarding/QaCardsStep.tsx
+- `.qa-levels` → pages/onboarding/QaCardsStep.tsx
+- `.question-section` → pages/onboarding/LightQuestionsStep.tsx
+- `.question-title` → pages/onboarding/LightQuestionsStep.tsx
+- `.reason-grid` → components/FeedbackReasonSheet.tsx
+- `.reason-option` → components/FeedbackReasonSheet.tsx
+- `.record-list` → pages/ProfileRecordsPage.tsx
+- `.records-page` → pages/ProfileRecordsPage.tsx
+- `.revenue-hero` → pages/AdminContentPage.tsx
+- `.revenue-list` → pages/AdminContentPage.tsx
+- `.revenue-page` → pages/AdminContentPage.tsx
+- `.revenue-summary` → pages/AdminContentPage.tsx
+- `.revenue-tabs` → pages/AdminContentPage.tsx
+- `.route-stage` → app/AppRouter.tsx
+- `.safety-panel` → pages/ClubActivityDetailPage.tsx
+- `.secondary-button` → pages/ClubActivityDetailPage.tsx, pages/ExplorePage.tsx, pages/NeedsPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/onboarding/QaCardsStep.tsx
+- `.sheet-backdrop` → components/Sheet.tsx
+- `.sheet-close` → components/Sheet.tsx
+- `.sheet-handle` → components/Sheet.tsx, core.test.tsx
+- `.sheet-handle-area` → components/Sheet.tsx, core.test.tsx
+- `.sheet-icon` → components/JoinSheet.tsx, pages/ClubActivityDetailPage.tsx
+- `.sheet-note` → components/JoinSheet.tsx, pages/ClubActivityDetailPage.tsx
+- `.sr-only` → components/CommentSection.tsx
+- `.stage-goal` → pages/AdminContentPage.tsx
+- `.stage-script` → pages/AdminContentPage.tsx
+- `.stage-tip` → pages/AdminContentPage.tsx
+- `.standard-page` → pages/AdminContentPage.tsx, pages/CreateActivityPage.tsx, pages/MessagesPage.tsx
+- `.standard-page--flush` → pages/MessagesPage.tsx
+- `.stepper` → pages/CreateActivityPage.tsx
+- `.subpage-header` → pages/ActivityFeedbackPage.tsx, pages/AdminContentPage.tsx, pages/CreateActivityPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx, pages/LifePostDetailPage.tsx, pages/MessagesPage.tsx, pages/OperatorBusinessConfigPage.tsx, pages/ProfileEditorPage.tsx, pages/ProfileRecordsPage.tsx
+- `.tag-picks` → pages/ActivityFeedbackPage.tsx, pages/CreateLifePage.tsx, pages/CreateNeedPage.tsx
+- `.toast` → app/AppRouter.tsx, components/Toast.tsx
+- `.trust-strip` → pages/ProfilePage.tsx
+- `.voice-action` → pages/onboarding/QaCardsStep.tsx
+- `.welcome-error` → pages/LoginPage.tsx
+- `.welcome-face` → pages/LoginPage.tsx
+- `.welcome-login-nav` → pages/LoginPage.tsx
+- `.welcome-login-page` → pages/LoginPage.tsx
+- `.welcome-logo` → pages/LoginPage.tsx
+- `.welcome-screen` → pages/LoginPage.tsx
+- `.welcome-start` → pages/LoginPage.tsx
+
+## 未被任何 tsx/ts 引用（候选死样式 / 伪元素基类）
+
+- `.activity-card__body`
+- `.activity-card__category`
+- `.activity-card__date`
+- `.activity-card__footer`
+- `.activity-card__image-button`
+- `.activity-card__image-wrap`
+- `.activity-card__people`
+- `.activity-card__place`
+- `.activity-card__save`
+- `.activity-card__title`
+- `.activity-stat-line`
+- `.activity-stat-line--card`
+- `.activity-stat-line--detail`
+- `.admin-content-item`
+- `.admin-content-item__actions`
+- `.admin-content-item__meta`
+- `.admin-content-list`
+- `.admin-filters`
+- `.admin-reason`
+- `.admin-rejection`
+- `.admin-tag-row`
+- `.admin-tags`
+- `.category-strip`
+- `.club-activity-detail`
+- `.detail-facts`
+- `.discover-header`
+- `.discover-hero`
+- `.discover-hero__content`
+- `.discover-hero__shade`
+- `.discover-hero__title`
+- `.discover-load-more`
+- `.discover-page`
+- `.discover-section`
+- `.empty-state--tall`
+- `.empty-state__mark`
+- `.host-row`
+- `.is-approved`
+- `.is-rejected`
+- `.location-button`
+- `.login-submit`
+- `.need-comments`
+- `.need-response-waiting`
+- `.notification-icon--comment`
+- `.notification-icon--feedback`
+- `.notification-icon--like`
+- `.notification-icon--system`
+- `.operator-dashboard`
+- `.operator-need-list`
+- `.operator-panel--governance`
+- `.operator-proposals`
+- `.participant-row`
+- `.png`
+- `.profile-menu`
+- `.profile-page`
+- `.publish-cover-picker`
+- `.publish-type-option__icon--activity`
+- `.publish-type-option__icon--life`
+- `.publish-type-option__icon--need`
+- `.search-box`
+- `.secondary-button--compact`
+- `.section-heading`
+- `.section-title-row`
+- `.simple-admin-pane`
+- `.text-button`
+- `.text-link`

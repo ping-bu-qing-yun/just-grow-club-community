@@ -11,11 +11,11 @@ import { AuthorizationError, requireCommentOwnerOrAdmin, requireContentOwnerOrAd
 import { REQUIRED_MIGRATIONS, type QiahaoDatabase } from './db';
 import { isIgnorableMigrationError, migrationStatementCounts, splitMigrationStatements } from './migrations/service';
 import { changeModerationStatus, isAllowedStatusTransition } from './content-repository';
-import { cancelActivity, joinActivity } from './social-repository';
+import { cancelActivity, joinActivity, listThreads } from './social-repository';
 import { decodeTimestampCursor, encodeTimestampCursor, PaginationCursorError } from './pagination';
 import { assertMediaUrl, MediaUrlError } from './media-url';
 import { setPrimaryContentMedia } from './media-repository';
-import { mutateConfigEntity, ConfigMutationError } from './config-mutation-repository';
+import { mutateConfigEntity } from './config-mutation-repository';
 
 const operator: AuthenticatedUser = { id: 'op', phone: '1', name: '运营', avatar: '', bio: '', verified: true, role: 'operator' };
 const member: AuthenticatedUser = { ...operator, id: 'member', role: 'member' };
@@ -183,6 +183,27 @@ describe('authorization and activity lifecycle', () => {
     expect(queries).toContain('DELETE FROM thread_members WHERE thread_id=? AND user_id=?');
     expect(queries.join('\n')).toMatch(/cancelled_at/);
   });
+
+  it('uses a MySQL-safe alias when it reads member threads', async () => {
+    const database = {
+      async query(sql: string) {
+        if (sql.includes('t.is_system AS system')) throw new Error('unquoted MySQL reserved keyword alias');
+        if (sql.includes('ORDER BY t.created_at DESC')) return [{ id: 'thread-a1' }];
+        if (sql.includes('SELECT t.id,t.activity_id')) {
+          return [{
+            id: 'thread-a1', activity_id: 'a1', title: '活动群聊', image: null, system: 0,
+            last_message: '欢迎加入', message_created_at: '2026-08-09 10:00:00.000', unread: 1,
+          }];
+        }
+        throw new Error(`unexpected query: ${sql}`);
+      },
+    } as unknown as QiahaoDatabase;
+
+    await expect(listThreads(database, 'member')).resolves.toEqual([{
+      id: 'thread-a1', activityId: 'a1', title: '活动群聊', lastMessage: '欢迎加入',
+      time: '2026-08-09 10:00:00.000', unread: 1, image: undefined, system: false,
+    }]);
+  });
 });
 
 describe('migrations and v2 session security', () => {
@@ -274,7 +295,7 @@ describe('migrations and v2 session security', () => {
     await expect(mutateConfigEntity(database, {
       domain: 'activity-categories', entityType: 'activity-category', key: 'walking', expectedRevision: 0,
       actorId: 'op', mode: 'create', values: { label: '散步', themeKey: 'walk', iconKey: 'footprints' },
-    })).rejects.toMatchObject<Partial<ConfigMutationError>>({ code: 'VERSION_CONFLICT', status: 409 });
+    })).rejects.toMatchObject({ code: 'VERSION_CONFLICT', status: 409 });
   });
 
   it('rejects executable-shaped or unbounded recommendation settings before opening a transaction', async () => {
@@ -284,11 +305,11 @@ describe('migrations and v2 session security', () => {
     await expect(mutateConfigEntity(database, {
       domain: 'recommendation', entityType: 'recommendation-setting', key: 'cold_start', expectedRevision: 1,
       actorId: 'op', mode: 'update', values: { value: { formal: 'process.exit()', pre: 42 } },
-    })).rejects.toMatchObject<Partial<ConfigMutationError>>({ code: 'VALIDATION_ERROR', status: 400 });
+    })).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
     await expect(mutateConfigEntity(database, {
       domain: 'recommendation', entityType: 'recommendation-setting', key: 'sql_expression', expectedRevision: 1,
       actorId: 'op', mode: 'create', values: { value: { sql: 'SELECT * FROM users' } },
-    })).rejects.toMatchObject<Partial<ConfigMutationError>>({ code: 'VALIDATION_ERROR', status: 400 });
+    })).rejects.toMatchObject({ code: 'VALIDATION_ERROR', status: 400 });
   });
 
   it('round-trips opaque timestamp cursors and rejects malformed values', () => {
