@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import type { CommentContentType } from '../api/types';
 import { useQiahaoOptional } from '../state/QiahaoContext';
 import { type CommentApi, type CommentViewer, useComments } from '../hooks/useComments';
+import { Avatar } from './ui/Avatar';
+import styles from './CommentSection.module.css';
 
 const localViewer: CommentViewer = {
   id: 'me',
@@ -75,34 +77,28 @@ export function CommentSection({
   }
 
   return (
-    <section className="comment-section" id={`${contentType}-${contentId}-comments`} aria-label={`${title}评论区`}>
-      <header className="comment-section__header">
+    <section className={styles.section} id={`${contentType}-${contentId}-comments`} aria-label={`${title}评论区`}>
+      <header className={styles.header}>
         <h2>{title}</h2>
         {!loading && <span aria-label={`共${total}条评论`}>{total} 条</span>}
       </header>
 
       {loading ? (
-        <div className="comment-section__state" role="status">
-          <LoaderCircle size={18} className="comment-section__spinner" aria-hidden />
+        <div className={styles.state} role="status">
+          <LoaderCircle size={18} className={styles.spinner} aria-hidden />
           正在加载评论
         </div>
       ) : comments.length === 0 ? (
-        <div className="need-empty-panel comment-section__empty" aria-disabled="true">
+        <div className={styles.empty} aria-disabled="true">
           <strong>还没有评论</strong>
           <span>第一个说点什么吧</span>
         </div>
       ) : (
-        <ul className="comment-section__list" aria-label="评论列表" aria-busy={loadingMore}>
+        <ul className={styles.list} aria-label="评论列表" aria-busy={loadingMore}>
           {comments.map((comment) => (
-            <li key={comment.id} className="comment-section__item">
-              {comment.author.avatar ? (
-                <img src={comment.author.avatar} alt="" className="comment-section__avatar" />
-              ) : (
-                <span className="comment-section__avatar comment-section__avatar--initial" aria-hidden>
-                  {comment.author.name.slice(0, 1)}
-                </span>
-              )}
-              <div className="comment-section__copy">
+            <li key={comment.id} className={styles.item}>
+              <Avatar src={comment.author.avatar || undefined} name={comment.author.name} size={34} />
+              <div className={styles.copy}>
                 <div>
                   <strong>{comment.author.name}</strong>
                   <time dateTime={comment.createdAt}>{formatCommentTime(comment.createdAt)}</time>
@@ -112,12 +108,12 @@ export function CommentSection({
               {canDeleteComment(viewer, comment.author.id) && (
                 <button
                   type="button"
-                  className="comment-section__delete"
+                  className={styles.delete}
                   aria-label={`删除${comment.author.name}的评论`}
                   disabled={deletingIds.has(comment.id)}
                   onClick={() => void remove(comment)}
                 >
-                  {deletingIds.has(comment.id) ? <LoaderCircle size={15} className="comment-section__spinner" /> : <Trash2 size={15} />}
+                  {deletingIds.has(comment.id) ? <LoaderCircle size={15} className={styles.spinner} /> : <Trash2 size={15} />}
                   <span>删除</span>
                 </button>
               )}
@@ -129,7 +125,7 @@ export function CommentSection({
       {canToggle && (
         <button
           type="button"
-          className="comment-section__toggle"
+          className={styles.toggle}
           onClick={() => void (viewState === 'expanded' ? collapse() : expand())}
           disabled={loadingMore}
           aria-label={viewState === 'expanded' ? '收起评论' : '展开更多评论'}
@@ -140,7 +136,7 @@ export function CommentSection({
       )}
 
       <form
-        className="comment-section__composer"
+        className={styles.composer}
         aria-label="发表评论"
         onSubmit={(event) => {
           event.preventDefault();
@@ -157,12 +153,12 @@ export function CommentSection({
           placeholder={viewer ? '说点什么…' : '登录后可以发表评论'}
         />
         <button type="submit" aria-label="发布评论" disabled={submitting || !body.trim()}>
-          {submitting ? <LoaderCircle size={17} className="comment-section__spinner" /> : <Send size={17} />}
+          {submitting ? <LoaderCircle size={17} className={styles.spinner} /> : <Send size={17} />}
         </button>
       </form>
 
       {error && (
-        <div className="comment-section__error" role="alert">
+        <div className={styles.error} role="alert">
           <span>{error}</span>
           <button type="button" onClick={() => void retry()}>重试</button>
         </div>

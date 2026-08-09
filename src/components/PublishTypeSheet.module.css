@@ -1,0 +1,85 @@
+/* PublishTypeSheet — the publish-kind chooser inside a Sheet. */
+
+.sheet {
+  text-align: left;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  text-align: center;
+}
+
+.list {
+  display: grid;
+  gap: 10px;
+}
+
+.option {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  will-change: transform;
+  transition: border-color var(--dur-fast) ease-out;
+}
+
+.option:hover {
+  border-color: var(--brand);
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: var(--radius-control);
+}
+
+.icon--activity {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.icon--need {
+  background: #eff5f1;
+  color: var(--green);
+}
+
+.icon--life {
+  background: #f7f1ff;
+  color: #7a5af8;
+}
+
+.copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.copy strong {
+  font-size: var(--text-body-size);
+}
+
+.copy small {
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  line-height: 1.4;
+}

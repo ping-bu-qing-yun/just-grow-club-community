@@ -1,0 +1,39 @@
+/* JoinSheet — confirmation dialog content inside a Sheet. */
+
+.sheet {
+  text-align: center;
+}
+
+.icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eff5f1;
+  color: var(--green);
+}
+
+.title {
+  margin: 0 0 7px;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+}
+
+.note {
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  line-height: 1.6;
+  text-align: left;
+}

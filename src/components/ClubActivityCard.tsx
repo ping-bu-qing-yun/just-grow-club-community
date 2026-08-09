@@ -1,5 +1,9 @@
 import { ArrowUpRight, MapPin, MessageCircle, UsersRound } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import type { ClubActivity } from '../club/types';
+import { quick } from '../motion/springs';
+import { Badge } from './ui/Badge';
+import styles from './ClubActivityCard.module.css';
 
 export function ClubActivityCard({
   activity,
@@ -11,6 +15,8 @@ export function ClubActivityCard({
   matchLabel?: string;
   onOpen?: (activity: ClubActivity, focusComments?: boolean) => void;
 }) {
+  const reducedMotion = useReducedMotion();
+
   function open(focusComments = false) {
     onOpen?.(activity, focusComments);
   }
@@ -18,29 +24,36 @@ export function ClubActivityCard({
   const badge = matchLabel ?? activity.matchLabel;
 
   return (
-    <article className="club-activity-card">
-      <button type="button" className="club-activity-media" onClick={() => open()} aria-label={`打开${activity.title}`}>
-        <img src={activity.image} alt="" />
-        <span>{activity.status}</span>
-      </button>
-      <div className="club-activity-copy">
-        <div className="club-tags">
-          {badge ? <span className="club-tag-match">{badge}</span> : null}
+    <article className={styles.card}>
+      <motion.button
+        type="button"
+        className={styles.media}
+        onClick={() => open()}
+        aria-label={`打开${activity.title}`}
+        whileTap={reducedMotion ? { opacity: 0.8 } : { scale: 0.99 }}
+        transition={quick}
+      >
+        <motion.img
+          src={activity.image}
+          alt=""
+          whileTap={reducedMotion ? undefined : { scale: 1.03 }}
+          transition={quick}
+        />
+        <span className={styles.status}>{activity.status}</span>
+      </motion.button>
+      <div className={styles.copy}>
+        <div className={styles.tags}>
+          {badge ? <Badge tone="brand">{badge}</Badge> : null}
           {activity.tags.slice(0, badge ? 2 : 3).map((tag) => (
-            <span key={tag}>{tag}</span>
+            <Badge key={tag}>{tag}</Badge>
           ))}
         </div>
-        <button
-          type="button"
-          className="club-activity-title"
-          onClick={() => open()}
-          aria-label={`查看${activity.title}详情`}
-        >
+        <button type="button" className={styles.title} onClick={() => open()} aria-label={`查看${activity.title}详情`}>
           <h3>{activity.title}</h3>
           <ArrowUpRight size={18} aria-hidden />
         </button>
-        <p>{activity.description}</p>
-        <div className="club-activity-meta">
+        <p className={styles.description}>{activity.description}</p>
+        <div className={styles.meta}>
           <span>
             <MapPin size={13} />
             {activity.location}
@@ -51,7 +64,7 @@ export function ClubActivityCard({
           </span>
           <strong>{activity.fee}</strong>
         </div>
-        <button type="button" className="club-activity-comment-link" onClick={() => open(true)} aria-label={`查看${activity.title}评论`}>
+        <button type="button" className={styles.commentLink} onClick={() => open(true)} aria-label={`查看${activity.title}评论`}>
           <MessageCircle size={15} aria-hidden />
           评论
         </button>
