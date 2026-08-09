@@ -19,7 +19,7 @@ export function AdminContentPage({ onBack }: { onBack: () => void }) {
   const [pending, setPending] = useState<string | null>(null);
 
   async function load() {
-    if (user?.role !== 'admin') return;
+    if (user?.role !== 'operator') return;
     try {
       const [content, tagResult] = await Promise.all([
         api.adminContent({ type: type || undefined, status: status || undefined, tag: tag || undefined }),
@@ -57,13 +57,13 @@ export function AdminContentPage({ onBack }: { onBack: () => void }) {
     }
   }
 
-  if (user?.role !== 'admin') {
-    return <main className="page standard-page"><button type="button" className="icon-button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div className="empty-state"><ShieldAlert size={28} /><h2>无权访问</h2><p>管理员权限由服务器确认。</p></div></main>;
+  if (user?.role !== 'operator') {
+    return <main className="page standard-page"><button type="button" className="icon-button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div className="empty-state"><ShieldAlert size={28} /><h2>无权访问</h2><p>运营权限由服务器确认。</p></div></main>;
   }
 
   return (
     <main className="page standard-page admin-content-page">
-      <header className="subpage-header"><button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div><small>ADMIN</small><h1>内容治理</h1></div><button type="button" className="icon-button" aria-label="刷新" onClick={() => void load()}><RotateCcw size={18} /></button></header>
+      <header className="subpage-header"><button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div><small>OPERATOR</small><h1>内容治理</h1></div><button type="button" className="icon-button" aria-label="刷新" onClick={() => void load()}><RotateCcw size={18} /></button></header>
       <div className="admin-filters"><label>类型<select value={type} onChange={(event) => setType(event.target.value as ContentType | '')}><option value="">全部类型</option><option value="activity">活动</option><option value="need">需求</option><option value="life">生活</option></select></label><label>状态<select value={status} onChange={(event) => setStatus(event.target.value as ContentStatus | '')}><option value="">全部状态</option>{Object.entries(statusLabels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label><label>标签<select value={tag} onChange={(event) => setTag(event.target.value)}><option value="">全部标签</option>{tags.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label></div>
       {error && <p className="form-error" role="alert">{error}</p>}
       <label className="form-field admin-reason"><span>审核备注</span><input value={reason} onChange={(event) => setReason(event.target.value)} placeholder="驳回或归档时可填写原因" /></label>

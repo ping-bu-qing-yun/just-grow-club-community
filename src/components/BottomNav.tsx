@@ -2,7 +2,7 @@ import { CalendarHeart, Compass, MessagesSquare, Plus, UserRound } from 'lucide-
 
 export type AppTab = 'activities' | 'explore' | 'needs' | 'profile';
 
-const items = [
+export const appNavigationItems = [
   { id: 'activities' as const, label: '活动', Icon: CalendarHeart },
   { id: 'explore' as const, label: '发现', Icon: Compass },
   { id: 'needs' as const, label: '需求', Icon: MessagesSquare },
@@ -18,8 +18,8 @@ export function BottomNav({
   onChange: (tab: AppTab) => void;
   onPublish: () => void;
 }) {
-  const left = items.slice(0, 2);
-  const right = items.slice(2);
+  const left = appNavigationItems.slice(0, 2);
+  const right = appNavigationItems.slice(2);
 
   return (
     <nav className="bottom-nav" aria-label="主要导航">

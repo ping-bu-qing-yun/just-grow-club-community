@@ -6,6 +6,7 @@ import type { QiahaoDatabase } from './db';
 import { seedDatabase } from './seed';
 import { createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
 import type { CreateActivityInput, UserRole } from '../src/domain/types';
+import { normalizeUserRole } from '../src/domain/roles';
 import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
 import { NotificationHub } from './notification-hub';
@@ -112,7 +113,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
           avatar: row.avatar,
           bio: row.bio,
           verified: Boolean(row.verified),
-          role: row.role === 'admin' ? 'admin' : 'user',
+          role: normalizeUserRole(row.role),
         },
       },
     };
@@ -163,7 +164,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   app.post<{ Body: Partial<CreateActivityInput> }>('/api/activities', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    if (user.role !== 'admin') return fail(reply, 403, 'FORBIDDEN', '只有管理员可以发布活动');
+    if (user.role !== 'operator') return fail(reply, 403, 'FORBIDDEN', '只有运营者可以发布活动');
     const input = request.body ?? {};
     const message = validateActivity(input);
     if (message) return fail(reply, 400, 'VALIDATION_ERROR', message);
@@ -307,7 +308,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.get<{ Querystring: { type?: string; status?: string; tag?: string } }>('/api/admin/content', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    requireRole(user, 'admin');
+    requireRole(user, 'operator');
     const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
     const status = request.query.status as 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | undefined;
     if (request.query.tag !== undefined && typeof request.query.tag !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '标签筛选条件无效');
@@ -318,7 +319,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.patch<{ Params: { id: string }; Body: { status?: 'approved' | 'rejected' | 'archived' | 'pending'; reason?: string } }>('/api/admin/content/:id/status', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    requireRole(user, 'admin');
+    requireRole(user, 'operator');
     const status = request.body?.status;
     if (!status || !['approved', 'rejected', 'archived', 'pending'].includes(status)) return fail(reply, 400, 'VALIDATION_ERROR', '审核状态无效');
     const reason = parseOptionalReason(request.body?.reason);
@@ -331,7 +332,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.get<{ Querystring: { type?: string } }>('/api/admin/tags', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    requireRole(user, 'admin');
+    requireRole(user, 'operator');
     const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
     if (type && !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
     return { data: { tags: await listContentTags(database, type) } };
@@ -339,7 +340,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.post<{ Body: { type?: 'activity' | 'need' | 'life'; slug?: string; label?: string } }>('/api/admin/tags', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    requireRole(user, 'admin');
+    requireRole(user, 'operator');
     const { type, slug, label } = request.body ?? {};
     if (!type || !slug || !label || !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '标签信息不完整');
     const tag = await createContentTag(database, { contentType: type, slug, label });
@@ -348,7 +349,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.patch<{ Params: { id: string }; Body: { slug?: string; label?: string; enabled?: boolean } }>('/api/admin/tags/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    requireRole(user, 'admin');
+    requireRole(user, 'operator');
     const tag = await updateContentTag(database, request.params.id, request.body ?? {});
     return { data: { tag } };
   });

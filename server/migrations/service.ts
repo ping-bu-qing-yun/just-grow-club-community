@@ -152,7 +152,7 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
           JOIN content_items ci ON ci.id=it.content_id
           JOIN content_tags t ON t.id=it.tag_id
          WHERE it.content_type<>ci.content_type OR it.content_type<>t.content_type) AS invalid_tag_types,
-       (SELECT COUNT(*) FROM users WHERE role IS NULL OR role NOT IN ('admin','user')) AS invalid_roles`,
+       (SELECT COUNT(*) FROM users WHERE role IS NULL OR role NOT IN ('member','host','operator')) AS invalid_roles`,
   );
   const row = rows[0];
   if (!row) throw new Error('迁移校验未返回数据一致性结果');
@@ -160,7 +160,7 @@ async function verifyContentData(database: QiahaoDatabase): Promise<void> {
   if (Number(row.invalid_tag_types) > 0) throw new Error(`迁移后存在 ${row.invalid_tag_types} 条内容标签类型不一致`);
   if (Number(row.invalid_roles) > 0) throw new Error(`迁移后存在 ${row.invalid_roles} 个非法用户角色`);
   const demoRows = await database.query<Array<RowDataPacket & { role: string }>>('SELECT role FROM users WHERE id=? LIMIT 1', ['me']);
-  if (demoRows[0] && demoRows[0].role !== 'admin') throw new Error('演示账号 me 必须映射为 admin');
+  if (demoRows[0] && demoRows[0].role !== 'operator') throw new Error('演示账号 me 必须映射为 operator');
 }
 
 async function ensureActivitiesContentForeignKey(database: QiahaoDatabase): Promise<void> {

@@ -55,18 +55,19 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
     `INSERT IGNORE INTO users
       (id,phone,password_hash,name,avatar,bio,verified,role,created_at,updated_at)
      VALUES (?,?,?,?,?,?,?,?,?,?)`,
-    ['me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, 'admin', now, now],
+    ['me', '13800000000', passwordHash, '小恰', '/assets/avatar-me.jpg', '喜欢城市散步、咖啡和不赶时间的周末。', 1, 'operator', now, now],
   );
   for (const [id, phone, name, avatar, bio, verified] of users) {
     await database.query(
       `INSERT IGNORE INTO users
         (id,phone,password_hash,name,avatar,bio,verified,role,created_at,updated_at)
        VALUES (?,?,?,?,?,?,?,?,?,?)`,
-      [id, phone, passwordHash, name, avatar, bio, verified, 'user', now, now],
+      [id, phone, passwordHash, name, avatar, bio, verified, id === 'u2' ? 'host' : 'member', now, now],
     );
   }
-  await database.query("UPDATE users SET role='admin' WHERE id='me'");
-  await database.query("UPDATE users SET role='user' WHERE id IN ('u1','u2','u3','u4','u5','u6')");
+  await database.query("UPDATE users SET role='operator' WHERE id='me'");
+  await database.query("UPDATE users SET role='member' WHERE id IN ('u1','u3','u4','u5','u6')");
+  await database.query("UPDATE users SET role='host' WHERE id='u2'");
   for (const activity of activities) {
     await database.query(
       `INSERT IGNORE INTO content_items

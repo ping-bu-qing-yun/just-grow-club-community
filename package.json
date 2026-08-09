@@ -6,16 +6,16 @@
   "scripts": {
     "dev": "vite",
     "build:server": "esbuild server/index.ts --bundle --platform=node --format=esm --packages=external --outfile=.server-dist/index.js",
-    "dev:api": "npm run build:server && node .server-dist/index.js",
+    "dev:api": "npm run build:server && node --env-file-if-exists=.env .server-dist/index.js",
     "dev:all": "concurrently -k \"npm:dev:api\" \"npm:dev -- --host 127.0.0.1 --port 5174\"",
-    "db:migrate": "tsx server/migrations/run.ts",
+    "db:migrate": "node --env-file-if-exists=.env --import tsx server/migrations/run.ts",
     "build": "tsc -b && vite build",
     "test": "vitest",
     "test:server": "vitest server --run --no-file-parallelism --maxWorkers=1",
     "test:watch": "vitest",
     "e2e": "playwright test",
     "qa:audit": "playwright test e2e/ui-audit.spec.ts --project=mobile-chrome",
-    "start": "npm run build:server && node .server-dist/index.js"
+    "start": "npm run build:server && node --env-file-if-exists=.env .server-dist/index.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.0",
@@ -24,7 +24,8 @@
     "lucide-react": "^0.468.0",
     "mysql2": "^3.14.3",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
