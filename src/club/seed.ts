@@ -1,5 +1,15 @@
 import type { ClubActivity, LifePost, Need } from './types';
 
+export interface QaQuestion {
+  title: string;
+  options?: string[];
+  groups?: Array<{ label: string; options: string[] }>;
+  multiple?: boolean;
+  text?: boolean;
+  voice?: boolean;
+  placeholder?: string;
+}
+
 export const lightQuestions = [
   { title: '你最近最想解决什么？', options: ['想认识靠谱的人', '想自然一点脱单', '想找能深聊的人', '想扩大线下社交圈', '想理解关系模式', '暂时不确定'] },
   { title: '你更容易接受哪种见面场景？', options: ['少人数饭局', '轻松散步', '主题 deep talk', '共同兴趣活动', '关系工作坊', '小组匹配'] },
@@ -7,9 +17,32 @@ export const lightQuestions = [
 ];
 
 export const qaSets = {
-  basic: ['最近一次让你觉得“做自己很舒服”的时刻是什么？', '你理想中的周末，通常会怎么度过？', '一段关系里，你最希望被怎样理解？'],
-  extra: ['你通常怎样表达在意？', '什么样的聊天会让你放松？', '你希望彼此保留怎样的空间？', '你更看重稳定还是新鲜？', '遇到分歧时你习惯怎么处理？', '什么会让你愿意再见一个人？'],
-};
+  basic: [
+    { title: '你更喜欢哪种规模的活动？', options: ['6人以下私密小局', '10-20人', '20-50人', '50人以上大型派对'] },
+    { title: '你能接受单次活动的最长时长是？', options: ['1-2小时', '2-4小时', '半天', '全天'] },
+    { title: '参加活动时，你能接受的路程时间是？', options: ['30分钟内', '1小时内', '只要值得，距离不限'] },
+    { title: '未来7天，你的可约档期是？', multiple: true, options: ['工作日晚间（周一至周四19:00后）', '周五晚上（开启周末模式）', '周六白天', '周六晚上', '周日白天', '周日晚上', '最近想先线上聊聊，暂不见面'] },
+  ],
+  extra: [
+    { title: '初次见面，怎样开始让你最舒服？', options: ['有主持人/规则，先玩个游戏再聊', '从共同兴趣聊起，不愁没话题', '慢热型，先给点独处空间', '直接来深处话题，不想浪费时间客套'] },
+    { title: '在喜欢的人面前，你通常是？', options: ['主动型，喜欢就会靠近', '慢热型，熟了之后话很多', '被动型，需要对方给我信号', '状态型，感觉对了就主动'] },
+    { title: '哪句话最接近你的感情观？', options: ['先看感觉，感觉对了什么都可以谈', '三观合拍比心动更重要', '关系是两个人一起修出来的，不存在完美匹配', '爱自己要优先于爱对方'] },
+    { title: '你现在在感情上更接近哪种状态？', options: ['单身很久，想认真脱单但不想将就', '有目标类型，但一直没遇到对的', '刚结束一段关系，想先找回自己', '佛系随缘，碰到同频的再说', '母胎单身，需要有人带带'] },
+  ],
+  advanced: [
+    {
+      title: '最容易被异性哪种特质吸引？',
+      multiple: true,
+      groups: [
+        { label: '外在', options: ['长相干净舒服', '穿搭有品味', '气质好有辨识度'] },
+        { label: '内在', options: ['温柔有耐心，接得住情绪', '幽默有趣，能接梗抛梗', '情绪稳定，不情绪化'] },
+        { label: '处理事情的方式', options: ['有主见，不随波逐流', '遇事有解决问题的能力', '有自己热爱的事，很专注'] },
+      ],
+    },
+    { title: '如果和一个人聊得还不错，哪些是阻碍你下一步行动的阻力？', multiple: true, options: ['害怕主动', '不确定对方态度', '生活节奏忙', '担心破坏现有关系', '慢热需要时间', '对线下见面有焦虑'] },
+    { title: '亲密关系里，你如何看待边界感与个人空间？哪些事你不愿被干涉？', text: true, voice: true, placeholder: '可以打字，也可以用语音说一段。比如：我需要彼此信任，不希望被干涉消费决定、兴趣爱好、社交方式。' },
+  ],
+} satisfies Record<'basic' | 'extra' | 'advanced', QaQuestion[]>;
 
 const pics = ['/assets/food.jpg', '/assets/coffee.jpg', '/assets/hike.jpg', '/assets/art.jpg', '/assets/sport.jpg', '/assets/board.jpg'];
 

@@ -30,7 +30,7 @@ export function ActivitiesHomePage({
     [activities, portrait, state.joinedClubActivityIds],
   );
   const featuredRanked = ranked[0];
-  const pinnedCreated = activities.find((activity) => activity.matchLabel === '新发布');
+  const pinnedCreated = activities.find((activity) => activity.matchLabel === '新发布' || activity.matchLabel === 'AI提案');
   const featured = pinnedCreated ?? featuredRanked?.activity ?? activities[0] ?? clubActivities[0];
   const forYou = ranked.filter((item) => item.activity.id !== featured.id).slice(0, 3);
   const highlightTags = portrait.highlightTags.slice(0, 3);

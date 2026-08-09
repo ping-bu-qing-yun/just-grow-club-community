@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { api } from '../api/client';
+import { api, ApiError } from '../api/client';
 import type { ApiComment, CommentContentType, CommentPage, QiahaoApi } from '../api/types';
 import { localCommentsFor } from '../comments/local-comments';
 import type { UserRole } from '../domain/types';
@@ -53,6 +53,14 @@ function localComment(contentType: CommentContentType, contentId: string, body: 
   };
 }
 
+function isContentMissing(reason: unknown): boolean {
+  return (
+    reason instanceof ApiError &&
+    reason.status === 404 &&
+    (reason.code === 'CONTENT_NOT_FOUND' || reason.message.includes('内容不存在'))
+  );
+}
+
 export function useComments({
   contentType,
   contentId,
@@ -69,19 +77,21 @@ export function useComments({
   const key = `${contentType}:${contentId}`;
   const keyRef = useRef(key);
   keyRef.current = key;
+  const [fallbackLocalMode, setFallbackLocalMode] = useState(false);
+  const effectiveLocalMode = localMode || fallbackLocalMode;
   const cacheRef = useRef(new Map<string, CommentCacheEntry>());
   const localEntriesRef = useRef(new Map<string, ApiComment[]>());
-  if (localMode && !localEntriesRef.current.has(key)) {
+  if (effectiveLocalMode && !localEntriesRef.current.has(key)) {
     localEntriesRef.current.set(key, localCommentsFor(contentType, contentId));
   }
-  if (localMode && !cacheRef.current.has(key)) {
+  if (effectiveLocalMode && !cacheRef.current.has(key)) {
     const initial = localPage(localEntriesRef.current.get(key) ?? [], null, 5);
     cacheRef.current.set(key, { comments: initial.comments, total: initial.total, nextCursor: initial.nextCursor });
   }
   const [entry, setEntry] = useState<CommentCacheEntry | null>(() => cacheRef.current.get(key) ?? null);
   const [entryKey, setEntryKey] = useState(key);
   const [viewState, setViewState] = useState<CommentViewState>('preview');
-  const [loading, setLoading] = useState(() => !localMode);
+  const [loading, setLoading] = useState(() => !effectiveLocalMode);
   const [loadingMore, setLoadingMore] = useState(false);
   const loadingMoreRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
@@ -91,15 +101,26 @@ export function useComments({
   const entryRef = useRef<CommentCacheEntry | null>(null);
   entryRef.current = activeEntry;
 
+  const ensureLocalEntries = useCallback(() => {
+    const current = localEntriesRef.current.get(key);
+    if (current) return current;
+    const seeded = localCommentsFor(contentType, contentId);
+    localEntriesRef.current.set(key, seeded);
+    return seeded;
+  }, [contentId, contentType, key]);
+
   const readPage = useCallback(async (cursor?: string | null, limit = 5): Promise<CommentPage> => {
-    if (!localMode) return apiClient.listComments({ contentType, contentId, limit, cursor });
-    let local = localEntriesRef.current.get(key);
-    if (!local) {
-      local = localCommentsFor(contentType, contentId);
-      localEntriesRef.current.set(key, local);
+    if (!effectiveLocalMode) {
+      try {
+        return await apiClient.listComments({ contentType, contentId, limit, cursor });
+      } catch (reason) {
+        if (!isContentMissing(reason)) throw reason;
+        setFallbackLocalMode(true);
+      }
     }
+    const local = ensureLocalEntries();
     return localPage(local, cursor, limit);
-  }, [apiClient, contentId, contentType, key, localMode]);
+  }, [apiClient, contentId, contentType, effectiveLocalMode, ensureLocalEntries]);
 
   const saveEntry = useCallback((next: CommentCacheEntry) => {
     cacheRef.current.set(key, next);
@@ -192,11 +213,20 @@ export function useComments({
     setSubmitting(true);
     setError(null);
     try {
-      const comment = localMode
-        ? localComment(contentType, contentId, body, viewer)
-        : (await apiClient.createComment({ contentType, contentId, body })).comment;
-      if (localMode) {
-        const currentLocal = localEntriesRef.current.get(key) ?? [];
+      let comment: ApiComment;
+      if (effectiveLocalMode) {
+        comment = localComment(contentType, contentId, body, viewer);
+      } else {
+        try {
+          comment = (await apiClient.createComment({ contentType, contentId, body })).comment;
+        } catch (reason) {
+          if (!isContentMissing(reason)) throw reason;
+          setFallbackLocalMode(true);
+          comment = localComment(contentType, contentId, body, viewer);
+        }
+      }
+      if (effectiveLocalMode || comment.id.startsWith('local-comment-')) {
+        const currentLocal = ensureLocalEntries();
         localEntriesRef.current.set(key, [comment, ...currentLocal.filter((item) => item.id !== comment.id)]);
       }
       if (keyRef.current !== requestKey) return false;
@@ -214,7 +244,7 @@ export function useComments({
     } finally {
       if (keyRef.current === requestKey) setSubmitting(false);
     }
-  }, [apiClient, contentId, contentType, key, keyRef, localMode, saveEntry, viewer]);
+  }, [apiClient, contentId, contentType, effectiveLocalMode, ensureLocalEntries, key, keyRef, saveEntry, viewer]);
 
   const remove = useCallback(async (comment: ApiComment): Promise<boolean> => {
     const requestKey = key;
@@ -225,8 +255,8 @@ export function useComments({
     setDeletingIds((current) => new Set(current).add(comment.id));
     setError(null);
     try {
-      if (localMode) {
-        const local = localEntriesRef.current.get(key) ?? [];
+      if (effectiveLocalMode || comment.id.startsWith('local-comment-')) {
+        const local = ensureLocalEntries();
         localEntriesRef.current.set(key, local.filter((item) => item.id !== comment.id));
       } else {
         await apiClient.deleteComment(comment.id);
@@ -252,7 +282,7 @@ export function useComments({
         return next;
       });
     }
-  }, [apiClient, key, keyRef, localMode, saveEntry, viewer]);
+  }, [apiClient, effectiveLocalMode, ensureLocalEntries, key, keyRef, saveEntry, viewer]);
 
   const isActiveKey = entryKey === key;
   const visibleViewState = isActiveKey ? viewState : 'preview';

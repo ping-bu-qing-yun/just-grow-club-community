@@ -50,7 +50,7 @@ export function ProfileRecordsPage({
       domainItems.length || clubItems.length ? (
         <div className="record-list club-card-list">
           {clubItems.map((item) => (
-            <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} />
+            <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} showStats={false} />
           ))}
           {domainItems.map((item) => (
             <article key={item.id}>
@@ -110,6 +110,7 @@ export function ProfileRecordsPage({
         </div>
       </header>
       {content}
+      <button type="button" className="secondary-button records-return-button" onClick={onBack}>返回我的</button>
     </main>
   );
 }

@@ -206,7 +206,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     },
     async createActivity(input) {
       if (effectiveLocalMode) {
-        const activity: Activity = { ...input, id: `created-${Date.now()}`, image: categoryImages[input.category], distance: '由你发起', host: user ?? currentUser, participants: [], note: '请在活动开始前与参与者确认集合信息。' };
+        const activity: Activity = { ...input, id: `created-${Date.now()}`, image: input.image || categoryImages[input.category], distance: '由你发起', host: user ?? currentUser, participants: [], note: '请在活动开始前与参与者确认集合信息。' };
         setState((current) => ({ ...current, customActivities: [activity, ...current.customActivities] }));
         return activity;
       }

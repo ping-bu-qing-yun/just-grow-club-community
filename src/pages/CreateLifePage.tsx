@@ -17,11 +17,16 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
   const { createLifePost, localMode } = useQiahao();
   const [text, setText] = useState('');
   const [selectedImage, setSelectedImage] = useState(photoOptions[0]);
-  const [tags, setTags] = useState<string[]>(['weekend']);
+  const [uploadedImage, setUploadedImage] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
 
   async function submit() {
+    if (!tags.length) {
+      setError('请至少选择一个标签');
+      return;
+    }
     if (!text.trim()) {
       setError('先写下一句话');
       return;
@@ -29,7 +34,7 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
     setPending(true);
     setError('');
     try {
-      await createLifePost(text.trim(), selectedImage, tags);
+      await createLifePost(text.trim(), uploadedImage || selectedImage, tags);
       onPublished();
     } catch (reason) {
       // 本地预览写入内存状态后即视为成功。
@@ -49,11 +54,15 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
         <button type="button" aria-label="返回" onClick={onBack}><ArrowLeft /></button>
         <div><small>发布生活</small><h1>分享此刻的日常</h1></div>
       </header>
-      <p className="create-need-lead">不用很正式，像给朋友发一条近况就好。</p>
-      <div className="guide-chips">{lifeTemplates.map((template) => <button type="button" onClick={() => { setText(template); setError(''); }} key={template}>{template}</button>)}</div>
+      <div className="guide-chips guide-chips--compact">{lifeTemplates.map((template) => <button type="button" onClick={() => { setText(template); setError(''); }} key={template}>{template}</button>)}</div>
       <textarea aria-label="生活内容" value={text} onChange={(event) => { setText(event.target.value); setError(''); }} placeholder="比如：周末想找人一起去梧桐区散步……" />
       {error && <p className="field-error" role="alert">{error}</p>}
       <div className="publish-photo-grid" aria-label="选择生活照片">
+        {uploadedImage ? (
+          <button type="button" className="is-active" onClick={() => setSelectedImage(uploadedImage)}>
+            <img src={uploadedImage} alt="" />
+          </button>
+        ) : null}
         {photoOptions.map((image) => (
           <button
             type="button"
@@ -66,9 +75,16 @@ export function CreateLifePage({ onBack, onPublished }: { onBack: () => void; on
         ))}
       </div>
       <div className="need-tools">
-        <button type="button" onClick={() => setSelectedImage(photoOptions[(photoOptions.indexOf(selectedImage) + 1) % photoOptions.length])}><ImagePlus size={18} />换一张图</button>
+        <label><ImagePlus size={18} />上传图片<input type="file" accept="image/*" onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            const next = URL.createObjectURL(file);
+            setUploadedImage(next);
+            setSelectedImage(next);
+          }
+        }} /></label>
       </div>
-      <small className="publish-helper">照片和标签会直接出现在生活动态卡片里。</small>
+      <small className="publish-helper">请选择至少一个标签，照片和标签会直接出现在生活动态卡片里。</small>
       <div className="tag-picks">
         {tagOptions.map((tag) => (
           <button

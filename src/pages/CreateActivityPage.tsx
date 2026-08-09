@@ -1,4 +1,4 @@
-import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Utensils } from 'lucide-react';
+import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, ImagePlus, Minus, Palette, Plus, Utensils } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Activity, ActivityCategory, CreateActivityInput } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
@@ -74,6 +74,7 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [errors, setErrors] = useState<DraftErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [posterImage, setPosterImage] = useState('');
   const minDate = useMemo(() => todayIsoDate(), []);
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
@@ -98,6 +99,7 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
       location: draft.location,
       capacity: draft.capacity,
       price: draft.price,
+      image: posterImage,
     };
     try {
       const activity = await createActivity(input);
@@ -120,53 +122,49 @@ export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; 
         </div>
       </header>
       <form className="create-form" onSubmit={submit} noValidate>
-        <fieldset className="form-section">
-          <legend>想找什么搭子？</legend>
-          <div className="category-grid">
-            {categoryOptions.map(({ label, Icon }) => (
-              <button
-                key={label}
-                type="button"
-                className={draft.category === label ? 'is-active' : ''}
-                onClick={() => update('category', label)}
-              >
-                <Icon size={20} />
-                <span>{label}</span>
-              </button>
-            ))}
+        <section className="activity-template-card">
+          <label className={`poster-upload ${posterImage ? 'has-image' : ''}`}>
+            {posterImage ? <img src={posterImage} alt="" /> : <span><ImagePlus size={24} />添加优质图片更吸引人</span>}
+            <input type="file" accept="image/*" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) setPosterImage(URL.createObjectURL(file));
+            }} />
+          </label>
+          <input
+            aria-label="活动标题"
+            className="activity-title-input"
+            value={draft.title}
+            onChange={(event) => update('title', event.target.value)}
+            placeholder="填写清晰的活动标题（必填 20 字内）"
+            maxLength={20}
+          />
+          <textarea
+            aria-label="活动介绍"
+            className="activity-desc-input"
+            value={draft.description}
+            onChange={(event) => update('description', event.target.value)}
+            placeholder="描述一下活动的亮点、活动内容、推荐的人群、贴心 tips 等，叫大家一起粗门玩吧～"
+            rows={5}
+          />
+        </section>
+        {errors.title && <small className="field-error">{errors.title}</small>}
+        {errors.description && <small className="field-error">{errors.description}</small>}
+
+        <fieldset className="form-section activity-template-section">
+          <legend>单次活动</legend>
+          <div className="template-field-row">
+            <b>*活动分类</b>
+            <div className="activity-category-pills">
+              {categoryOptions.map(({ label, Icon }) => (
+                <button key={label} type="button" className={draft.category === label ? 'is-active' : ''} onClick={() => update('category', label)}>
+                  <Icon size={16} />
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
           {errors.category && <p className="field-error">{errors.category}</p>}
         </fieldset>
-
-        <label className="form-field">
-          <span>活动标题</span>
-          <input
-            aria-label="活动标题"
-            value={draft.title}
-            onChange={(event) => update('title', event.target.value)}
-            placeholder="例如：周日城市散步"
-            aria-describedby={errors.title ? 'title-error' : undefined}
-          />
-          {errors.title && (
-            <small className="field-error" id="title-error">
-              {errors.title}
-            </small>
-          )}
-        </label>
-
-        <label className="form-field">
-          <span>活动介绍</span>
-          <textarea
-            aria-label="活动介绍"
-            value={draft.description}
-            onChange={(event) => update('description', event.target.value)}
-            placeholder="路线、节奏、适合什么样的人……"
-            rows={4}
-          />
-          <small className={errors.description ? 'field-error' : 'field-help'}>
-            {errors.description ?? `${draft.description.length}/160`}
-          </small>
-        </label>
 
         <div className="form-row">
           <label className="form-field">

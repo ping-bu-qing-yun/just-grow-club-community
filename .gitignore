@@ -8,5 +8,6 @@ dist/
 data/*.sqlite*
 .server-dist/
 .vite/
+.pnpm-store/
 playwright-report/
 test-results/

@@ -37,6 +37,7 @@ export interface CreateActivityInput {
   location: string;
   capacity: number;
   price: number;
+  image?: string;
 }
 
 export interface MessageThread {
@@ -82,4 +83,3 @@ export interface PersistedState {
   joinedIds: string[];
   messages: MessageThread[];
 }
-

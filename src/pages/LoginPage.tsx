@@ -1,4 +1,3 @@
-import { ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 
 const DEMO_PHONE = '13800000000';
@@ -23,17 +22,6 @@ export function LoginPage({ login }: { login: (phone: string, password: string) 
 
   return (
     <main className="login-page welcome-login-page">
-      <header className="welcome-login-nav">
-        <button type="button" aria-label="返回" disabled>
-          <ChevronLeft size={20} />
-        </button>
-        <div>
-          <strong>恰好关系俱乐部</strong>
-          <small>恰好欢迎页</small>
-        </div>
-        <span aria-hidden="true" />
-      </header>
-
       <section className="welcome-screen" aria-label="恰好欢迎页">
         <div className="welcome-logo" aria-label="Just Grow Club">
           <span>Just</span>

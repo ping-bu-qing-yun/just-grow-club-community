@@ -39,7 +39,7 @@ export function ExplorePage({
   return (
     <main className="explore-page page">
       <header className="page-hero page-hero--with-action">
-        <div><span>EXPLORE</span><h1>发现其他活动</h1><p>按出门阻力和见面方式，挑一场刚刚好的局。</p></div>
+        <div><h1>发现其他活动</h1><p>按出门阻力和见面方式，挑一场刚刚好的局。</p></div>
         <NotificationBell onOpen={onOpenNotifications} />
       </header>
       <label className="club-search">

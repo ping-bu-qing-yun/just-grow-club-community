@@ -16,6 +16,7 @@ import { LifePostDetailPage } from './pages/LifePostDetailPage';
 import { ClubActivityDetailPage } from './pages/ClubActivityDetailPage';
 import { ProfilePage, type ProfileDestination } from './pages/ProfilePage';
 import { ProfileEditorPage } from './pages/ProfileEditorPage';
+import { ProfilePortraitPage } from './pages/ProfilePortraitPage';
 import { ProfileServicePage, type ProfileServiceKind } from './pages/ProfileServicePage';
 import { ProfileRecordsPage } from './pages/ProfileRecordsPage';
 import { CreateActivityPage } from './pages/CreateActivityPage';
@@ -159,7 +160,6 @@ function QiahaoApp() {
   }
 
   function profileNavigate(destination: ProfileDestination) {
-    if (destination === 'portrait') return;
     if (destination === 'dynamics') {
       setNeedsMode('life');
       return changeTab('needs');
@@ -348,6 +348,7 @@ function QiahaoApp() {
       />
     );
   } else if (subview === 'editor') content = <ProfileEditorPage onBack={() => setSubview(null)} />;
+  else if (subview === 'portrait') content = <ProfilePortraitPage onBack={() => setSubview(null)} />;
   else if (subview === 'help' || subview === 'safety' || subview === 'settings') content = <ProfileServicePage kind={subview as ProfileServiceKind} onBack={() => setSubview(null)} />;
   else if (selectedMessageThread) content = <MessageThreadPage thread={selectedMessageThread} onBack={() => setSelectedMessageThread(null)} />;
   else if (subview === 'messages') content = <MessagesPage onOpenThread={setSelectedMessageThread} />;

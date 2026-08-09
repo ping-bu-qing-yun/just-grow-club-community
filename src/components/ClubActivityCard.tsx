@@ -7,11 +7,13 @@ export function ClubActivityCard({
   activity,
   matchLabel,
   onOpen,
+  showStats = true,
 }: {
   activity: ClubActivity;
   /** 推荐引擎动态匹配标签；缺省用活动自身 matchLabel */
   matchLabel?: string;
   onOpen?: (activity: ClubActivity, focusComments?: boolean) => void;
+  showStats?: boolean;
 }) {
   const { isClubActivityJoined } = useClub();
   function open(focusComments = false) {
@@ -26,6 +28,7 @@ export function ClubActivityCard({
       <button type="button" className="club-activity-media" onClick={() => open()} aria-label={`打开${activity.title}`}>
         <img src={activity.image} alt="" />
         <span>{activity.status}</span>
+        {showStats ? <em>{stats.views}看过｜{stats.joined}人已报名</em> : null}
       </button>
       <div className="club-activity-copy">
         <div className="club-tags">
@@ -44,7 +47,6 @@ export function ClubActivityCard({
           <ArrowUpRight size={18} aria-hidden />
         </button>
         <p>{activity.description}</p>
-        <div className="activity-stat-line activity-stat-line--card">{stats.views}看过｜{stats.joined}人已报名</div>
         <div className="club-activity-meta">
           <span>
             <MapPin size={13} />

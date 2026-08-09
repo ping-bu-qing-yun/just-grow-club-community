@@ -4,7 +4,7 @@ import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
 import { useQiahao } from '../state/QiahaoContext';
 
-type AdminView = 'home' | 'proposals' | 'detail' | 'daily' | 'revenue' | 'activities' | 'activity-detail' | 'confirm' | 'push' | 'preview';
+type AdminView = 'home' | 'proposals' | 'detail' | 'daily' | 'users' | 'revenue' | 'activities' | 'activity-detail' | 'confirm' | 'push' | 'preview';
 type ProposalStatus = 'pending' | 'approved' | 'rejected';
 type ActivityPhase = 'pre' | 'mature' | 'recruiting' | 'feedback' | 'ended';
 
@@ -43,6 +43,26 @@ interface ManagedActivity {
   feedbacks: number;
   score: number;
 }
+
+interface OperatorUser {
+  name: string;
+  joinedAt: string;
+  city: string;
+  source: string;
+  stage: string;
+  tags: string[];
+  lastAction: string;
+  needLine: string;
+}
+
+const operatorUsers: OperatorUser[] = [
+  { name: '林 × Mei', joinedAt: '08-09 10:24', city: '上海 · 杨浦', source: '轻问答完成', stage: '已报名', tags: ['低压力认识', '怕尴尬', '咖啡'], lastAction: '报名「周末低压力认识局」', needLine: '想认识靠谱的人，但不想像面试。' },
+  { name: '阿南 × 小满', joinedAt: '08-09 09:41', city: '上海 · 徐汇', source: '需求广场', stage: '待跟进', tags: ['附近生活', '散步', '早餐'], lastAction: '发布需求「附近早晨局」', needLine: '周末早上想有人一起吃早餐、走一走。' },
+  { name: '园园 × 阿May', joinedAt: '08-08 22:18', city: '上海 · 静安', source: '活动反馈', stage: '可二次撮合', tags: ['deep talk', '价值观', '长期关系'], lastAction: '反馈「深度对谈夜局」4.8 分', needLine: '希望先聊价值观，再决定要不要继续认识。' },
+  { name: '舟舟', joinedAt: '08-08 18:06', city: '上海 · 浦东', source: '收藏活动', stage: '未报名', tags: ['运动', '匹克球', '轻社交'], lastAction: '收藏「周日匹克球熟手场」', needLine: '想参加活动，但担心自己一个人去会尴尬。' },
+  { name: '小北', joinedAt: '08-07 21:33', city: '上海 · 长宁', source: 'AI 推荐点击', stage: '沉默用户', tags: ['看展', '咖啡', '同频'], lastAction: '看过 5 次活动详情但未报名', needLine: '喜欢有主题的见面，不想只吃饭聊天。' },
+  { name: 'Yuki', joinedAt: '08-07 16:12', city: '上海 · 黄浦', source: '朋友邀请', stage: '已入群', tags: ['关系工作坊', '30岁前后'], lastAction: '加入「关系说明书」候补群', needLine: '不是不想恋爱，是不知道怎么重新开始。' },
+];
 
 const baseProposals: Proposal[] = [
   {
@@ -185,6 +205,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
   const [revenueMode, setRevenueMode] = useState<'month' | 'year'>('month');
   const [confirmChecks, setConfirmChecks] = useState<string[]>([]);
   const [pushDraft, setPushDraft] = useState({ title: '这场低压力认识局，适合怕尴尬但想认真认识人的你', value: '不做自我介绍，用三段式话题让关系自然发生。', audience: '低压力认识、少人数、怕尴尬用户', sent: false });
+  const [pushCounts, setPushCounts] = useState<Record<string, number>>({});
 
   const proposals = useMemo(
     () => baseProposals.map((proposal) => ({ ...proposal, ...drafts[proposal.id], status: statuses[proposal.id] ?? proposal.status })),
@@ -228,11 +249,12 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
   const pendingCount = proposals.filter((proposal) => proposal.status === 'pending').length;
   const preCount = managedActivities.filter((item) => item.phase === 'pre').length;
   const feedbackCount = managedActivities.filter((item) => item.phase === 'feedback').length;
+  const totalUsers = 128 + needs.length + lifePosts.length;
   const metrics = [
-    { label: '入住用户', value: String(128 + needs.length + lifePosts.length), icon: UsersRound, target: 'daily' as AdminView },
+    { label: '入驻用户', value: String(totalUsers), icon: UsersRound, target: 'users' as AdminView },
     { label: '待拍板提案', value: String(pendingCount), icon: Bot, target: 'proposals' as AdminView },
     { label: '本月收入', value: `¥${estimatedRevenue.toLocaleString('zh-CN')}`, icon: Coins, target: 'revenue' as AdminView },
-    { label: '预活动', value: String(preCount), icon: CalendarDays, target: 'activities' as AdminView },
+    { label: '预活动', value: String(preCount), icon: CalendarDays, target: 'activities' as AdminView, filter: 'pre' as const },
   ];
 
   const previewActivity = selectedManagedActivity?.activity ?? generatedActivity;
@@ -279,9 +301,10 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
   function sendPush() {
     if (!selectedManagedActivity) return;
     setPushDraft((current) => ({ ...current, sent: true }));
+    setPushCounts((current) => ({ ...current, [selectedManagedActivity.activity.id]: (current[selectedManagedActivity.activity.id] ?? 0) + 1 }));
     setActivityPhases((current) => ({ ...current, [selectedManagedActivity.activity.id]: 'recruiting' }));
     go('activity-detail', true);
-    setNotice('AI 推送已整理并发出，活动状态已进入报名中');
+    setNotice('AI 招募推送已发出，活动状态已进入报名中，并记录本场推送次数');
   }
 
   const filteredActivities = managedActivities.filter((item) => activityFilter === 'all' || item.phase === activityFilter);
@@ -299,7 +322,18 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
           <section className="operator-metrics">
             {metrics.map((metric) => {
               const Icon = metric.icon;
-              return <button type="button" key={metric.label} onClick={() => go(metric.target)}><Icon size={16} /><b>{metric.value}</b><span>{metric.label}</span></button>;
+              return (
+                <button
+                  type="button"
+                  key={metric.label}
+                  onClick={() => {
+                    if ('filter' in metric && metric.filter) setActivityFilter(metric.filter);
+                    go(metric.target);
+                  }}
+                >
+                  <Icon size={16} /><b>{metric.value}</b><span>{metric.label}</span>
+                </button>
+              );
             })}
           </section>
           <section className="admin-action-card">
@@ -310,7 +344,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
             <button type="button" onClick={() => go('activities')}><span className="admin-action-icon">活</span><b>活动管理</b><em>预活动、报名、反馈、评分一览</em><ChevronRight /></button>
             <button type="button" onClick={() => setNotice('消息中心将在下一步接入企微提醒和用户反馈线程')}><span className="admin-action-icon">信</span><b>我的消息</b><em>系统通知 / 用户联系 / 反馈提醒</em><i>{messages.length}</i><ChevronRight /></button>
           </section>
-          <DemandInsight clusters={demandClusters} />
+          <DemandInsight clusters={demandClusters} onGenerateProposal={() => go('proposals')} />
         </>
       ) : null}
 
@@ -328,6 +362,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
       ) : null}
       {view === 'preview' ? <ActivityPreview activity={previewActivity} onActivities={() => go('activities')} onProposals={() => go('proposals')} /> : null}
       {view === 'daily' ? <DailyPage needs={needs} pendingCount={pendingCount} feedbackCount={feedbackCount} proposals={proposals} onOpenProposal={openProposal} onDraft={() => openProposal(proposals[0])} /> : null}
+      {view === 'users' ? <UsersPage totalUsers={totalUsers} needs={needs} lifePostsCount={lifePosts.length} /> : null}
       {view === 'revenue' ? <RevenuePage mode={revenueMode} setMode={setRevenueMode} /> : null}
       {view === 'activities' ? (
         <ActivitiesManagePage
@@ -341,13 +376,13 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
         />
       ) : null}
       {view === 'activity-detail' && selectedManagedActivity ? (
-        <ActivityManageDetail item={selectedManagedActivity} onConfirm={() => go('confirm')} onPush={() => go('push')} onPreview={() => go('preview')} />
+        <ActivityManageDetail item={selectedManagedActivity} pushCount={pushCounts[selectedManagedActivity.activity.id] ?? 0} onConfirm={() => go('confirm')} onPush={() => go('push')} onPreview={() => go('preview')} />
       ) : null}
       {view === 'confirm' && selectedManagedActivity ? (
         <ActivityConfirmPage item={selectedManagedActivity} checks={confirmChecks} setChecks={setConfirmChecks} onSubmit={confirmActivity} />
       ) : null}
       {view === 'push' && selectedManagedActivity ? (
-        <PushPage item={selectedManagedActivity} draft={pushDraft} setDraft={setPushDraft} onSend={sendPush} />
+        <PushPage item={selectedManagedActivity} pushCount={pushCounts[selectedManagedActivity.activity.id] ?? 0} draft={pushDraft} setDraft={setPushDraft} onSend={sendPush} />
       ) : null}
     </main>
   );
@@ -359,6 +394,7 @@ function viewTitle(view: AdminView): string {
     proposals: 'AI 活动提案',
     detail: '提案详情',
     daily: '小CC 每日分身',
+    users: '入驻用户',
     revenue: '经营明细',
     activities: '活动一览',
     'activity-detail': '活动详情',
@@ -368,17 +404,33 @@ function viewTitle(view: AdminView): string {
   }[view];
 }
 
-function DemandInsight({ clusters }: { clusters: Array<{ label: string; count: number; resonance: number; examples: Need[] }> }) {
+function DemandInsight({ clusters, onGenerateProposal }: { clusters: Array<{ label: string; count: number; resonance: number; examples: Need[] }>; onGenerateProposal: () => void }) {
+  const totalNeeds = clusters.reduce((sum, cluster) => sum + cluster.count, 0);
+  const totalResonance = clusters.reduce((sum, cluster) => sum + cluster.resonance, 0);
+  const hottest = clusters[0];
+
   return (
     <section className="operator-panel">
       <header><span>DEMAND INSIGHT</span><h2>需求分类洞察</h2></header>
+      <div className="demand-insight-summary">
+        <article><b>{totalNeeds}</b><span>有效需求</span></article>
+        <article><b>{totalResonance}</b><span>累计共鸣</span></article>
+        <article><b>{hottest?.label ?? '暂无'}</b><span>最高频方向</span></article>
+      </div>
       <div className="operator-clusters">
         {clusters.map((cluster) => (
           <article key={cluster.label}>
             <div><b>{cluster.label}</b><span>{cluster.count} 条需求 · {cluster.resonance} 人共鸣</span></div>
-            <p>{cluster.examples.map((need) => need.title).join(' / ')}</p>
+            <i className="cluster-meter"><em style={{ width: `${Math.max(18, Math.min(100, Math.round((cluster.count / Math.max(1, totalNeeds)) * 100)))}%` }} /></i>
+            <p>用户出处：{cluster.examples.map((need) => `${need.author}「${need.title}」`).join(' / ')}</p>
+            <ul>
+              <li>高频信号：{cluster.examples.flatMap((need) => need.tags).slice(0, 4).join('、') || '待沉淀'}</li>
+              <li>建议动作：{cluster.count >= 2 ? '进入 AI 活动提案，优先转成可招募活动。' : '先继续收集相似需求，达到 3 条后再成局。'}</li>
+            </ul>
+            <button type="button" onClick={onGenerateProposal}><Lightbulb size={14} />查看可转化提案</button>
           </article>
         ))}
+        {!clusters.length ? <article><div><b>暂无可分类需求</b><span>等待用户发布</span></div><p>当用户完成轻问答或发布需求后，这里会按主题聚合来源、共鸣和可转化活动方向。</p></article> : null}
       </div>
     </section>
   );
@@ -503,6 +555,57 @@ function DailyPage({ needs, pendingCount, feedbackCount, proposals, onOpenPropos
   );
 }
 
+function UsersPage({ totalUsers, needs, lifePostsCount }: { totalUsers: number; needs: Need[]; lifePostsCount: number }) {
+  const activeUsers = Math.max(42, needs.length + lifePostsCount + 29);
+  const followUsers = operatorUsers.filter((item) => item.stage.includes('待') || item.stage.includes('沉默')).length + Math.max(0, needs.filter((need) => !need.responseActivityId).length - 1);
+  const sourceRows = [
+    { label: '轻问答入驻', count: Math.max(68, totalUsers - 49), note: '完成基础画像，可进入推荐' },
+    { label: '需求广场发布', count: needs.length, note: '有明确需求来源，可转活动' },
+    { label: '生活/反馈互动', count: lifePostsCount + 24, note: '适合做关系看板与二次撮合' },
+  ];
+  const maxSource = Math.max(...sourceRows.map((item) => item.count), 1);
+
+  return (
+    <section className="users-page">
+      <section className="users-hero">
+        <div><span>入住用户池</span><h2>{totalUsers} 位</h2><p>把“谁来了、从哪来、最近想要什么、是否需要小CC跟进”放在一个页面里。</p></div>
+      </section>
+      <div className="users-stat-grid">
+        <article><b>{activeUsers}</b><span>近 7 天活跃</span></article>
+        <article><b>{needs.length}</b><span>发布过需求</span></article>
+        <article><b>29</b><span>报名过活动</span></article>
+        <article><b>{followUsers}</b><span>待小CC跟进</span></article>
+      </div>
+      <section className="operator-panel">
+        <header><h2>入驻来源</h2><span>可定位出处</span></header>
+        <div className="users-source-list">
+          {sourceRows.map((row) => (
+            <article key={row.label}>
+              <div><b>{row.label}</b><span>{row.count} 人</span></div>
+              <i><em style={{ width: `${Math.max(12, Math.round((row.count / maxSource) * 100))}%` }} /></i>
+              <p>{row.note}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+      <section className="operator-panel">
+        <header><h2>用户列表</h2><span>示例 6 / {totalUsers}</span></header>
+        <div className="operator-user-list">
+          {operatorUsers.map((item) => (
+            <article key={item.name}>
+              <div className="operator-user-head"><b>{item.name}</b><span>{item.stage}</span></div>
+              <p>{item.city} · {item.joinedAt} 入驻 · 来源：{item.source}</p>
+              <strong>{item.needLine}</strong>
+              <div className="club-tags">{item.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+              <small>最近动作：{item.lastAction}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
 function RevenuePage({ mode, setMode }: { mode: 'month' | 'year'; setMode: (mode: 'month' | 'year') => void }) {
   const data = mode === 'month' ? revenueMonths : revenueYears;
   const current = data[0];
@@ -537,18 +640,21 @@ function ActivitiesManagePage({ activities, filter, setFilter, onOpen }: { activ
   );
 }
 
-function ActivityManageDetail({ item, onConfirm, onPush, onPreview }: { item: ManagedActivity; onConfirm: () => void; onPush: () => void; onPreview: () => void }) {
+function ActivityManageDetail({ item, pushCount, onConfirm, onPush, onPreview }: { item: ManagedActivity; pushCount: number; onConfirm: () => void; onPush: () => void; onPreview: () => void }) {
   const activity = item.activity;
+  const canPush = item.phase === 'mature' || item.phase === 'recruiting';
   return (
     <section className="activity-manage-detail">
       <div className="activity-admin-hero"><img src={activity.image} alt="" /><span>{phaseLabel(item.phase)}</span><h2>{activity.title}</h2><p>{activity.pitch || activity.description}</p></div>
-      <section className="operator-panel"><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className="activity-kpi-grid"><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article></div></section>
+      <section className="operator-panel"><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className="activity-kpi-grid"><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article><article><b>{pushCount}</b><span>AI 招募推送</span></article><article><b>{canPush ? '可推' : '收起'}</b><span>推送状态</span></article></div></section>
       <section className="operator-panel"><header><h2>活动信息</h2><span>可编辑</span></header><div className="proposal-info-table"><div><span>时间</span><b>{activity.timeRange}</b></div><div><span>地点</span><b>{activity.location}</b></div><div><span>人数</span><b>{activity.people}</b></div><div><span>费用</span><b>{activity.fee}</b></div><div><span>适合谁</span><b>{activity.audience}</b></div></div></section>
       <section className="operator-panel"><header><h2>流程亮点</h2></header><div className="activity-flow-mini">{activity.flow.map((step) => <article key={step.title}><b>{step.title}</b><p>{step.body}</p></article>)}</div></section>
       <div className="proposal-actions">
-        {item.phase === 'pre' ? <button type="button" onClick={onConfirm}><Check size={17} />运营确认 · 转成熟活动</button> : <button type="button" onClick={onPush}><Megaphone size={17} />AI 整理推送招募</button>}
+        {item.phase === 'pre' ? <button type="button" onClick={onConfirm}><Check size={17} />运营确认 · 转成熟活动</button> : null}
+        {canPush ? <button type="button" onClick={onPush}><Megaphone size={17} />{pushCount > 0 ? `AI 再次推送招募 · 已推 ${pushCount} 次` : 'AI 推送招募'}</button> : null}
         <button type="button" onClick={onPreview}><Eye size={17} />预览给用户看</button>
       </div>
+      {!canPush && item.phase !== 'pre' ? <p className="push-guard">这场活动已进入{phaseLabel(item.phase)}阶段，不再展示招募推送入口，避免重复打扰用户。</p> : null}
     </section>
   );
 }
@@ -566,10 +672,11 @@ function ActivityConfirmPage({ item, checks, setChecks, onSubmit }: { item: Mana
   );
 }
 
-function PushPage({ item, draft, setDraft, onSend }: { item: ManagedActivity; draft: { title: string; value: string; audience: string; sent: boolean }; setDraft: Dispatch<SetStateAction<{ title: string; value: string; audience: string; sent: boolean }>>; onSend: () => void }) {
+function PushPage({ item, pushCount, draft, setDraft, onSend }: { item: ManagedActivity; pushCount: number; draft: { title: string; value: string; audience: string; sent: boolean }; setDraft: Dispatch<SetStateAction<{ title: string; value: string; audience: string; sent: boolean }>>; onSend: () => void }) {
   return (
     <section className="push-page">
-      <section className="operator-panel"><header><span>AI PUSH</span><h2>智能推送招募</h2></header><p>小芽已根据活动标签、历史参与、收藏和需求共鸣整理招募文案。小CC 可以编辑后推送到首页推荐和企微客户朋友圈。</p></section>
+      <section className="operator-panel"><header><span>AI PUSH</span><h2>智能推送招募</h2></header><p>仅成熟活动和报名中活动可以推送招募。小芽已根据活动标签、历史参与、收藏和需求共鸣整理招募文案，小CC 编辑确认后再发出。</p></section>
+      <div className="push-count-strip"><b>已推送 {pushCount} 次</b><span>本次确认后将记录为第 {pushCount + 1} 次，并把活动状态设为报名中。</span></div>
       <label className="admin-field"><span>推送标题</span><input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label>
       <label className="admin-field"><span>核心价值</span><textarea value={draft.value} onChange={(event) => setDraft((current) => ({ ...current, value: event.target.value }))} /></label>
       <label className="admin-field"><span>面向群体</span><input value={draft.audience} onChange={(event) => setDraft((current) => ({ ...current, audience: event.target.value }))} /></label>

@@ -1,4 +1,51 @@
 import { useState } from 'react';
 import { Camera } from 'lucide-react';
 import { useClub } from '../../club/ClubContext';
-export function BasicProfileStep({onNext}:{onNext:()=>void}){const{state,saveBasicProfile}=useClub();const[profile,setProfile]=useState(state.profile);function update(key:keyof typeof profile,value:string){setProfile(current=>({...current,[key]:value}))}return <section className="onboarding-body"><div className="onboarding-intro"><span>基础资料</span><h1>完善一点基础信息</h1><p>先填最少的部分，后面可以慢慢补充。</p></div><div className="profile-avatar-edit"><img src="/assets/avatar-me.jpg" alt="当前头像"/><button><Camera size={18}/>更换照片</button></div><div className="profile-fields"><label>昵称<input aria-label="昵称" value={profile.nickname} onChange={e=>update('nickname',e.target.value)}/></label><label>生年月日<input type="date" value={profile.birthDate} onChange={e=>update('birthDate',e.target.value)}/></label><label>性别<select value={profile.gender} onChange={e=>update('gender',e.target.value)}><option>女</option><option>男</option><option>不透露</option></select></label><label>学历<select value={profile.education} onChange={e=>update('education',e.target.value)}><option>本科</option><option>硕士</option><option>博士</option></select></label><label>职业<input value={profile.occupation} onChange={e=>update('occupation',e.target.value)}/></label></div><button className="primary-button primary-button--wide" disabled={!profile.nickname.trim()} onClick={()=>{saveBasicProfile(profile);onNext()}}>生成画像</button></section>}
+
+export function BasicProfileStep({ onNext }: { onNext: () => void }) {
+  const { state, saveBasicProfile } = useClub();
+  const [profile, setProfile] = useState(state.profile);
+  const [avatarPreview, setAvatarPreview] = useState('/assets/avatar-me.jpg');
+
+  function update(key: keyof typeof profile, value: string) {
+    setProfile((current) => ({ ...current, [key]: value }));
+  }
+
+  return (
+    <section className="onboarding-body">
+      <div className="onboarding-intro">
+        <span>基础资料</span>
+        <h1>完善一点基础信息</h1>
+        <p>先填必要信息，后面可以慢慢补充。</p>
+      </div>
+      <div className="profile-avatar-edit">
+        <img src={avatarPreview} alt="当前头像" />
+        <label><Camera size={18} />更换照片<input type="file" accept="image/*" onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) setAvatarPreview(URL.createObjectURL(file));
+        }} /></label>
+      </div>
+      <div className="profile-fields">
+        <label>昵称<input aria-label="昵称" value={profile.nickname} onChange={(event) => update('nickname', event.target.value)} /></label>
+        <label>性别<select value={profile.gender} onChange={(event) => update('gender', event.target.value)}><option>女</option><option>男</option><option>不透露</option></select></label>
+        <label>生日<input type="date" value={profile.birthDate} onChange={(event) => update('birthDate', event.target.value)} /></label>
+        <label>身高<input value={profile.height} placeholder="例如 165cm" onChange={(event) => update('height', event.target.value)} /></label>
+        <label>居住地<input value={profile.city} placeholder="例如 上海 杨浦区" onChange={(event) => update('city', event.target.value)} /></label>
+        <label>家乡<input value={profile.hometown} placeholder="例如 浙江杭州" onChange={(event) => update('hometown', event.target.value)} /></label>
+        <label>情感状态<select value={profile.relationship} onChange={(event) => update('relationship', event.target.value)}><option>正在寻觅</option><option>单身观察中</option><option>刚结束一段关系</option><option>暂时随缘</option><option>不透露</option></select></label>
+        <label>职业<input value={profile.occupation} onChange={(event) => update('occupation', event.target.value)} /></label>
+      </div>
+      <button
+        type="button"
+        className="primary-button primary-button--wide"
+        disabled={!profile.nickname.trim()}
+        onClick={() => {
+          saveBasicProfile(profile);
+          onNext();
+        }}
+      >
+        生成画像
+      </button>
+    </section>
+  );
+}
