@@ -1,0 +1,104 @@
+/* Onboarding — shared styles for the 4-step wizard shell + steps. */
+
+.page {
+  min-height: 100dvh;
+  background: var(--surface);
+  padding-bottom: 32px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  align-items: center;
+  min-height: 74px;
+  padding: max(12px, env(safe-area-inset-top)) 18px 8px;
+  background: var(--material-thick);
+  -webkit-backdrop-filter: var(--blur-nav);
+  backdrop-filter: var(--blur-nav);
+}
+
+.backButton {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-instant) ease-out;
+}
+
+.backButton:active {
+  transform: scale(0.92);
+}
+
+.backButton:disabled {
+  opacity: 0.2;
+}
+
+.header small {
+  display: block;
+  margin-bottom: 8px;
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  font-weight: 750;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.progress i {
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.progress i.active {
+  background: var(--brand);
+}
+
+.stepCount {
+  text-align: right;
+  color: var(--subtle);
+  font-size: 10px;
+}
+
+.body {
+  padding: 18px 20px 34px;
+}
+
+.intro span {
+  color: var(--brand);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.intro h1 {
+  margin: 9px 0 8px;
+  font-size: var(--text-display-size);
+  line-height: var(--text-display-leading);
+  letter-spacing: var(--text-display-tracking);
+  font-weight: 800;
+}
+
+.intro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  line-height: 1.75;
+}
+
+.formError {
+  color: #c83d33;
+  font-size: var(--text-caption-size);
+}

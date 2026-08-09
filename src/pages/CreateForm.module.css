@@ -1,0 +1,100 @@
+/* Create — shared styles for the publish forms (activity / need / life). */
+
+.page {
+  padding-bottom: 40px;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  padding: max(20px, env(safe-area-inset-top)) 0 17px;
+}
+
+.backButton {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-instant) ease-out;
+}
+
+.backButton:active {
+  transform: scale(0.92);
+}
+
+.eyebrow {
+  color: var(--brand);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.header h1 {
+  margin: 3px 0 5px;
+  font-size: var(--text-title-size);
+  line-height: 1.2;
+  letter-spacing: var(--text-title-tracking);
+}
+
+.header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  line-height: 1.5;
+}
+
+.form {
+  display: grid;
+  gap: 18px;
+}
+
+.section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.section legend,
+.fieldLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: var(--text-caption-size);
+  font-weight: 760;
+}
+
+.error {
+  display: block;
+  margin: 6px 0 0;
+  color: #c83d33;
+  font-size: var(--text-caption-size);
+}
+
+.help {
+  display: block;
+  margin: 6px 0 0;
+  color: var(--subtle);
+  font-size: var(--text-caption-size);
+  text-align: right;
+}
+
+.helpLeft {
+  text-align: left;
+}
+
+.note {
+  padding: 12px;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  line-height: 1.6;
+}

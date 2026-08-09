@@ -1,0 +1,112 @@
+/* PortraitStep — the generated-portrait reveal step. */
+
+.step {
+  padding-bottom: 34px;
+}
+
+.cover {
+  position: relative;
+  min-height: 270px;
+  margin: 0 -20px 22px;
+  padding: 32px 24px;
+  overflow: hidden;
+  background: linear-gradient(150deg, #293d37, #72937a);
+  color: #fff;
+}
+
+.cover::after {
+  content: '';
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  right: -45px;
+  bottom: -45px;
+  border: 32px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.coverAvatar {
+  margin-bottom: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.75);
+}
+
+.coverLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-caption-size);
+}
+
+.cover h1 {
+  margin: 8px 0 4px;
+  font-size: var(--text-title-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.cover p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--text-caption-size);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.tags span {
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: #eff5f1;
+  color: #416054;
+  font-size: var(--text-caption-size);
+  font-weight: 700;
+}
+
+.tags span.orange {
+  background: #fff0e9;
+  color: #a95238;
+}
+
+.quote {
+  margin: 22px 0;
+  padding: 19px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--text-headline-size);
+  line-height: 1.55;
+  font-weight: 700;
+  letter-spacing: var(--text-title-tracking);
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.compare > div {
+  padding: 15px;
+  border-radius: var(--radius-control);
+  background: #eff5f1;
+}
+
+.compare .avoid {
+  background: #fff0e9;
+}
+
+.compare b {
+  font-size: var(--text-callout-size);
+}
+
+.compare p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  line-height: 1.8;
+}
+
+.finish {
+  margin-top: 22px;
+}

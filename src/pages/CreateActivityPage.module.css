@@ -1,0 +1,107 @@
+/* CreateActivityPage — activity publish form specifics (category grid, stepper, price). */
+
+.page {
+  padding: 0 18px 40px;
+}
+
+.categoryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.categoryGrid button {
+  display: flex;
+  min-width: 0;
+  min-height: 66px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--text-caption-size);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) ease-out,
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out;
+}
+
+.categoryGrid button.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rowControls {
+  align-items: end;
+}
+
+.controlBlock {
+  min-width: 0;
+}
+
+.stepper {
+  display: grid;
+  height: 46px;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+
+.stepper button {
+  display: grid;
+  height: 100%;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.stepper strong {
+  text-align: center;
+  font-size: var(--text-body-size);
+}
+
+.priceInput {
+  position: relative;
+}
+
+.priceInput b {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  font-size: var(--text-callout-size);
+}
+
+.priceInput input {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px 0 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  outline: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-callout-size);
+}
+
+.priceInput input:focus {
+  border-color: var(--ink);
+}

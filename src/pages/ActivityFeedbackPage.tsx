@@ -1,7 +1,10 @@
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
+import { Button } from '../components/ui/Button';
+import { Textarea } from '../components/ui/Input';
 import { useQiahao } from '../state/QiahaoContext';
+import styles from './ActivityFeedbackPage.module.css';
 
 const previewMoods = [
   ['comfortable', '舒服自然'], ['nervous', '有点紧张'], ['rewarding', '收获很大'], ['neutral', '一般般'], ['not_suitable', '不太合适'],
@@ -41,9 +44,9 @@ export function ActivityFeedbackPage({
   }
 
   return (
-    <main className="create-need page activity-feedback-page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={onBack}>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}>
           <ArrowLeft />
         </button>
         <div>
@@ -52,7 +55,7 @@ export function ActivityFeedbackPage({
         </div>
       </header>
 
-      <section className="activity-feedback-summary">
+      <section className={styles.summary}>
         <img src={activity.image} alt="" />
         <div>
           <strong>{activity.title}</strong>
@@ -62,14 +65,14 @@ export function ActivityFeedbackPage({
         </div>
       </section>
 
-      <p className="create-need-lead">你的反馈只会用于改进推荐和活动设计，不会公开给其他参与者。</p>
+      <p className={styles.lead}>你的反馈只会用于改进推荐和活动设计，不会公开给其他参与者。</p>
 
-      <div className="tag-picks" role="group" aria-label="整体感受">
+      <div className={styles.moods} role="group" aria-label="整体感受">
         {moods.map((item) => (
           <button
             key={item.key}
             type="button"
-            className={mood === item.key ? 'is-active' : ''}
+            className={mood === item.key ? styles.active : ''}
             onClick={() => {
               setMood(item.key);
               setError('');
@@ -80,17 +83,17 @@ export function ActivityFeedbackPage({
         ))}
       </div>
 
-      <textarea
+      <Textarea
         aria-label="补充感受"
         value={note}
         onChange={(event) => setNote(event.target.value)}
         placeholder="可选：哪里舒服、哪里有压力、还想遇见怎样的人……"
       />
-      {error ? <p className="field-error">{error}</p> : null}
+      {error ? <p className={styles.error}>{error}</p> : null}
 
-      <button type="button" className="primary-button primary-button--wide" disabled={pending} onClick={() => void submit()}>
+      <Button wide disabled={pending} onClick={() => void submit()} className={styles.submit}>
         {pending ? '提交中…' : '提交反馈'}
-      </button>
+      </Button>
     </main>
   );
 }

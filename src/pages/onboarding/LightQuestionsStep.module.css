@@ -1,0 +1,64 @@
+/* LightQuestionsStep — the three-question intro step. */
+
+.question {
+  padding: 28px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.questionTitle {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.questionTitle b {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 11px;
+}
+
+.questionTitle h2 {
+  margin: 1px 0 0;
+  font-size: var(--text-headline-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.answerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.answerGrid button {
+  min-height: var(--tap);
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+}
+
+.answerGrid button.active {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 750;
+  box-shadow: inset 3px 0 var(--brand);
+}
+
+.continue {
+  margin-top: 25px;
+}

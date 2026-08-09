@@ -1,0 +1,115 @@
+/* ActivityFeedbackPage — post-activity feedback form. */
+
+.page {
+  padding: 0 18px 40px;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 9px;
+  align-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 0 17px;
+}
+
+.backButton {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform var(--dur-instant) ease-out;
+}
+
+.backButton:active {
+  transform: scale(0.92);
+}
+
+.header small {
+  color: var(--brand);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.header h1 {
+  margin: 3px 0 0;
+  font-size: var(--text-title-size);
+  letter-spacing: var(--text-title-tracking);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 8px 0 16px;
+  padding: 12px;
+  border-radius: var(--radius-card);
+  background: var(--surface-secondary);
+}
+
+.summary img {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.summary strong {
+  display: block;
+  font-size: var(--text-body-size);
+}
+
+.summary p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+}
+
+.lead {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+}
+
+.moods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 18px 0;
+}
+
+.moods button {
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: var(--surface-secondary);
+  color: var(--muted);
+  font-size: var(--text-callout-size);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+}
+
+.moods button.active {
+  background: var(--brand-soft);
+  color: var(--brand-dark);
+  font-weight: 750;
+  box-shadow: inset 3px 0 var(--brand);
+}
+
+.error {
+  color: #c83d33;
+  font-size: var(--text-caption-size);
+}
+
+.submit {
+  margin-top: 14px;
+}
