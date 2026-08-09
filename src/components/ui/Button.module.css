@@ -1,0 +1,125 @@
+/* Button — four variants on a shared pressable base. */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font-weight: 780;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  /* Color/background transitions only; transform is driven by the spring. */
+  transition:
+    background-color var(--dur-fast) ease-out,
+    color var(--dur-fast) ease-out,
+    opacity var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+  will-change: transform;
+}
+
+.button:disabled {
+  cursor: default;
+}
+
+.leadingIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+/* ---------- Primary ---------- */
+.primary {
+  min-height: 46px;
+  padding: 0 22px;
+  background: var(--brand);
+  color: #fff;
+  font-size: var(--text-body-size);
+  box-shadow: 0 8px 19px color-mix(in srgb, var(--brand) 22%, transparent);
+}
+.primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+}
+.primary:disabled {
+  background: var(--surface-secondary);
+  color: var(--subtle);
+  box-shadow: none;
+}
+
+/* ---------- Secondary ---------- */
+.secondary {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-callout-size);
+  font-weight: 750;
+}
+.secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.secondary:disabled {
+  color: var(--subtle);
+  opacity: 0.7;
+}
+
+/* ---------- Text ---------- */
+.text {
+  min-height: var(--tap);
+  padding: 0 4px;
+  background: transparent;
+  color: var(--brand);
+  font-size: var(--text-callout-size);
+  font-weight: 700;
+  text-align: left;
+}
+.text:disabled {
+  color: var(--subtle);
+}
+
+/* ---------- Icon ---------- */
+.icon {
+  width: var(--tap);
+  height: var(--tap);
+  min-height: var(--tap);
+  padding: 0;
+  border-radius: 50%;
+  background: var(--surface-secondary);
+  color: var(--ink);
+}
+.icon:hover:not(:disabled) {
+  background: var(--line);
+}
+.iconOnly {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Sizes ---------- */
+.sm {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: var(--text-caption-size);
+}
+.icon.sm {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+.lg {
+  min-height: 52px;
+  padding: 0 26px;
+  font-size: 1rem;
+}
+
+/* ---------- Layout ---------- */
+.wide {
+  width: 100%;
+}

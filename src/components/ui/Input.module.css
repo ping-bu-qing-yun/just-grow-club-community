@@ -1,0 +1,70 @@
+/* Input — text / textarea / select on a shared control surface. */
+
+.field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.label {
+  font-size: var(--text-caption-size);
+  font-weight: 760;
+  color: var(--ink);
+}
+
+.control {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  outline: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: var(--text-callout-size);
+  transition:
+    border-color var(--dur-fast) ease-out,
+    box-shadow var(--dur-fast) ease-out;
+}
+
+.control::placeholder {
+  color: var(--subtle);
+}
+
+.control:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.control:disabled {
+  background: var(--surface-secondary);
+  color: var(--subtle);
+}
+
+.textarea {
+  min-height: 105px;
+  padding: 12px;
+  line-height: var(--text-callout-leading);
+  resize: vertical;
+}
+
+.invalid {
+  border-color: #c83d33;
+}
+.invalid:focus {
+  border-color: #c83d33;
+  box-shadow: 0 0 0 3px rgba(200, 61, 51, 0.12);
+}
+
+.error {
+  margin: 0;
+  color: #c83d33;
+  font-size: var(--text-caption-size);
+}
+
+.hint {
+  margin: 0;
+  color: var(--subtle);
+  font-size: var(--text-caption-size);
+  text-align: right;
+}
