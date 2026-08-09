@@ -7,6 +7,8 @@
 
 外部演示链接：[https://qiahao-club-demo.chengyan090.chatgpt.site](https://qiahao-club-demo.chengyan090.chatgpt.site)
 
+GitHub Pages 兜底链接：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
+
 本地演示链接：[http://127.0.0.1:5174/](http://127.0.0.1:5174/)
 
 前端使用 React + Vite，后端使用 Fastify + MySQL 8。当前分支 `justV0.2` 重点补强了注册问卷、专属页互动小猫、活动卡片、评论/报名/取消、用户画像与管理动作工作台等准商用演示能力。
@@ -72,6 +74,8 @@ npm test -- --run
 npm run build
 npm run e2e
 ```
+
+Sites 发布需要使用 `npm run build:sites` 生成 `dist/server/index.js`，再将 `.openai/hosting.json` 和 `dist/` 一起打包上传，确保静态资源和前端路由都能由生产 Worker 正确返回。
 
 `server/migrations/mysql/` 提供基础表、通知、内容治理、标签和评论迁移脚本。配置 MySQL 环境变量后，先执行 `npm run db:migrate -- --apply`，再启动 API；迁移会检查必要表和字段，重复执行不会重复登记版本。配置 `REDIS_URL` 后可启用跨实例通知事件桥接，Redis 不可用时会自动回退到进程内推送。
 

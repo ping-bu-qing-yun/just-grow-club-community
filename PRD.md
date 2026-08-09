@@ -10,6 +10,8 @@
 
 外部访问：[https://qiahao-club-demo.chengyan090.chatgpt.site](https://qiahao-club-demo.chengyan090.chatgpt.site)
 
+GitHub Pages 兜底访问：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
+
 本地访问：[http://127.0.0.1:5174/](http://127.0.0.1:5174/)
 
 演示账号：手机号 `13800000000`，密码 `qiahao123`。
@@ -67,3 +69,4 @@
 - 所有底部 tab、卡片、返回、发布、评论、报名、预约、取消均有可见反馈。
 - 小CC可从管理动作进入各子模块，并看到可操作的提案或数据。
 - `npm run build` 或等价 Vite 构建通过。
+- Sites 生产发布包需包含 `dist/server/index.js`，避免外部链接根路径或前端路由返回 404。
