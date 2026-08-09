@@ -1,12 +1,14 @@
-import { BadgeCheck, Bookmark, ChevronRight, CircleHelp, Heart, LogOut, MessageCircle, PenLine, Settings, ShieldCheck, Sparkles, UsersRound, Shield } from 'lucide-react';
+import { BadgeCheck, Bookmark, ChevronRight, CircleHelp, Heart, LogOut, MessageCircle, MoonStar, PenLine, ShieldCheck, Sparkles, UsersRound, Shield } from 'lucide-react';
 import { useClub } from '../club/ClubContext';
 import { useQiahao } from '../state/QiahaoContext';
+import { nextThemePreference, themeLabels, useThemePreference } from '../theme/theme';
 
 export type ProfileDestination = 'editor' | 'messages' | 'saved-activities' | 'saved-needs' | 'dynamics' | 'portrait' | 'attended' | 'admin-content';
 
 export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: string) => void; onNavigate?: (destination: ProfileDestination) => void }) {
   const { state, resetOnboarding } = useClub();
   const { activities, joinedIds, savedIds, user, needs, logout } = useQiahao();
+  const { preference, setPreference } = useThemePreference();
   const identity = user ?? { id: 'me', name: state.profile.nickname, avatar: '/assets/avatar-me.jpg', bio: state.profile.bio, role: 'member' as const };
   const hosted = activities.filter((item) => item.host.id === identity.id).length;
   const joinedCount = joinedIds.size + state.joinedClubActivityIds.length;
@@ -29,7 +31,7 @@ export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: stri
       <section className="club-profile-section"><h2>我的记录</h2>{rows.map(({ label, sub, Icon, d }) => <button key={label} onClick={() => onNavigate?.(d)}><span className="profile-row-icon"><Icon size={18} /></span><span><b>{label}</b><small>{sub}</small></span><ChevronRight size={17} /></button>)}</section>
       {user?.role === 'operator' && <section className="club-profile-section"><h2>运营工作台</h2><button onClick={() => onNavigate?.('admin-content')}><span className="profile-row-icon"><Shield size={18} /></span><span><b>内容治理</b><small>审核、驳回、归档内容与维护标签</small></span><ChevronRight size={17} /></button></section>}
       <section className="club-profile-section"><button onClick={() => onNavigate?.('messages')}><span className="profile-row-icon"><MessageCircle size={18} /></span><span><b>我的消息</b><small>报名、缴费、互动与系统通知</small></span><ChevronRight size={17} /></button></section>
-      <section className="club-profile-section"><h2>更多服务</h2><button onClick={() => onNotice('帮助与客服已打开')}><span className="profile-row-icon"><CircleHelp size={18} /></span><span><b>帮助与客服</b><small>遇到问题可以找小CC</small></span><ChevronRight size={17} /></button><button onClick={() => onNotice('安全中心已打开')}><span className="profile-row-icon"><ShieldCheck size={18} /></span><span><b>安全中心</b><small>隐私、举报与活动边界</small></span><ChevronRight size={17} /></button><button onClick={() => onNotice('设置已打开')}><span className="profile-row-icon"><Settings size={18} /></span><span><b>设置</b><small>通知、授权与账号</small></span><ChevronRight size={17} /></button><button className="danger" onClick={() => void logout()}><span className="profile-row-icon"><LogOut size={18} /></span><span><b>退出当前账号</b><small>退出后回到登录页</small></span><ChevronRight size={17} /></button></section>
+      <section className="club-profile-section"><h2>更多服务</h2><button onClick={() => onNotice('帮助与客服已打开')}><span className="profile-row-icon"><CircleHelp size={18} /></span><span><b>帮助与客服</b><small>遇到问题可以找小CC</small></span><ChevronRight size={17} /></button><button onClick={() => onNotice('安全中心已打开')}><span className="profile-row-icon"><ShieldCheck size={18} /></span><span><b>安全中心</b><small>隐私、举报与活动边界</small></span><ChevronRight size={17} /></button><button onClick={() => setPreference(nextThemePreference(preference))}><span className="profile-row-icon"><MoonStar size={18} /></span><span><b>外观</b><small>{themeLabels[preference]}，点击切换</small></span><ChevronRight size={17} /></button><button className="danger" onClick={() => void logout()}><span className="profile-row-icon"><LogOut size={18} /></span><span><b>退出当前账号</b><small>退出后回到登录页</small></span><ChevronRight size={17} /></button></section>
       <p className="profile-id">恰好号：78135154</p>
     </main>
   );

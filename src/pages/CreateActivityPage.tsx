@@ -1,4 +1,4 @@
-import { Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Utensils } from 'lucide-react';
+import { ArrowLeft, Coffee, Dices, Dumbbell, Footprints, Minus, Palette, Plus, Utensils } from 'lucide-react';
 import { useMemo, useState, type FormEvent } from 'react';
 import type { Activity, ActivityCategory, CreateActivityInput } from '../domain/types';
 import { useQiahao } from '../state/QiahaoContext';
@@ -69,7 +69,7 @@ function validateDraft(draft: Draft): DraftErrors {
   return errors;
 }
 
-export function CreateActivityPage({ onCreated }: { onCreated: (activity: Activity) => void }) {
+export function CreateActivityPage({ onBack, onCreated }: { onBack: () => void; onCreated: (activity: Activity) => void }) {
   const { createActivity } = useQiahao();
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -109,10 +109,9 @@ export function CreateActivityPage({ onCreated }: { onCreated: (activity: Activi
 
   return (
     <main className="page standard-page create-page">
-      <header className="page-header">
-        <span className="eyebrow">CREATE</span>
-        <h1>发起一次恰好的见面</h1>
-        <p>信息越清楚，越容易遇到同频的人。</p>
+      <header className="subpage-header create-page__header">
+        <button type="button" aria-label="返回活动" onClick={onBack}><ArrowLeft /></button>
+        <div><span className="eyebrow">CREATE</span><h1>发起一次恰好的见面</h1><p>信息越清楚，越容易遇到同频的人。</p></div>
       </header>
       <form className="create-form" onSubmit={submit} noValidate>
         <fieldset className="form-section">

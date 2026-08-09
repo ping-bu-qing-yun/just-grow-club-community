@@ -455,7 +455,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const origin = `${proto}://${host}`;
     const frontendOrigin = resolveFrontendOrigin('http://127.0.0.1:5174');
     const pageUrl = absoluteUrl(origin, `/api/share/activity/${encodeURIComponent(activity.id)}`);
-    const appUrl = `${frontendOrigin}/?activity=${encodeURIComponent(activity.id)}`;
+    const appUrl = `${frontendOrigin}/activities/${encodeURIComponent(activity.id)}`;
     const imageUrl = resolveShareImageUrl(activity.image, frontendOrigin);
 
     reply
