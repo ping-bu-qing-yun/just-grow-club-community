@@ -1,5 +1,7 @@
 import { ArrowLeft, ArrowUpRight, Bell, ClipboardList, Heart, Megaphone, MessageCircle, ShieldCheck } from 'lucide-react';
 import type { AppNotification, NotificationCategory } from '../notifications/types';
+import { Avatar } from '../components/ui/Avatar';
+import styles from './NotificationDetailPage.module.css';
 
 function iconFor(category: NotificationCategory) {
   if (category === 'announcement') return Megaphone;
@@ -41,29 +43,29 @@ export function NotificationDetailPage({
   const canNavigate = notification.target && notification.target.type !== 'none';
 
   return (
-    <main className="notification-detail page">
-      <header className="notification-detail__header">
-        <button type="button" className="icon-button" aria-label="返回通知" onClick={onBack}>
+    <main className={`${styles.detail} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回通知" onClick={onBack}>
           <ArrowLeft size={20} />
         </button>
         <span>通知详情</span>
         <i aria-hidden="true" />
       </header>
-      <section className="notification-detail__body">
-        <span className={`notification-icon notification-icon--${notification.category}`}>
-          {notification.actor?.avatar ? <img src={notification.actor.avatar} alt="" /> : <Icon size={22} />}
+      <section className={styles.body}>
+        <span className={`${styles.icon} ${styles[`icon--${notification.category}`]}`}>
+          {notification.actor?.avatar ? <Avatar src={notification.actor.avatar} size={64} /> : <Icon size={22} />}
         </span>
         <small>{labelFor(notification.category)}</small>
         <h1>{notification.title}</h1>
         <time>{formattedTime(notification.createdAt)}</time>
         <p>{notification.body}</p>
         {canNavigate ? (
-          <button type="button" className="notification-detail__link" onClick={() => onNavigate(notification)}>
+          <button type="button" className={styles.link} onClick={() => onNavigate(notification)}>
             {notification.target?.label ?? '查看相关内容'}
             <ArrowUpRight size={17} />
           </button>
         ) : (
-          <div className="notification-detail__note">
+          <div className={styles.note}>
             <Bell size={17} />
             这条提醒会保留在通知中心，方便你随时查看。
           </div>
