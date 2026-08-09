@@ -1,7 +1,16 @@
-export type ActivityCategory = '饭搭子' | '咖啡' | '运动' | '徒步' | '看展' | '桌游';
-export type UserRole = 'member' | 'host' | 'operator';
-export type ActivityLifecycle = 'pre' | 'formal' | 'archived';
-export type ParticipationStatus = 'interested' | 'joined';
+import type { z } from 'zod';
+import type {
+  activityCategorySchema,
+  activityLifecycleSchema,
+  createActivityInputSchema,
+  participationStatusSchema,
+  userRoleSchema,
+} from '../contracts/api';
+
+export type ActivityCategory = z.infer<typeof activityCategorySchema>;
+export type UserRole = z.infer<typeof userRoleSchema>;
+export type ActivityLifecycle = z.infer<typeof activityLifecycleSchema>;
+export type ParticipationStatus = z.infer<typeof participationStatusSchema>;
 
 export interface UserSummary {
   id: string;
@@ -30,18 +39,14 @@ export interface Activity {
   note?: string;
   lifecycle: ActivityLifecycle;
   participationStatus?: ParticipationStatus | null;
+  audience?: string;
+  pitch?: string;
+  boundary?: string;
+  matchLabel?: string;
+  flow?: Array<{ title: string; body: string }>;
 }
 
-export interface CreateActivityInput {
-  title: string;
-  category: ActivityCategory;
-  description: string;
-  dateLabel: string;
-  time: string;
-  location: string;
-  capacity: number;
-  price: number;
-}
+export type CreateActivityInput = z.infer<typeof createActivityInputSchema>;
 
 export interface MessageThread {
   id: string;

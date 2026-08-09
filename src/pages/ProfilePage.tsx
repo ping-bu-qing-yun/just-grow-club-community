@@ -11,12 +11,13 @@ export function ProfilePage({ onNotice, onNavigate }: { onNotice: (message: stri
   const { preference, setPreference } = useThemePreference();
   const identity = user ?? { id: 'me', name: state.profile.nickname, avatar: '/assets/avatar-me.jpg', bio: state.profile.bio, role: 'member' as const };
   const hosted = activities.filter((item) => item.host.id === identity.id).length;
-  const joinedCount = joinedIds.size + state.joinedClubActivityIds.length;
-  const savedActivityCount = savedIds.size + state.savedClubActivityIds.length;
+  const joinedCount = joinedIds.size;
+  const savedActivityCount = savedIds.size;
+  const savedNeedCount = needs.filter((item) => item.saved).length;
   const rows = [
     { label: '参加过活动', sub: `已报名 ${joinedCount} 场`, Icon: UsersRound, d: 'attended' as const },
     { label: '活动收藏', sub: `已收藏 ${savedActivityCount} 场活动`, Icon: Heart, d: 'saved-activities' as const },
-    { label: '需求收藏', sub: `已收藏 ${state.savedNeedIds.length} 张需求卡`, Icon: Bookmark, d: 'saved-needs' as const },
+    { label: '需求收藏', sub: `已收藏 ${savedNeedCount} 张需求卡`, Icon: Bookmark, d: 'saved-needs' as const },
     { label: '我的动态', sub: '发布动态和过去的生活记录', Icon: PenLine, d: 'dynamics' as const },
     { label: '我的画像', sub: '根据回答和活动反馈持续更新', Icon: Sparkles, d: 'portrait' as const },
   ];

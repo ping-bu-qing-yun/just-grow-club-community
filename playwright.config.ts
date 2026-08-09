@@ -10,15 +10,12 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
-  webServer: {
-    command: 'npm run dev:all',
-    url: 'http://127.0.0.1:5174',
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
   projects: [
     { name: 'mobile-chrome', use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } } },
+    { name: 'mobile-dark', use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 }, colorScheme: 'dark' } },
+    { name: 'mobile-reduced-motion', metadata: { reducedMotion: true }, use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } } },
     { name: 'desktop-chrome', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
+    { name: 'desktop-dark', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, colorScheme: 'dark' } },
   ],
 });
 

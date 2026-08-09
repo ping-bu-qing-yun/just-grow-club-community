@@ -19,6 +19,7 @@ type Gesture = {
   lastTime: number;
   velocity: number;
   dragging: boolean;
+  offset: number;
 };
 
 function readTranslateY(element: HTMLElement): number {
@@ -132,6 +133,7 @@ export function Sheet({
       lastTime: event.timeStamp,
       velocity: 0,
       dragging: false,
+      offset: startOffset,
     };
   }
 
@@ -151,6 +153,7 @@ export function Sheet({
     let offset = gesture.startOffset + rawDelta;
     if (offset < 0) offset *= 0.18;
     if (offset > panel.offsetHeight) offset = panel.offsetHeight + (offset - panel.offsetHeight) * 0.18;
+    gesture.offset = offset;
     panel.style.setProperty('--sheet-offset', `${offset}px`);
   }
 
@@ -161,7 +164,7 @@ export function Sheet({
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     gestureRef.current = null;
     if (!gesture.dragging) return;
-    const offset = Math.max(0, readTranslateY(panel));
+    const offset = Math.max(0, gesture.offset);
     const projectedOffset = offset + Math.max(0, gesture.velocity) * 220;
     const shouldClose = gesture.velocity > 0.55 || projectedOffset > Math.max(120, panel.offsetHeight * 0.32);
     if (shouldClose) {

@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { lifePosts, seedNeeds } from '../club/seed';
 import type { LifePost, Need } from '../club/types';
-import { useClub } from '../club/ClubContext';
 import { useQiahaoOptional } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { LifePostCard } from '../components/LifePostCard';
@@ -14,7 +13,6 @@ export function NeedsPage({
   onOpenNeed: (need: Need, focusComments?: boolean) => void;
   onOpenLifePost?: (post: LifePost, focusComments?: boolean) => void;
 }) {
-  const { state } = useClub();
   const qiahao = useQiahaoOptional();
   const [searchParams, setSearchParams] = useSearchParams();
   const mode = searchParams.get('view') === 'life' ? 'life' : 'needs';
@@ -35,16 +33,16 @@ export function NeedsPage({
     setSearchParams(params, { replace: true });
   }
   const needs = useMemo(() => {
-    const source = qiahao?.needs ?? [...state.publishedNeeds, ...seedNeeds];
+    const source = qiahao?.needs ?? seedNeeds;
     return [...new Map(source.map((item) => [item.id, item])).values()].filter((item) => filter !== 'similar' || item.similar);
-  }, [filter, qiahao?.needs, state.publishedNeeds]);
+  }, [filter, qiahao?.needs]);
   const lifeFeed = useMemo(() => {
     // Once the API provider exists, its approved response (or its explicit
     // read-only cache fallback) is authoritative. Seed data is only for the
     // standalone/offline preview that has no provider at all.
-    const base = qiahao ? qiahao.lifePosts : [...(state.publishedLifePosts ?? []), ...lifePosts];
+    const base = qiahao ? qiahao.lifePosts : lifePosts;
     return [...new Map(base.map((item) => [item.id, item])).values()];
-  }, [qiahao, state.publishedLifePosts]);
+  }, [qiahao]);
 
   return (
     <main className="needs-page page">

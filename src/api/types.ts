@@ -26,6 +26,9 @@ export interface ApiNeed {
   updatedAt: string;
   commentCount?: number;
   comments?: number;
+  saved: boolean;
+  resonated: boolean;
+  resonanceCount: number;
 }
 export interface ApiLifePost {
   id: string;
@@ -40,6 +43,9 @@ export interface ApiLifePost {
   updatedAt: string;
   commentCount?: number;
   comments?: number;
+  saved: boolean;
+  resonated: boolean;
+  resonanceCount: number;
 }
 
 export interface ApiComment {
@@ -94,6 +100,8 @@ export interface QiahaoApi {
   createTag(input: { type: ContentType; slug: string; label: string }): Promise<{ tag: ApiContentTag }>;
   updateTag(id: string, input: { slug?: string; label?: string; enabled?: boolean }): Promise<{ tag: ApiContentTag }>;
   favorite(id: string, saved: boolean): Promise<{ saved: boolean }>;
+  bookmark(contentType: ContentType, id: string, saved: boolean): Promise<{ saved: boolean }>;
+  resonate(contentType: ContentType, id: string, resonated: boolean): Promise<{ resonated: boolean }>;
   join(id: string): Promise<{ thread: ApiThread | null; participationStatus: 'interested' | 'joined' }>;
   threads(): Promise<{ threads: ApiThread[] }>;
   listComments(input: { contentType: CommentContentType; contentId: string; limit?: number; cursor?: string | null }): Promise<CommentPage>;

@@ -5,6 +5,7 @@ import type { QiahaoDatabase } from './db';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
 import { createContent, listTagsForContent, requireContent, updateContentTags } from './content-repository';
 import { countComments } from './comment-repository';
+import { getContentSocialState } from './social-repository';
 
 type NeedRow = RowDataPacket & {
   id: string;
@@ -33,6 +34,9 @@ function toNeed(row: NeedRow, tags: ApiNeed['tags']): ApiNeed {
     createdAt: toIsoTimestamp(row.created_at),
     updatedAt: toIsoTimestamp(row.updated_at),
     commentCount: 0,
+    saved: false,
+    resonated: false,
+    resonanceCount: 0,
   };
 }
 
@@ -43,24 +47,26 @@ const needSelect = `
     JOIN content_items ci ON ci.id=n.id AND ci.content_type='need'
     JOIN users u ON u.id=n.author_id`;
 
-export async function getNeed(database: QiahaoDatabase, id: string, publicOnly = true): Promise<ApiNeed | null> {
+export async function getNeed(database: QiahaoDatabase, id: string, publicOnly = true, userId?: string): Promise<ApiNeed | null> {
   const rows = await database.query<NeedRow[]>(`${needSelect} WHERE n.id=? ${publicOnly ? "AND ci.status='approved'" : ''} LIMIT 1`, [id]);
   if (!rows[0]) return null;
-  const [tags, commentCount] = await Promise.all([
+  const [tags, commentCount, social] = await Promise.all([
     listTagsForContent(database, id),
     countComments(database, 'need', id),
+    userId ? getContentSocialState(database, userId, id) : Promise.resolve({ saved: false, resonated: false, resonanceCount: 0 }),
   ]);
-  return { ...toNeed(rows[0], tags as ApiNeed['tags']), commentCount, comments: commentCount };
+  return { ...toNeed(rows[0], tags as ApiNeed['tags']), ...social, commentCount, comments: commentCount };
 }
 
-export async function listNeeds(database: QiahaoDatabase): Promise<ApiNeed[]> {
+export async function listNeeds(database: QiahaoDatabase, userId: string): Promise<ApiNeed[]> {
   const rows = await database.query<NeedRow[]>(`${needSelect} WHERE ci.status='approved' ORDER BY ci.published_at DESC,ci.created_at DESC`);
   return Promise.all(rows.map(async (row) => {
-    const [tags, commentCount] = await Promise.all([
+    const [tags, commentCount, social] = await Promise.all([
       listTagsForContent(database, row.id),
       countComments(database, 'need', row.id),
+      getContentSocialState(database, userId, row.id),
     ]);
-    return { ...toNeed(row, tags as ApiNeed['tags']), commentCount, comments: commentCount };
+    return { ...toNeed(row, tags as ApiNeed['tags']), ...social, commentCount, comments: commentCount };
   }));
 }
 
@@ -72,7 +78,7 @@ export async function createNeed(database: QiahaoDatabase, authorId: string, bod
     await createContent(connection, { id, authorId, contentType: 'need', status: 'approved', tagRefs, now });
     await connection.query('INSERT INTO needs (id,body,author_id,created_at,updated_at) VALUES (?,?,?,?,?)', [id, cleanBody, authorId, now, now]);
   });
-  const item = await getNeed(database, id, false);
+  const item = await getNeed(database, id, false, authorId);
   if (!item) throw new Error('需求创建失败');
   return item;
 }

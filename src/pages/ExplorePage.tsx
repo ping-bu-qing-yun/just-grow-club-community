@@ -1,10 +1,11 @@
 import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
-import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { useQiahao } from '../state/QiahaoContext';
+import { domainActivityToClub } from '../club/activity-adapter';
 
 const filters = [
   ['all', '全部'],
@@ -17,6 +18,8 @@ const filters = [
 
 export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenActivity: (activity: ClubActivity) => void; onOpenNotifications: () => void }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { activities } = useQiahao();
+  const catalog = useMemo(() => activities.map(domainActivityToClub), [activities]);
   const requestedFilter = searchParams.get('filter');
   const filter = filters.some(([id]) => id === requestedFilter) ? requestedFilter as (typeof filters)[number][0] : 'all';
   const query = searchParams.get('q') ?? '';
@@ -34,12 +37,12 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
 
   const visible = useMemo(
     () =>
-      clubActivities.filter(
+      catalog.filter(
         (item) =>
           (filter === 'all' || item.theme === filter || (filter === 'pre' && item.status === '预活动')) &&
           `${item.title}${item.tags.join('')}${item.location}`.includes(query),
       ),
-    [filter, query],
+    [catalog, filter, query],
   );
 
   return (

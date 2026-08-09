@@ -2,7 +2,7 @@ import { ArrowLeft, Bookmark, Heart } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
-import { useClub } from '../club/ClubContext';
+import { useQiahao } from '../state/QiahaoContext';
 import { CommentSection } from '../components/CommentSection';
 
 export function NeedDetailPage({
@@ -16,9 +16,9 @@ export function NeedDetailPage({
   onOpenActivity?: (activity: ClubActivity) => void;
   focusComments?: boolean;
 }) {
-  const { state, toggleNeedSaved, toggleNeedResonance } = useClub();
-  const saved = state.savedNeedIds.includes(need.id);
-  const resonated = state.resonatedNeedIds.includes(need.id);
+  const { toggleContentSaved, toggleContentResonance } = useQiahao();
+  const saved = Boolean(need.saved);
+  const resonated = Boolean(need.resonated);
 
   const resonanceCount = need.resonance + (resonated ? 1 : 0);
   const [commentCount, setCommentCount] = useState(need.comments);
@@ -107,7 +107,7 @@ export function NeedDetailPage({
           <button
             type="button"
             className={resonated ? 'is-active' : ''}
-            onClick={() => toggleNeedResonance(need.id)}
+            onClick={() => toggleContentResonance('need', need.id)}
           >
             <Heart size={18} />
             {resonated ? '已共鸣' : '我也有'}
@@ -115,7 +115,7 @@ export function NeedDetailPage({
           <button
             type="button"
             className={saved ? 'is-active' : ''}
-            onClick={() => toggleNeedSaved(need.id)}
+            onClick={() => toggleContentSaved('need', need.id)}
           >
             <Bookmark size={18} />
             {saved ? '已收藏' : '收藏'}

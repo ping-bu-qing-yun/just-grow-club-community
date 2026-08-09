@@ -1,12 +1,14 @@
 import { useMemo } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { clubActivities, seedNeeds } from '../club/seed';
+import { seedNeeds } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 import { useClub } from '../club/ClubContext';
 import { buildUserPortrait } from '../club/portrait';
 import { rankClubActivities } from '../club/recommend';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { useQiahao } from '../state/QiahaoContext';
+import { domainActivityToClub } from '../club/activity-adapter';
 
 export function ActivitiesHomePage({
   onNeeds,
@@ -18,18 +20,24 @@ export function ActivitiesHomePage({
   onOpenNotifications: () => void;
 }) {
   const { state } = useClub();
+  const { activities, joinedIds } = useQiahao();
   const portrait = useMemo(() => buildUserPortrait(state), [state]);
+  const catalog = useMemo(() => activities.map(domainActivityToClub), [activities]);
   const ranked = useMemo(
     () =>
-      rankClubActivities(portrait, clubActivities, {
-        penalizeIds: state.joinedClubActivityIds,
+      rankClubActivities(portrait, catalog, {
+        penalizeIds: [...joinedIds],
       }),
-    [portrait, state.joinedClubActivityIds],
+    [catalog, joinedIds, portrait],
   );
   const featuredRanked = ranked[0];
-  const featured = featuredRanked?.activity ?? clubActivities[0];
+  const featured = featuredRanked?.activity;
   const forYou = ranked.slice(1, 4);
   const highlightTags = portrait.highlightTags.slice(0, 3);
+
+  if (!featured) {
+    return <main className="club-home page"><div className="empty-state"><h3>正在准备适合你的活动</h3><p>活动目录加载完成后会自动出现。</p></div></main>;
+  }
 
   return (
     <main className="club-home page">

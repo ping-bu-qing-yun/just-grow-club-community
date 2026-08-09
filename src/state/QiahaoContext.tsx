@@ -1,12 +1,16 @@
 import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 import type { ApiUser, QiahaoApi, ApiNeed, ApiLifePost } from '../api/types';
 import { categoryImages, currentUser, seedActivities, seedMessages } from '../domain/seed';
 import type { Activity, CreateActivityInput, MessageThread, PersistedState } from '../domain/types';
 import type { LifePost, Need } from '../club/types';
 import { lifePosts as seededLifePosts, seedNeeds } from '../club/seed';
+import { clubActivities } from '../club/seed';
+import { clubActivityToDomain } from '../club/activity-adapter';
 import { readPersistedState, writePersistedState } from './storage';
 import { QiahaoContext, type QiahaoContextValue, type QiahaoStatus } from './qiahao-context';
+import { queryKeys } from '../data/queryClient';
 
 export type { QiahaoContextValue, QiahaoStatus };
 export { QiahaoContext };
@@ -23,7 +27,9 @@ function toNeed(item: ApiNeed): Need {
     title: firstLine.slice(0, 80) || '新的需求',
     copy: item.body,
     image: '/assets/coffee.jpg',
-    resonance: 0,
+    resonance: item.resonanceCount,
+    saved: item.saved,
+    resonated: item.resonated,
     comments: item.commentCount ?? item.comments ?? 0,
     response: '等待同频的人回应',
     similar: false,
@@ -40,7 +46,9 @@ function toLifePost(item: ApiLifePost): LifePost {
     images: item.image ? [item.image] : [],
     tag: item.tags[0] ? `#${item.tags[0].label}` : '#生活记录',
     comments: item.commentCount ?? item.comments ?? 0,
-    resonance: 0,
+    resonance: item.resonanceCount,
+    saved: item.saved,
+    resonated: item.resonated,
   };
 }
 
@@ -65,7 +73,9 @@ function writeContentCache(needs: Need[], lifePosts: LifePost[]): void {
 }
 
 export function QiahaoProvider({ children, apiClient = api }: { children: ReactNode; apiClient?: QiahaoApi }) {
-  const localMode = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom') && apiClient === api;
+  const localMode = typeof navigator !== 'undefined'
+    && (navigator.userAgent.includes('jsdom') || import.meta.env.MODE === 'preview')
+    && apiClient === api;
   const [state, setState] = useState<PersistedState>(() => localMode ? readPersistedState() : { customActivities: [], savedIds: [], joinedIds: [], messages: [] });
   const [serverActivities, setServerActivities] = useState<Activity[]>([]);
   const [serverNeeds, setServerNeeds] = useState<Need[]>([]);
@@ -76,57 +86,89 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
   const [status, setStatus] = useState<QiahaoStatus>(localMode ? 'authenticated' : 'loading');
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
+
+  const sessionQuery = useQuery({
+    queryKey: [...queryKeys.session, refreshKey],
+    queryFn: () => apiClient.me(),
+    enabled: !localMode && status === 'loading',
+    retry: false,
+  });
+
+  const activityQuery = useQuery({
+    queryKey: [...queryKeys.activities, user?.id ?? 'anonymous', refreshKey],
+    queryFn: async () => {
+      const [activities, threads] = await Promise.all([apiClient.activities(), apiClient.threads()]);
+      return { activities: activities.activities, threads: threads.threads };
+    },
+    enabled: !localMode && status === 'authenticated',
+  });
+
+  const contentQuery = useQuery({
+    queryKey: [...queryKeys.content, user?.id ?? 'anonymous', refreshKey],
+    queryFn: async () => {
+      const [{ needs }, { lifePosts }] = await Promise.all([apiClient.needs(), apiClient.lifePosts()]);
+      return { needs: needs.map(toNeed), lifePosts: lifePosts.map(toLifePost) };
+    },
+    enabled: !localMode && status === 'authenticated',
+  });
 
   useEffect(() => {
-    if (localMode || status !== 'loading') return;
-    let alive = true;
-    apiClient.me().then(({ user: nextUser }) => {
-      if (!alive) return;
-      setUser(nextUser);
+    if (localMode || status !== 'loading' || !sessionQuery.data) return;
+      setUser(sessionQuery.data.user);
       setStatus('authenticated');
-    }).catch((reason) => {
-      if (!alive) return;
-      setError(reason instanceof Error ? reason.message : '登录状态已失效');
-      setStatus('anonymous');
-    });
-    return () => { alive = false; };
-  }, [apiClient, localMode, status]);
+      setError(null);
+  }, [localMode, sessionQuery.data, status]);
 
   useEffect(() => {
-    if (localMode || status !== 'authenticated') return;
-    let alive = true;
-    Promise.all([apiClient.activities(), apiClient.threads()]).then(([activities, threads]) => {
-      if (!alive) return;
-      setServerActivities(activities.activities as Activity[]);
-      setState({ customActivities: [], savedIds: activities.activities.filter((item) => item.saved).map((item) => item.id), joinedIds: activities.activities.filter((item) => item.joined).map((item) => item.id), messages: threads.threads as MessageThread[] });
-      setError(null);
-    }).catch((reason) => {
-      if (!alive) return;
-      setError(reason instanceof Error ? reason.message : '活动加载失败');
-      setStatus('error');
+    if (localMode || status !== 'loading' || !sessionQuery.isError) return;
+    setUser(null);
+    setError(null);
+    setStatus('anonymous');
+  }, [localMode, sessionQuery.isError, status]);
+
+  useEffect(() => {
+    if (!activityQuery.data) return;
+    setServerActivities(activityQuery.data.activities as Activity[]);
+    setState({
+      customActivities: [],
+      savedIds: activityQuery.data.activities.filter((item) => item.saved).map((item) => item.id),
+      joinedIds: activityQuery.data.activities.filter((item) => item.joined).map((item) => item.id),
+      messages: activityQuery.data.threads as MessageThread[],
     });
-    apiClient.needs().then(({ needs }) => apiClient.lifePosts().then(({ lifePosts: posts }) => {
-      if (!alive) return;
-      const mappedNeeds = needs.map(toNeed);
-      const mappedLifePosts = posts.map(toLifePost);
-      setServerNeeds(mappedNeeds);
-      setServerLifePosts(mappedLifePosts);
-      writeContentCache(mappedNeeds, mappedLifePosts);
-    })).catch(() => {
-      if (!alive) return;
-      const cached = readContentCache();
-      if (cached) {
-        setServerNeeds(cached.needs);
-        setServerLifePosts(cached.lifePosts);
-        setError('内容服务暂不可用，当前显示最近缓存');
-      }
-    });
-    return () => { alive = false; };
-  }, [apiClient, localMode, refreshKey, status]);
+    setError(null);
+  }, [activityQuery.data]);
+
+  useEffect(() => {
+    if (!activityQuery.isError || status !== 'authenticated') return;
+    setError(activityQuery.error instanceof Error ? activityQuery.error.message : '活动加载失败');
+    setStatus('error');
+  }, [activityQuery.error, activityQuery.isError, status]);
+
+  useEffect(() => {
+    if (!contentQuery.data) return;
+    setServerNeeds(contentQuery.data.needs);
+    setServerLifePosts(contentQuery.data.lifePosts);
+    writeContentCache(contentQuery.data.needs, contentQuery.data.lifePosts);
+  }, [contentQuery.data]);
+
+  useEffect(() => {
+    if (!contentQuery.isError) return;
+    const cached = readContentCache();
+    if (!cached) return;
+    setServerNeeds(cached.needs);
+    setServerLifePosts(cached.lifePosts);
+    setError('内容服务暂不可用，当前显示最近缓存');
+  }, [contentQuery.isError]);
 
   useEffect(() => { if (localMode) writePersistedState(state); }, [localMode, state]);
 
-  const activities = useMemo(() => localMode ? [...state.customActivities, ...seedActivities] : serverActivities, [localMode, serverActivities, state.customActivities]);
+  const activities = useMemo(
+    () => localMode
+      ? [...state.customActivities, ...clubActivities.map((activity) => clubActivityToDomain(activity, currentUser)), ...seedActivities]
+      : serverActivities,
+    [localMode, serverActivities, state.customActivities],
+  );
   const needs = localMode ? localNeeds : serverNeeds;
   const lifeFeed = localMode ? localLifePosts : serverLifePosts;
 
@@ -144,12 +186,14 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     localMode,
     async login(phone, password) {
       const result = await apiClient.login(phone, password);
+      queryClient.setQueryData(queryKeys.session, result);
       setUser(result.user);
       setStatus('authenticated');
       setRefreshKey((key) => key + 1);
     },
     async logout() {
-      try { await apiClient.logout(); } finally {
+      try { if (!localMode) await apiClient.logout(); } finally {
+        queryClient.removeQueries();
         setUser(null);
         setStatus('anonymous');
         setServerActivities([]);
@@ -166,7 +210,9 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     toggleSaved(activityId) {
       const saved = state.savedIds.includes(activityId);
       setState((current) => ({ ...current, savedIds: saved ? current.savedIds.filter((id) => id !== activityId) : [...current.savedIds, activityId] }));
-      if (!localMode && status === 'authenticated') void apiClient.favorite(activityId, !saved).catch((reason) => setError(reason instanceof Error ? reason.message : '收藏失败'));
+      if (!localMode && status === 'authenticated') void apiClient.favorite(activityId, !saved)
+        .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.activities }))
+        .catch((reason) => setError(reason instanceof Error ? reason.message : '收藏失败'));
     },
     joinActivity(activityId) {
       const activity = activities.find((item) => item.id === activityId);
@@ -178,7 +224,53 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
           ? [{ id: `thread-${activityId}`, activityId, title: `${activity.title}群聊`, lastMessage: `${activity.host.name}：欢迎加入，出发前会在这里同步集合信息。`, time: '刚刚', unread: 1, image: activity.image }, ...current.messages]
           : current.messages,
       });
-      if (!localMode && status === 'authenticated') void apiClient.join(activityId).catch((reason) => setError(reason instanceof Error ? reason.message : '报名失败'));
+      if (!localMode && status === 'authenticated') void apiClient.join(activityId)
+        .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.activities }))
+        .catch((reason) => setError(reason instanceof Error ? reason.message : '报名失败'));
+    },
+    toggleContentSaved(contentType, contentId) {
+      const source = contentType === 'need' ? needs : lifeFeed;
+      const item = source.find((candidate) => candidate.id === contentId);
+      if (!item || contentType === 'activity') return;
+      const nextSaved = !item.saved;
+      if (contentType === 'need') setLocalNeeds((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: nextSaved } : candidate));
+      if (contentType === 'life') setLocalLifePosts((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: nextSaved } : candidate));
+      if (!localMode) {
+        if (contentType === 'need') setServerNeeds((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: nextSaved } : candidate));
+        if (contentType === 'life') setServerLifePosts((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: nextSaved } : candidate));
+        void apiClient.bookmark(contentType, contentId, nextSaved)
+          .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.content }))
+          .catch((reason) => {
+            if (contentType === 'need') setServerNeeds((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: !nextSaved } : candidate));
+            if (contentType === 'life') setServerLifePosts((current) => current.map((candidate) => candidate.id === contentId ? { ...candidate, saved: !nextSaved } : candidate));
+            setError(reason instanceof Error ? reason.message : '收藏失败');
+          });
+      }
+    },
+    toggleContentResonance(contentType, contentId) {
+      const source = contentType === 'need' ? needs : lifeFeed;
+      const item = source.find((candidate) => candidate.id === contentId);
+      if (!item || contentType === 'activity') return;
+      const nextResonated = !item.resonated;
+      const adjust = (candidate: Need | LifePost) => candidate.id === contentId
+        ? { ...candidate, resonated: nextResonated, resonance: Math.max(0, candidate.resonance + (nextResonated ? 1 : -1)) }
+        : candidate;
+      if (contentType === 'need') setLocalNeeds((current) => current.map(adjust) as Need[]);
+      if (contentType === 'life') setLocalLifePosts((current) => current.map(adjust) as LifePost[]);
+      if (!localMode) {
+        if (contentType === 'need') setServerNeeds((current) => current.map(adjust) as Need[]);
+        if (contentType === 'life') setServerLifePosts((current) => current.map(adjust) as LifePost[]);
+        void apiClient.resonate(contentType, contentId, nextResonated)
+          .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.content }))
+          .catch((reason) => {
+            const rollback = (candidate: Need | LifePost) => candidate.id === contentId
+              ? { ...candidate, resonated: !nextResonated, resonance: Math.max(0, candidate.resonance + (nextResonated ? -1 : 1)) }
+              : candidate;
+            if (contentType === 'need') setServerNeeds((current) => current.map(rollback) as Need[]);
+            if (contentType === 'life') setServerLifePosts((current) => current.map(rollback) as LifePost[]);
+            setError(reason instanceof Error ? reason.message : '共鸣失败');
+          });
+      }
     },
     async createActivity(input) {
       if (localMode) {
@@ -188,6 +280,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       }
       const { activity } = await apiClient.createActivity(input);
       setServerActivities((current) => [activity, ...current]);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.activities });
       return activity;
     },
     async createNeed(body, tags = []) {
@@ -199,6 +292,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       const { need } = await apiClient.createNeed(body, tags);
       const mapped = toNeed(need);
       setServerNeeds((current) => [mapped, ...current]);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.content });
       return mapped;
     },
     async createLifePost(body, image, tags = []) {
@@ -210,9 +304,10 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
       const { lifePost } = await apiClient.createLifePost(body, image, tags);
       const mapped = toLifePost(lifePost);
       setServerLifePosts((current) => [mapped, ...current]);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.content });
       return mapped;
     },
-  }), [activities, apiClient, error, lifeFeed, localMode, needs, state, status, user]);
+  }), [activities, apiClient, error, lifeFeed, localMode, needs, queryClient, state, status, user]);
 
   return <QiahaoContext.Provider value={value}>{children}</QiahaoContext.Provider>;
 }

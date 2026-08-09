@@ -13,8 +13,8 @@
     "test": "vitest",
     "test:server": "vitest server --run --no-file-parallelism --maxWorkers=1",
     "test:watch": "vitest",
-    "e2e": "playwright test",
-    "qa:audit": "playwright test e2e/ui-audit.spec.ts --project=mobile-chrome",
+    "e2e": "node scripts/run-playwright.mjs",
+    "qa:audit": "node scripts/run-playwright.mjs e2e/ui-audit.spec.ts --project=mobile-chrome",
     "start": "npm run build:server && node --env-file-if-exists=.env .server-dist/index.js"
   },
   "dependencies": {

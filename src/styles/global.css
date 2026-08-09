@@ -374,6 +374,8 @@ img { display: block; max-width: 100%; }
 * { letter-spacing: 0 !important; }
 body { color: var(--ink); font-size: 15px; line-height: 1.5; }
 button, input, textarea, select { min-height: var(--tap); }
+button[aria-label] { min-width: var(--tap); }
+.club-filter-strip button, .needs-subhead button, .need-response-link button { min-height: var(--tap); }
 button { touch-action: manipulation; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--brand) 58%, transparent);
@@ -381,7 +383,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 }
 .app-sidebar { display: none; }
 .app-shell { background: var(--surface); }
-.app-shell__content > .page { animation: route-enter 220ms cubic-bezier(.22,.8,.28,1) both; }
+.route-stage { min-height: inherit; }
 .bottom-nav {
   z-index: var(--z-navigation);
   border-color: var(--line);
@@ -540,9 +542,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   }
   .app-sidebar > p { margin: auto 10px 0; color: var(--subtle); font-size: 11px; }
   .app-shell__content { min-width: 0; min-height: 100dvh; padding-bottom: 0; }
-  .app-shell__content > .page { width: min(100%, 1180px); min-height: 100dvh; margin: 0 auto; padding-right: 42px; padding-left: 42px; }
-  .app-shell__content > .detail-page, .app-shell__content > .need-detail, .app-shell__content > .life-detail,
-  .app-shell__content > .club-activity-detail, .app-shell__content > .notification-detail { width: min(100%, 920px); padding-right: 0; padding-left: 0; }
+  .route-stage > .page { width: min(100%, 1180px); min-height: 100dvh; margin: 0 auto; padding-right: 42px; padding-left: 42px; }
+  .route-stage > .detail-page, .route-stage > .need-detail, .route-stage > .life-detail,
+  .route-stage > .club-activity-detail, .route-stage > .notification-detail { width: min(100%, 920px); padding-right: 0; padding-left: 0; }
   .bottom-nav { display: none; }
   .club-card-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
   .club-feature { height: 420px; }
@@ -558,7 +560,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-  .app-shell__content > .page { animation: none; }
+  .route-stage > .page { animation: none; }
 }
 
 @media (prefers-reduced-transparency: reduce) {

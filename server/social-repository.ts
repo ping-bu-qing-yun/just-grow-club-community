@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { RowDataPacket } from 'mysql2/promise';
 import type { MessageThread } from '../src/domain/types';
 import type { ActivityLifecycle, ParticipationStatus } from '../src/domain/types';
+import type { ContentType } from '../src/api/types';
 import { toMysqlDateTime } from './db';
 import type { QiahaoConnection, QiahaoDatabase } from './db';
 
@@ -26,22 +27,84 @@ type ThreadRow = RowDataPacket & {
 };
 
 export async function setFavorite(database: QiahaoDatabase, userId: string, activityId: string, saved: boolean): Promise<boolean> {
-  const activities = await database.query<RowDataPacket[]>(
-    `SELECT a.id FROM activities a
-      JOIN content_items ci ON ci.id=a.id AND ci.content_type='activity' AND ci.status='approved'
-      WHERE a.id=? LIMIT 1`,
-    [activityId],
+  return setContentBookmark(database, userId, 'activity', activityId, saved);
+}
+
+async function publicContentExists(database: QiahaoDatabase, contentType: ContentType, contentId: string): Promise<boolean> {
+  const rows = await database.query<RowDataPacket[]>(
+    `SELECT 1 FROM content_items
+      WHERE id=? AND content_type=? AND status='approved'
+      LIMIT 1`,
+    [contentId, contentType],
   );
-  if (!activities.length) return false;
+  return rows.length > 0;
+}
+
+export async function setContentBookmark(
+  database: QiahaoDatabase,
+  userId: string,
+  contentType: ContentType,
+  contentId: string,
+  saved: boolean,
+): Promise<boolean> {
+  if (!(await publicContentExists(database, contentType, contentId))) return false;
   if (saved) {
     await database.query(
-      'INSERT IGNORE INTO favorites (user_id,activity_id,created_at) VALUES (?,?,?)',
-      [userId, activityId, toMysqlDateTime()],
+      'INSERT IGNORE INTO content_bookmarks (user_id,content_id,content_type,created_at) VALUES (?,?,?,?)',
+      [userId, contentId, contentType, toMysqlDateTime()],
     );
   } else {
-    await database.query('DELETE FROM favorites WHERE user_id=? AND activity_id=?', [userId, activityId]);
+    await database.query('DELETE FROM content_bookmarks WHERE user_id=? AND content_id=?', [userId, contentId]);
   }
   return true;
+}
+
+export async function setContentResonance(
+  database: QiahaoDatabase,
+  userId: string,
+  contentType: ContentType,
+  contentId: string,
+  resonated: boolean,
+): Promise<boolean> {
+  if (!(await publicContentExists(database, contentType, contentId))) return false;
+  if (resonated) {
+    await database.query(
+      `INSERT IGNORE INTO content_reactions
+        (user_id,content_id,content_type,reaction_type,created_at)
+       VALUES (?,?,?,'resonance',?)`,
+      [userId, contentId, contentType, toMysqlDateTime()],
+    );
+  } else {
+    await database.query(
+      `DELETE FROM content_reactions
+        WHERE user_id=? AND content_id=? AND reaction_type='resonance'`,
+      [userId, contentId],
+    );
+  }
+  return true;
+}
+
+export async function getContentSocialState(
+  database: QiahaoDatabase,
+  userId: string,
+  contentId: string,
+): Promise<{ saved: boolean; resonated: boolean; resonanceCount: number }> {
+  const rows = await database.query<Array<RowDataPacket & {
+    saved: number | string;
+    resonated: number | string;
+    resonance_count: number | string;
+  }>>(
+    `SELECT
+       EXISTS(SELECT 1 FROM content_bookmarks WHERE user_id=? AND content_id=?) AS saved,
+       EXISTS(SELECT 1 FROM content_reactions WHERE user_id=? AND content_id=? AND reaction_type='resonance') AS resonated,
+       (SELECT COUNT(*) FROM content_reactions WHERE content_id=? AND reaction_type='resonance') AS resonance_count`,
+    [userId, contentId, userId, contentId, contentId],
+  );
+  return {
+    saved: Boolean(Number(rows[0]?.saved ?? 0)),
+    resonated: Boolean(Number(rows[0]?.resonated ?? 0)),
+    resonanceCount: Number(rows[0]?.resonance_count ?? 0),
+  };
 }
 
 export type JoinActivityResult =
@@ -89,7 +152,7 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
     );
     if (participationStatus === 'interested') return { kind: 'ok' as const, thread: null, participationStatus };
     await connection.query(
-      `INSERT INTO threads (id,activity_id,title,system,image,created_at)
+      `INSERT INTO threads (id,activity_id,title,is_system,image,created_at)
        VALUES (?,?,?,?,?,?)
        ON DUPLICATE KEY UPDATE title=VALUES(title),image=VALUES(image)`,
       [threadId, activityId, `${activity.title}群聊`, 0, activity.image, now],
@@ -117,7 +180,7 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
 
 async function readThread(connection: QiahaoDatabase | QiahaoConnection, id: string, userId?: string): Promise<MessageThread | null> {
   const rows = await connection.query<ThreadRow[]>(
-    `SELECT t.id,t.activity_id,t.title,t.image,t.system,
+    `SELECT t.id,t.activity_id,t.title,t.image,t.is_system AS system,
             latest.body AS last_message,latest.created_at AS message_created_at,
             tm.unread
        FROM threads t
