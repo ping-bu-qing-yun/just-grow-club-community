@@ -1,7 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { installAssetFallbacks } from './lib/assets';
 import './styles/global.css';
+
+installAssetFallbacks();
 
 if (new URLSearchParams(window.location.search).get('reset') === 'registration') {
   for (const key of Object.keys(window.localStorage)) {
