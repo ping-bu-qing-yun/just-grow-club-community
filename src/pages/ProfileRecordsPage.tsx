@@ -4,6 +4,7 @@ import { useQiahao } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { ClubActivityCard } from '../components/ClubActivityCard';
 import { domainActivityToClub } from '../club/activity-adapter';
+import styles from './ProfileRecordsPage.module.css';
 
 export function ProfileRecordsPage({
   kind,
@@ -33,7 +34,7 @@ export function ProfileRecordsPage({
         />
       ))
     ) : (
-      <div className="empty-state">
+      <div className={styles.empty}>
         <h3>还没有收藏需求</h3>
         <p>在需求广场共鸣或收藏后，会出现在这里。</p>
       </div>
@@ -43,13 +44,13 @@ export function ProfileRecordsPage({
     const items = activities.filter((item) => joinedIds.has(item.id)).map(domainActivityToClub);
     content =
       items.length ? (
-        <div className="record-list club-card-list">
+        <div className={styles.cardList}>
           {items.map((item) => (
             <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} />
           ))}
         </div>
       ) : (
-        <div className="empty-state">
+        <div className={styles.empty}>
           <h3>这里还没有记录</h3>
           <p>报名或收藏活动后，会自动出现在这里。</p>
         </div>
@@ -59,13 +60,13 @@ export function ProfileRecordsPage({
     const items = activities.filter((item) => savedIds.has(item.id)).map(domainActivityToClub);
     content =
       items.length ? (
-        <div className="record-list club-card-list">
+        <div className={styles.cardList}>
           {items.map((item) => (
             <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} />
           ))}
         </div>
       ) : (
-        <div className="empty-state">
+        <div className={styles.empty}>
           <h3>这里还没有记录</h3>
           <p>报名或收藏活动后，会自动出现在这里。</p>
         </div>
@@ -73,9 +74,9 @@ export function ProfileRecordsPage({
   }
 
   return (
-    <main className="records-page page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={onBack}>
+    <main className={`${styles.page} page`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}>
           <ArrowLeft />
         </button>
         <div>
