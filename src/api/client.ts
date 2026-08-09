@@ -50,14 +50,14 @@ export const api: QiahaoApi = {
   me: () => request<{ user: ApiUser }>('/session'),
   activities: () => request<{ activities: ApiActivity[] }>('/activities'),
   createActivity: (input: CreateActivityInput) => request<{ activity: ApiActivity }>('/activities', { method: 'POST', body: JSON.stringify(input) }),
-  needs: () => request<{ needs: ApiNeed[] }>('/needs'),
-  createNeed: (body, tags = []) => request<{ need: ApiNeed }>('/needs', { method: 'POST', body: JSON.stringify({ body, tags }) }),
-  updateNeed: (id, body, tags = []) => request<{ need: ApiNeed }>(`/needs/${id}`, { method: 'PATCH', body: JSON.stringify({ body, tags }) }),
-  archiveNeed: (id) => request<void>(`/needs/${id}`, { method: 'DELETE' }),
-  lifePosts: () => request<{ lifePosts: ApiLifePost[] }>('/life-posts'),
-  createLifePost: (body, image, tags = []) => request<{ lifePost: ApiLifePost }>('/life-posts', { method: 'POST', body: JSON.stringify({ body, image, tags }) }),
-  updateLifePost: (id, body, image, tags = []) => request<{ lifePost: ApiLifePost }>(`/life-posts/${id}`, { method: 'PATCH', body: JSON.stringify({ body, image, tags }) }),
-  archiveLifePost: (id) => request<void>(`/life-posts/${id}`, { method: 'DELETE' }),
+  async needs() { const { items } = await request<{ items: ApiNeed[] }>('/content?type=need'); return { needs: items }; },
+  async createNeed(body, tags = []) { const { item } = await request<{ item: ApiNeed }>('/content', { method: 'POST', body: JSON.stringify({ type: 'need', body, tags }) }); return { need: item }; },
+  async updateNeed(id, body, tags = []) { const { item } = await request<{ item: ApiNeed }>(`/content/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ body, tags }) }); return { need: item }; },
+  archiveNeed: (id) => request<void>(`/content/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  async lifePosts() { const { items } = await request<{ items: ApiLifePost[] }>('/content?type=life'); return { lifePosts: items }; },
+  async createLifePost(body, image, tags = []) { const { item } = await request<{ item: ApiLifePost }>('/content', { method: 'POST', body: JSON.stringify({ type: 'life', body, image, tags }) }); return { lifePost: item }; },
+  async updateLifePost(id, body, image, tags = []) { const { item } = await request<{ item: ApiLifePost }>(`/content/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ body, image, tags }) }); return { lifePost: item }; },
+  archiveLifePost: (id) => request<void>(`/content/${encodeURIComponent(id)}`, { method: 'DELETE' }),
   adminContent: (filters = {}) => {
     const params = new URLSearchParams();
     if (filters.type) params.set('type', filters.type);
@@ -70,6 +70,8 @@ export const api: QiahaoApi = {
   createTag: (input) => request<{ tag: ApiContentTag }>('/admin/tags', { method: 'POST', body: JSON.stringify(input) }),
   updateTag: (id, input) => request<{ tag: ApiContentTag }>(`/admin/tags/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
   favorite: (id, saved) => request<{ saved: boolean }>(`/activities/${id}/favorite`, { method: saved ? 'PUT' : 'DELETE' }),
+  bookmark: (contentType, id, saved) => request<{ saved: boolean }>(`/content/${contentType}/${encodeURIComponent(id)}/bookmark`, { method: saved ? 'PUT' : 'DELETE' }),
+  resonate: (contentType, id, resonated) => request<{ resonated: boolean }>(`/content/${contentType}/${encodeURIComponent(id)}/resonance`, { method: resonated ? 'PUT' : 'DELETE' }),
   join: (id) => request<{ thread: ApiThread | null; participationStatus: 'interested' | 'joined' }>(`/activities/${id}/join`, { method: 'POST' }),
   threads: () => request<{ threads: ApiThread[] }>('/threads'),
   listComments: ({ contentType, contentId, limit = 5, cursor }) => {

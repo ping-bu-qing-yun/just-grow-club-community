@@ -22,6 +22,8 @@ export interface Need {
   copy: string;
   image: string;
   resonance: number;
+  saved?: boolean;
+  resonated?: boolean;
   comments: number;
   response: string;
   /** 关联的俱乐部活动；有值 = 有活动回应，可跳转查看 */
@@ -39,6 +41,8 @@ export interface LifePost {
   tag: string;
   comments: number;
   resonance: number;
+  saved?: boolean;
+  resonated?: boolean;
 }
 
 export interface ClubActivityFlowStep {
@@ -80,13 +84,4 @@ export interface ClubState {
   lightAnswers: string[][];
   qaAnswers: Record<string, string>;
   profile: BasicProfile;
-  savedNeedIds: string[];
-  resonatedNeedIds: string[];
-  publishedNeeds: Need[];
-  /** 用户发布的生活动态（本地） */
-  publishedLifePosts: LifePost[];
-  /** 俱乐部活动收藏 id */
-  savedClubActivityIds: string[];
-  /** 俱乐部活动报名/预约 id */
-  joinedClubActivityIds: string[];
 }

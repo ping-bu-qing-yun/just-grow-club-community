@@ -5,6 +5,7 @@ import { toMysqlDateTime } from './db';
 import type { QiahaoConnection, QiahaoDatabase } from './db';
 import { createContent, listTagsForContent } from './content-repository';
 import { countComments } from './comment-repository';
+import { createActivityInputSchema } from '../src/contracts/api';
 
 const categories = new Set<ActivityCategory>(['饭搭子', '咖啡', '运动', '徒步', '看展', '桌游']);
 
@@ -37,7 +38,13 @@ type ActivityRow = RowDataPacket & {
   host_bio: string;
   status: 'draft' | 'pending' | 'approved' | 'rejected' | 'archived';
   lifecycle: ActivityLifecycle;
+  audience: string;
+  pitch: string;
+  boundary: string;
+  match_label: string;
 };
+
+type AgendaRow = RowDataPacket & { title: string; body: string };
 
 function toUser(row: UserRow | { id: string; name: string; avatar: string; verified: number | boolean; bio: string }) {
   return {
@@ -50,7 +57,7 @@ function toUser(row: UserRow | { id: string; name: string; avatar: string; verif
 }
 
 async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: string) {
-  const [participants, savedRows, joinedRows, tags, commentCount] = await Promise.all([
+  const [participants, savedRows, joinedRows, tags, commentCount, agenda] = await Promise.all([
     database.query<UserRow[]>(
       `SELECT u.id,u.name,u.avatar,u.verified,u.bio
          FROM activity_members m
@@ -59,10 +66,14 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
         ORDER BY m.created_at`,
       [row.id],
     ),
-    database.query<RowDataPacket[]>('SELECT 1 FROM favorites WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
+    database.query<RowDataPacket[]>('SELECT 1 FROM content_bookmarks WHERE user_id=? AND content_id=? LIMIT 1', [userId, row.id]),
     database.query<Array<RowDataPacket & { status: ParticipationStatus }>>('SELECT status FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1', [userId, row.id]),
     listTagsForContent(database, row.id),
     countComments(database, 'activity', row.id),
+    database.query<AgendaRow[]>(
+      'SELECT title,body FROM activity_agenda_items WHERE activity_id=? ORDER BY sequence_no',
+      [row.id],
+    ),
   ]);
   return {
     id: row.id,
@@ -94,6 +105,11 @@ async function toActivity(database: QiahaoDatabase, row: ActivityRow, userId: st
     comments: commentCount,
     saved: savedRows.length > 0,
     joined: joinedRows.length > 0,
+    audience: row.audience,
+    pitch: row.pitch,
+    boundary: row.boundary,
+    matchLabel: row.match_label,
+    flow: agenda.map((item) => ({ title: item.title, body: item.body })),
   };
 }
 
@@ -120,6 +136,8 @@ export async function getActivity(database: QiahaoDatabase, userId: string, id: 
 }
 
 export function validateActivity(input: Partial<CreateActivityInput>) {
+  const parsed = createActivityInputSchema.safeParse(input);
+  if (parsed.success) return null;
   const textFields = [input.title, input.description, input.location, input.dateLabel, input.time];
   if (textFields.some((value) => typeof value !== 'string' || !value.trim())) return '请完整填写活动信息';
   if (input.title!.length > 255 || input.location!.length > 255 || input.dateLabel!.length > 120 || input.description!.length > 20000) return '活动文字内容过长';

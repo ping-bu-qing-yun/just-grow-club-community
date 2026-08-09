@@ -23,12 +23,6 @@ export const defaultClubState: ClubState = {
     tags: ['喜欢深聊', '周末散步', '慢热'],
     preferences: ['喝杯咖啡', '看展', '户外运动'],
   },
-  savedNeedIds: [],
-  resonatedNeedIds: [],
-  publishedNeeds: [],
-  publishedLifePosts: [],
-  savedClubActivityIds: [],
-  joinedClubActivityIds: [],
 };
 
 export function clubStorageKey(userId: string): string {
@@ -42,12 +36,6 @@ function normalizeState(raw: Partial<ClubState> | null | undefined): ClubState {
     profile: { ...defaultClubState.profile, ...(raw?.profile ?? {}) },
     lightAnswers: Array.isArray(raw?.lightAnswers) ? raw!.lightAnswers : defaultClubState.lightAnswers,
     qaAnswers: raw?.qaAnswers && typeof raw.qaAnswers === 'object' ? raw.qaAnswers : {},
-    savedNeedIds: Array.isArray(raw?.savedNeedIds) ? raw!.savedNeedIds : [],
-    resonatedNeedIds: Array.isArray(raw?.resonatedNeedIds) ? raw!.resonatedNeedIds : [],
-    publishedNeeds: Array.isArray(raw?.publishedNeeds) ? raw!.publishedNeeds : [],
-    publishedLifePosts: Array.isArray(raw?.publishedLifePosts) ? raw!.publishedLifePosts : [],
-    savedClubActivityIds: Array.isArray(raw?.savedClubActivityIds) ? raw!.savedClubActivityIds : [],
-    joinedClubActivityIds: Array.isArray(raw?.joinedClubActivityIds) ? raw!.joinedClubActivityIds : [],
   };
 }
 

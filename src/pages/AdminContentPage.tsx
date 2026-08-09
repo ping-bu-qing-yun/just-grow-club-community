@@ -8,7 +8,7 @@ const statusLabels: Record<ContentStatus, string> = { draft: '草稿', pending: 
 const typeLabels: Record<ContentType, string> = { activity: '活动', need: '需求', life: '生活' };
 
 export function AdminContentPage({ onBack }: { onBack: () => void }) {
-  const { user } = useQiahao();
+  const { user, localMode } = useQiahao();
   const [items, setItems] = useState<AdminContentItem[]>([]);
   const [tags, setTags] = useState<ApiContentTag[]>([]);
   const [type, setType] = useState<ContentType | ''>('');
@@ -20,6 +20,12 @@ export function AdminContentPage({ onBack }: { onBack: () => void }) {
 
   async function load() {
     if (user?.role !== 'operator') return;
+    if (localMode) {
+      setItems([]);
+      setTags([]);
+      setError(null);
+      return;
+    }
     try {
       const [content, tagResult] = await Promise.all([
         api.adminContent({ type: type || undefined, status: status || undefined, tag: tag || undefined }),
@@ -33,7 +39,7 @@ export function AdminContentPage({ onBack }: { onBack: () => void }) {
     }
   }
 
-  useEffect(() => { void load(); }, [user?.role, type, status, tag]);
+  useEffect(() => { void load(); }, [user?.role, localMode, type, status, tag]);
 
   async function changeStatus(item: AdminContentItem, next: Exclude<ContentStatus, 'draft'>) {
     setPending(item.id);

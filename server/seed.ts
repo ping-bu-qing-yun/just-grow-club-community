@@ -2,6 +2,7 @@ import { hashPassword } from './auth';
 import { toMysqlDateTime } from './db';
 import type { QiahaoDatabase } from './db';
 import { seedNotifications } from './notification-repository';
+import { clubActivities } from '../src/club/seed';
 
 const seedTime = '2026-08-07T10:00:00.000Z';
 const users = [
@@ -37,8 +38,18 @@ const lifePosts = [
   ['life-2', 'u3', '你觉得舒服的关系，是从心动开始，还是从相处不费力开始？', '/assets/coffee.jpg', 'relationship'],
 ] as const;
 
-// 俱乐部推荐页目前使用前端目录；为其稳定 id 建立可评论的内容记录。
-const clubActivityIds = ['club-dinner', 'club-night', 'club-walk', 'club-workshop', 'club-lunch', 'club-exhibit', 'club-poem', 'club-ride'] as const;
+const clubCategory = {
+  low: '饭搭子',
+  deep: '咖啡',
+  walk: '徒步',
+  workshop: '桌游',
+  other: '看展',
+} as const;
+
+function firstNumber(value: string, fallback: number): number {
+  const values = value.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
+  return values.length ? Math.max(...values) : fallback;
+}
 const commentBodies = [
   '我也在找这种不需要硬破冰的认识方式。',
   '人数少一点、地点近一点，我会很愿意参加。',
@@ -121,17 +132,58 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
       [id, tagSlug],
     );
   }
-  for (const id of clubActivityIds) {
+  for (const [index, activity] of clubActivities.entries()) {
     await database.query(
       `INSERT IGNORE INTO content_items
         (id,author_id,content_type,status,published_at,created_at,updated_at)
        VALUES (?,?,?,?,?,?,?)`,
-      [id, 'me', 'activity', 'approved', now, now, now],
+      [activity.id, 'me', 'activity', 'approved', now, now, now],
     );
+    const category = clubCategory[activity.theme];
+    await database.query(
+      `INSERT IGNORE INTO activities
+        (id,host_id,title,category,image,date_label,time,location,distance,description,capacity,price,featured,note,lifecycle,audience,pitch,boundary,match_label,created_at,updated_at)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      [
+        activity.id,
+        'me',
+        activity.title,
+        category,
+        activity.image,
+        activity.date,
+        activity.timeRange.match(/\b\d{2}:\d{2}\b/)?.[0] ?? '19:00',
+        activity.location,
+        '俱乐部精选',
+        activity.description,
+        firstNumber(activity.people, 6),
+        firstNumber(activity.fee, 0),
+        index === 0 ? 1 : 0,
+        activity.boundary,
+        activity.status === '预活动' ? 'pre' : 'formal',
+        activity.audience,
+        activity.pitch,
+        activity.boundary,
+        activity.matchLabel,
+        now,
+        now,
+      ],
+    );
+    await database.query(
+      `INSERT IGNORE INTO content_item_tags (content_id,tag_id,content_type)
+       SELECT ?,id,'activity' FROM content_tags WHERE content_type='activity' AND label=? LIMIT 1`,
+      [activity.id, category],
+    );
+    for (const [flowIndex, step] of activity.flow.entries()) {
+      await database.query(
+        `INSERT IGNORE INTO activity_agenda_items (activity_id,sequence_no,title,body,created_at,updated_at)
+         VALUES (?,?,?,?,?,?)`,
+        [activity.id, flowIndex + 1, step.title, step.body, now, now],
+      );
+    }
   }
   const commentTargets = [
     ...activities.map(([id]) => ({ contentType: 'activity' as const, contentId: id })),
-    ...clubActivityIds.map((contentId) => ({ contentType: 'activity' as const, contentId })),
+    ...clubActivities.map(({ id: contentId }) => ({ contentType: 'activity' as const, contentId })),
     ...needs.map(([contentId]) => ({ contentType: 'need' as const, contentId })),
     ...lifePosts.map(([contentId]) => ({ contentType: 'life' as const, contentId })),
   ];
@@ -155,7 +207,7 @@ export async function seedDatabase(database: QiahaoDatabase): Promise<void> {
     }
   }
   await database.query(
-    `INSERT IGNORE INTO threads (id,title,system,created_at)
+    `INSERT IGNORE INTO threads (id,title,is_system,created_at)
      VALUES (?,?,?,?)`,
     ['system-safety', '恰好安全助手', 1, now],
   );

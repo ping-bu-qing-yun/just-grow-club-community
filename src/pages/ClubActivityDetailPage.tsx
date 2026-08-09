@@ -1,7 +1,7 @@
 import { ArrowLeft, Heart, Share2, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity } from '../club/types';
-import { useClub } from '../club/ClubContext';
+import { useQiahao } from '../state/QiahaoContext';
 import { DislikeReasonSheet } from '../components/FeedbackReasonSheet';
 import { CommentSection } from '../components/CommentSection';
 import { shareActivity } from '../lib/activityShare';
@@ -40,9 +40,9 @@ export function ClubActivityDetailPage({
   onNotice?: (message: string) => void;
   focusComments?: boolean;
 }) {
-  const { isClubActivitySaved, isClubActivityJoined, toggleClubActivitySaved, joinClubActivity } = useClub();
-  const saved = isClubActivitySaved(activity.id);
-  const joined = isClubActivityJoined(activity.id);
+  const { savedIds, joinedIds, toggleSaved, joinActivity } = useQiahao();
+  const saved = savedIds.has(activity.id);
+  const joined = joinedIds.has(activity.id);
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [feedback, setFeedback] = useState<'consider' | 'dislike' | null>(null);
   const [showDislikeReasons, setShowDislikeReasons] = useState(false);
@@ -119,7 +119,7 @@ export function ClubActivityDetailPage({
               className={`icon-button floating-button${saved ? ' is-active' : ''}`}
               aria-label={`${saved ? '取消收藏' : '收藏'}${activity.title}`}
               onClick={() => {
-                toggleClubActivitySaved(activity.id);
+                toggleSaved(activity.id);
                 onNotice?.(saved ? '已取消收藏' : '已收藏活动');
               }}
             >
@@ -239,7 +239,7 @@ export function ClubActivityDetailPage({
               type="button"
               className="primary-button primary-button--wide"
               onClick={() => {
-                joinClubActivity(activity.id);
+                joinActivity(activity.id);
                 setShowJoinSheet(false);
                 onNotice?.(activity.status === '预活动' ? '已记下你的兴趣' : '报名成功，可在「我的」查看');
               }}

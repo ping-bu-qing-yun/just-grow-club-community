@@ -1,10 +1,9 @@
 import { ArrowLeft } from 'lucide-react';
-import { clubActivities, seedNeeds } from '../club/seed';
 import type { ClubActivity, Need } from '../club/types';
-import { useClub } from '../club/ClubContext';
 import { useQiahao } from '../state/QiahaoContext';
 import { NeedCard } from '../components/NeedCard';
 import { ClubActivityCard } from '../components/ClubActivityCard';
+import { domainActivityToClub } from '../club/activity-adapter';
 
 export function ProfileRecordsPage({
   kind,
@@ -17,15 +16,14 @@ export function ProfileRecordsPage({
   onOpenNeed?: (need: Need) => void;
   onOpenClubActivity?: (activity: ClubActivity) => void;
 }) {
-  const { state } = useClub();
-  const { activities, savedIds, joinedIds } = useQiahao();
+  const { activities, needs, savedIds, joinedIds } = useQiahao();
 
   let title = '我的记录';
   let content: React.ReactNode;
 
   if (kind === 'saved-needs') {
     title = '需求收藏';
-    const items = seedNeeds.filter((item) => state.savedNeedIds.includes(item.id));
+    const items = needs.filter((item) => item.saved);
     content = items.length ? (
       items.map((item) => (
         <NeedCard
@@ -42,23 +40,12 @@ export function ProfileRecordsPage({
     );
   } else if (kind === 'attended') {
     title = '参加过活动';
-    const domainItems = activities.filter((item) => joinedIds.has(item.id));
-    const clubItems = clubActivities.filter((item) => state.joinedClubActivityIds.includes(item.id));
+    const items = activities.filter((item) => joinedIds.has(item.id)).map(domainActivityToClub);
     content =
-      domainItems.length || clubItems.length ? (
+      items.length ? (
         <div className="record-list club-card-list">
-          {clubItems.map((item) => (
+          {items.map((item) => (
             <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} />
-          ))}
-          {domainItems.map((item) => (
-            <article key={item.id}>
-              <img src={item.image} alt="" />
-              <div>
-                <small>{item.dateLabel}</small>
-                <h3>{item.title}</h3>
-                <p>{item.location}</p>
-              </div>
-            </article>
           ))}
         </div>
       ) : (
@@ -69,23 +56,12 @@ export function ProfileRecordsPage({
       );
   } else {
     title = '活动收藏';
-    const domainItems = activities.filter((item) => savedIds.has(item.id));
-    const clubItems = clubActivities.filter((item) => state.savedClubActivityIds.includes(item.id));
+    const items = activities.filter((item) => savedIds.has(item.id)).map(domainActivityToClub);
     content =
-      domainItems.length || clubItems.length ? (
+      items.length ? (
         <div className="record-list club-card-list">
-          {clubItems.map((item) => (
+          {items.map((item) => (
             <ClubActivityCard key={item.id} activity={item} onOpen={onOpenClubActivity} />
-          ))}
-          {domainItems.map((item) => (
-            <article key={item.id}>
-              <img src={item.image} alt="" />
-              <div>
-                <small>{item.dateLabel}</small>
-                <h3>{item.title}</h3>
-                <p>{item.location}</p>
-              </div>
-            </article>
           ))}
         </div>
       ) : (

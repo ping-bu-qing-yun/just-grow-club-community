@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   Navigate,
   Outlet,
@@ -15,32 +16,35 @@ import { AppShell } from '../components/AppShell';
 import type { AppTab } from '../components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from '../components/PublishTypeSheet';
 import { Toast } from '../components/Toast';
-import { clubActivities, lifePosts, seedNeeds } from '../club/seed';
+import { clubActivities } from '../club/seed';
+import { domainActivityToClub } from '../club/activity-adapter';
 import { useClub } from '../club/ClubContext';
 import { canPublishActivity, isOperator } from '../domain/roles';
 import { useNotifications } from '../notifications/NotificationContext';
 import type { AppNotification } from '../notifications/types';
 import { useQiahao } from '../state/QiahaoContext';
-import { ActivitiesHomePage } from '../pages/ActivitiesHomePage';
-import { ActivityDetail } from '../pages/ActivityDetail';
-import { ActivityFeedbackPage } from '../pages/ActivityFeedbackPage';
-import { AdminContentPage } from '../pages/AdminContentPage';
-import { ClubActivityDetailPage } from '../pages/ClubActivityDetailPage';
-import { CreateActivityPage } from '../pages/CreateActivityPage';
-import { CreateLifePage } from '../pages/CreateLifePage';
-import { CreateNeedPage } from '../pages/CreateNeedPage';
-import { ExplorePage } from '../pages/ExplorePage';
-import { LifePostDetailPage } from '../pages/LifePostDetailPage';
-import { LoginPage } from '../pages/LoginPage';
-import { MessageThreadPage, MessagesPage } from '../pages/MessagesPage';
-import { NeedDetailPage } from '../pages/NeedDetailPage';
-import { NeedsPage } from '../pages/NeedsPage';
-import { NotificationCenterPage } from '../pages/NotificationCenterPage';
-import { NotificationDetailPage } from '../pages/NotificationDetailPage';
-import { OnboardingFlow } from '../pages/onboarding/OnboardingFlow';
-import { ProfileEditorPage } from '../pages/ProfileEditorPage';
-import { ProfilePage, type ProfileDestination } from '../pages/ProfilePage';
-import { ProfileRecordsPage } from '../pages/ProfileRecordsPage';
+import type { ProfileDestination } from '../pages/ProfilePage';
+
+const ActivitiesHomePage = lazy(() => import('../pages/ActivitiesHomePage').then((module) => ({ default: module.ActivitiesHomePage })));
+const ActivityFeedbackPage = lazy(() => import('../pages/ActivityFeedbackPage').then((module) => ({ default: module.ActivityFeedbackPage })));
+const AdminContentPage = lazy(() => import('../pages/AdminContentPage').then((module) => ({ default: module.AdminContentPage })));
+const ClubActivityDetailPage = lazy(() => import('../pages/ClubActivityDetailPage').then((module) => ({ default: module.ClubActivityDetailPage })));
+const CreateActivityPage = lazy(() => import('../pages/CreateActivityPage').then((module) => ({ default: module.CreateActivityPage })));
+const CreateLifePage = lazy(() => import('../pages/CreateLifePage').then((module) => ({ default: module.CreateLifePage })));
+const CreateNeedPage = lazy(() => import('../pages/CreateNeedPage').then((module) => ({ default: module.CreateNeedPage })));
+const ExplorePage = lazy(() => import('../pages/ExplorePage').then((module) => ({ default: module.ExplorePage })));
+const LifePostDetailPage = lazy(() => import('../pages/LifePostDetailPage').then((module) => ({ default: module.LifePostDetailPage })));
+const LoginPage = lazy(() => import('../pages/LoginPage').then((module) => ({ default: module.LoginPage })));
+const MessagesPage = lazy(() => import('../pages/MessagesPage').then((module) => ({ default: module.MessagesPage })));
+const MessageThreadPage = lazy(() => import('../pages/MessagesPage').then((module) => ({ default: module.MessageThreadPage })));
+const NeedDetailPage = lazy(() => import('../pages/NeedDetailPage').then((module) => ({ default: module.NeedDetailPage })));
+const NeedsPage = lazy(() => import('../pages/NeedsPage').then((module) => ({ default: module.NeedsPage })));
+const NotificationCenterPage = lazy(() => import('../pages/NotificationCenterPage').then((module) => ({ default: module.NotificationCenterPage })));
+const NotificationDetailPage = lazy(() => import('../pages/NotificationDetailPage').then((module) => ({ default: module.NotificationDetailPage })));
+const OnboardingFlow = lazy(() => import('../pages/onboarding/OnboardingFlow').then((module) => ({ default: module.OnboardingFlow })));
+const ProfileEditorPage = lazy(() => import('../pages/ProfileEditorPage').then((module) => ({ default: module.ProfileEditorPage })));
+const ProfilePage = lazy(() => import('../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const ProfileRecordsPage = lazy(() => import('../pages/ProfileRecordsPage').then((module) => ({ default: module.ProfileRecordsPage })));
 
 type ShellContext = {
   notify(message: string): void;
@@ -85,10 +89,14 @@ function AppState({ message, action }: { message: string; action?: { label: stri
   );
 }
 
+export function resolveRootDestination(search: string): string {
+  const legacyActivityId = new URLSearchParams(search).get('activity')?.trim();
+  return legacyActivityId ? `/activities/${encodeURIComponent(legacyActivityId)}` : '/activities';
+}
+
 function RootRedirect() {
   const { search } = useLocation();
-  const legacyActivityId = new URLSearchParams(search).get('activity')?.trim();
-  return <Navigate replace to={legacyActivityId ? `/activities/${encodeURIComponent(legacyActivityId)}` : '/activities'} />;
+  return <Navigate replace to={resolveRootDestination(search)} />;
 }
 
 function LoginRoute() {
@@ -136,6 +144,7 @@ function ProductShell() {
   const [publishOpen, setPublishOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const activeTab = activeTabFor(pathname);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
     window.scrollTo({ top: 0 });
@@ -153,7 +162,18 @@ function ProductShell() {
       onPublish={() => setPublishOpen(true)}
       showBottomNav={tabRoutes.has(pathname)}
     >
-      <Outlet context={{ notify: setToast } satisfies ShellContext} />
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          className="route-stage"
+          key={pathname}
+          initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
+          transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.22, 0.8, 0.28, 1] }}
+        >
+          <Outlet context={{ notify: setToast } satisfies ShellContext} />
+        </motion.div>
+      </AnimatePresence>
       {publishOpen ? (
         <PublishTypeSheet
           canPublishActivity={canPublishActivity(user)}
@@ -191,15 +211,14 @@ function ActivityRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { activities } = useQiahao();
+  const { activities, localMode } = useQiahao();
   const { notify } = useShell();
-  const clubActivity = clubActivities.find((item) => item.id === id);
   const activity = activities.find((item) => item.id === id);
+  const clubActivity = activity ? domainActivityToClub(activity) : localMode ? clubActivities.find((item) => item.id === id) : undefined;
   const focusComments = new URLSearchParams(search).get('comments') === '1';
   if (clubActivity) {
     return <ClubActivityDetailPage activity={clubActivity} onBack={() => navigate('/activities')} onNotice={notify} focusComments={focusComments} />;
   }
-  if (activity) return <ActivityDetail activity={activity} onBack={() => navigate('/activities')} />;
   return <MissingResource label="活动" backTo="/activities" />;
 }
 
@@ -217,12 +236,8 @@ function NeedRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { state } = useClub();
   const { needs } = useQiahao();
-  const need = useMemo(
-    () => [...needs, ...state.publishedNeeds, ...seedNeeds].find((item) => item.id === id),
-    [id, needs, state.publishedNeeds],
-  );
+  const need = useMemo(() => needs.find((item) => item.id === id), [id, needs]);
   if (!need) return <MissingResource label="需求" backTo="/needs" />;
   return (
     <NeedDetailPage
@@ -238,12 +253,8 @@ function LifeRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { state } = useClub();
   const { lifePosts: serverLifePosts } = useQiahao();
-  const post = useMemo(
-    () => [...serverLifePosts, ...state.publishedLifePosts, ...lifePosts].find((item) => item.id === id),
-    [id, serverLifePosts, state.publishedLifePosts],
-  );
+  const post = useMemo(() => serverLifePosts.find((item) => item.id === id), [id, serverLifePosts]);
   if (!post) return <MissingResource label="生活动态" backTo="/needs" />;
   return <LifePostDetailPage post={post} onBack={() => navigate('/needs?view=life')} focusComments={new URLSearchParams(search).get('comments') === '1'} />;
 }
@@ -347,7 +358,9 @@ function FeedbackRoute() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { notify } = useShell();
-  const activity = clubActivities.find((item) => item.id === id);
+  const { activities, localMode } = useQiahao();
+  const domainActivity = activities.find((item) => item.id === id);
+  const activity = domainActivity ? domainActivityToClub(domainActivity) : localMode ? clubActivities.find((item) => item.id === id) : undefined;
   if (!activity) return <MissingResource label="活动反馈" backTo="/activities" />;
   return (
     <ActivityFeedbackPage
@@ -442,5 +455,5 @@ const router = createBrowserRouter([
 ]);
 
 export function AppRouter() {
-  return <RouterProvider router={router} />;
+  return <Suspense fallback={<AppState message="正在准备页面…" />}><RouterProvider router={router} /></Suspense>;
 }

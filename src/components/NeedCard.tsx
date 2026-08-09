@@ -1,6 +1,6 @@
 import { Bookmark, Heart, MessageCircle } from 'lucide-react';
 import type { Need } from '../club/types';
-import { useClub } from '../club/ClubContext';
+import { useQiahao } from '../state/QiahaoContext';
 
 export function NeedCard({
   need,
@@ -9,9 +9,9 @@ export function NeedCard({
   need: Need;
   onOpen: (need: Need, focusComments?: boolean) => void;
 }) {
-  const { state, toggleNeedSaved, toggleNeedResonance } = useClub();
-  const saved = state.savedNeedIds.includes(need.id);
-  const resonated = state.resonatedNeedIds.includes(need.id);
+  const { toggleContentSaved, toggleContentResonance } = useQiahao();
+  const saved = Boolean(need.saved);
+  const resonated = Boolean(need.resonated);
 
   return (
     <article className="need-card-large">
@@ -29,7 +29,7 @@ export function NeedCard({
           {need.tags.map((tag) => <span key={tag}>{tag}</span>)}
         </div>
         <div className="need-card-actions">
-          <button type="button" className={resonated ? 'is-active' : ''} onClick={() => toggleNeedResonance(need.id)} aria-label={resonated ? '已共鸣' : '我也有'}>
+          <button type="button" className={resonated ? 'is-active' : ''} onClick={() => toggleContentResonance('need', need.id)} aria-label={resonated ? '已共鸣' : '我也有'}>
             <Heart size={17} aria-hidden />
             {need.resonance + (resonated ? 1 : 0)}
           </button>
@@ -37,7 +37,7 @@ export function NeedCard({
             <MessageCircle size={17} aria-hidden />
             {need.comments}
           </button>
-          <button type="button" className={saved ? 'is-active' : ''} onClick={() => toggleNeedSaved(need.id)} aria-label={saved ? '已收藏' : '收藏'}>
+          <button type="button" className={saved ? 'is-active' : ''} onClick={() => toggleContentSaved('need', need.id)} aria-label={saved ? '已收藏' : '收藏'}>
             <Bookmark size={17} aria-hidden />
             {saved ? '已收藏' : '收藏'}
           </button>

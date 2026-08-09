@@ -33,7 +33,8 @@ function mergeIncoming(items: AppNotification[], incoming: AppNotification): App
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { status: appStatus, user } = useQiahao();
-  const localMode = typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom');
+  const localMode = typeof navigator !== 'undefined'
+    && (navigator.userAgent.includes('jsdom') || import.meta.env.MODE === 'preview');
   const userId = user?.id ?? 'local-user';
   const [state, setState] = useState<NotificationState>(() => {
     if (localMode) return readNotificationState(userId) ?? { notifications: seedNotifications };

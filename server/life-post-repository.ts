@@ -5,6 +5,7 @@ import type { QiahaoDatabase } from './db';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
 import { createContent, listTagsForContent, requireContent, updateContentTags } from './content-repository';
 import { countComments } from './comment-repository';
+import { getContentSocialState } from './social-repository';
 
 type LifeRow = RowDataPacket & {
   id: string;
@@ -35,6 +36,9 @@ function toLifePost(row: LifeRow, tags: ApiLifePost['tags']): ApiLifePost {
     createdAt: toIsoTimestamp(row.created_at),
     updatedAt: toIsoTimestamp(row.updated_at),
     commentCount: 0,
+    saved: false,
+    resonated: false,
+    resonanceCount: 0,
   };
 }
 
@@ -45,24 +49,26 @@ const lifeSelect = `
     JOIN content_items ci ON ci.id=lp.id AND ci.content_type='life'
     JOIN users u ON u.id=lp.author_id`;
 
-export async function getLifePost(database: QiahaoDatabase, id: string, publicOnly = true): Promise<ApiLifePost | null> {
+export async function getLifePost(database: QiahaoDatabase, id: string, publicOnly = true, userId?: string): Promise<ApiLifePost | null> {
   const rows = await database.query<LifeRow[]>(`${lifeSelect} WHERE lp.id=? ${publicOnly ? "AND ci.status='approved'" : ''} LIMIT 1`, [id]);
   if (!rows[0]) return null;
-  const [tags, commentCount] = await Promise.all([
+  const [tags, commentCount, social] = await Promise.all([
     listTagsForContent(database, id),
     countComments(database, 'life', id),
+    userId ? getContentSocialState(database, userId, id) : Promise.resolve({ saved: false, resonated: false, resonanceCount: 0 }),
   ]);
-  return { ...toLifePost(rows[0], tags as ApiLifePost['tags']), commentCount, comments: commentCount };
+  return { ...toLifePost(rows[0], tags as ApiLifePost['tags']), ...social, commentCount, comments: commentCount };
 }
 
-export async function listLifePosts(database: QiahaoDatabase): Promise<ApiLifePost[]> {
+export async function listLifePosts(database: QiahaoDatabase, userId: string): Promise<ApiLifePost[]> {
   const rows = await database.query<LifeRow[]>(`${lifeSelect} WHERE ci.status='approved' ORDER BY ci.published_at DESC,ci.created_at DESC`);
   return Promise.all(rows.map(async (row) => {
-    const [tags, commentCount] = await Promise.all([
+    const [tags, commentCount, social] = await Promise.all([
       listTagsForContent(database, row.id),
       countComments(database, 'life', row.id),
+      getContentSocialState(database, userId, row.id),
     ]);
-    return { ...toLifePost(row, tags as ApiLifePost['tags']), commentCount, comments: commentCount };
+    return { ...toLifePost(row, tags as ApiLifePost['tags']), ...social, commentCount, comments: commentCount };
   }));
 }
 
@@ -74,7 +80,7 @@ export async function createLifePost(database: QiahaoDatabase, authorId: string,
     await createContent(connection, { id, authorId, contentType: 'life', status: 'approved', tagRefs, now });
     await connection.query('INSERT INTO life_posts (id,body,image,author_id,created_at,updated_at) VALUES (?,?,?,?,?,?)', [id, cleanBody, image?.trim() || null, authorId, now, now]);
   });
-  const item = await getLifePost(database, id, false);
+  const item = await getLifePost(database, id, false, authorId);
   if (!item) throw new Error('生活动态创建失败');
   return item;
 }

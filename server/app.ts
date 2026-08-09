@@ -17,13 +17,14 @@ import { seedDatabase } from './seed';
 import { changeActivityLifecycle, createActivity, getActivity, listActivities, validateActivity } from './activity-repository';
 import type { ActivityLifecycle, CreateActivityInput, UserRole } from '../src/domain/types';
 import { normalizeUserRole } from '../src/domain/roles';
-import { joinActivity, listMessages, listThreads, setFavorite } from './social-repository';
+import { loginRequestSchema } from '../src/contracts/api';
+import { joinActivity, listMessages, listThreads, setContentBookmark, setContentResonance, setFavorite } from './social-repository';
 import { archiveReadNotifications, getNotification, listNotifications, markNotificationRead } from './notification-repository';
 import { NotificationHub } from './notification-hub';
 import { AuthorizationError, requireAuthenticatedUser, requireCommentOwnerOrAdmin, requireContentOwnerOrAdmin, requireRole } from './authorization';
 import { ContentRepositoryError, archiveContent, changeModerationStatus, createContentTag, listAdminContent, listContentTags, requireContent, updateContentTag } from './content-repository';
-import { createNeed, getNeed, listNeeds, updateNeed } from './need-repository';
-import { createLifePost, getLifePost, listLifePosts, updateLifePost } from './life-post-repository';
+import { createNeed, listNeeds, updateNeed } from './need-repository';
+import { createLifePost, listLifePosts, updateLifePost } from './life-post-repository';
 import { CommentRepositoryError, createComment, deleteComment, getComment, listComments } from './comment-repository';
 import {
   absoluteUrl,
@@ -141,8 +142,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   });
 
   app.post<{ Body: { phone?: string; password?: string } }>('/api/v2/session', async (request, reply) => {
-    const phone = typeof request.body?.phone === 'string' ? request.body.phone.trim() : undefined;
-    const password = typeof request.body?.password === 'string' ? request.body.password : '';
+    const parsedCredentials = loginRequestSchema.safeParse(request.body);
+    if (!parsedCredentials.success) return fail(reply, 400, 'VALIDATION_ERROR', '请填写有效的手机号和密码');
+    const { phone, password } = parsedCredentials.data;
     const rows = phone
       ? await database.query<LoginRow[]>('SELECT * FROM users WHERE phone=? LIMIT 1', [phone])
       : [];
@@ -182,7 +184,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const [joinedRows, hostedRows, savedRows] = await Promise.all([
       database.query<Array<RowDataPacket & { count: number | string }>>('SELECT COUNT(*) AS count FROM activity_members WHERE user_id=?', [user.id]),
       database.query<Array<RowDataPacket & { count: number | string }>>('SELECT COUNT(*) AS count FROM activities WHERE host_id=?', [user.id]),
-      database.query<Array<RowDataPacket & { count: number | string }>>('SELECT COUNT(*) AS count FROM favorites WHERE user_id=?', [user.id]),
+      database.query<Array<RowDataPacket & { count: number | string }>>('SELECT COUNT(*) AS count FROM content_bookmarks WHERE user_id=?', [user.id]),
     ]);
     return {
       data: {
@@ -237,48 +239,52 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return { data: { id: request.params.id, lifecycle: result.lifecycle } };
   });
 
-  app.get('/api/v2/needs', async (request, reply) => {
+  app.get<{ Querystring: { type?: 'need' | 'life' } }>('/api/v2/content', async (request, reply) => {
     const user = await userFrom(request, database);
     if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    return { data: { needs: await listNeeds(database) } };
+    if (request.query.type === 'need') return { data: { items: await listNeeds(database, user.id) } };
+    if (request.query.type === 'life') return { data: { items: await listLifePosts(database, user.id) } };
+    return fail(reply, 400, 'VALIDATION_ERROR', '内容类型必须是 need 或 life');
   });
 
-  app.get<{ Params: { id: string } }>('/api/v2/needs/:id', async (request, reply) => {
-    const user = await userFrom(request, database);
-    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    const need = await getNeed(database, request.params.id);
-    if (!need) return fail(reply, 404, 'NOT_FOUND', '需求不存在');
-    return { data: { need } };
-  });
-
-  app.post<{ Body: { body?: string; tags?: string[] } }>('/api/v2/needs', async (request, reply) => {
+  app.post<{ Body: { type?: 'need' | 'life'; body?: string; image?: string; tags?: string[] } }>('/api/v2/content', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
+    const type = request.body?.type;
     const body = parseContentBody(request.body?.body);
-    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
     const tags = parseTagRefs(request.body?.tags);
+    if (!type || !['need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '内容不能为空且不能超过 5000 字');
     if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
-    const need = await createNeed(database, user.id, body, tags);
-    return reply.code(201).send({ data: { need } });
+    if (type === 'need') {
+      const item = await createNeed(database, user.id, body, tags);
+      return reply.code(201).send({ data: { item } });
+    }
+    const image = parseOptionalImage(request.body?.image);
+    if (image === null) return fail(reply, 400, 'VALIDATION_ERROR', '图片格式无效');
+    const item = await createLifePost(database, user.id, body, image, tags);
+    return reply.code(201).send({ data: { item } });
   });
 
-  app.patch<{ Params: { id: string }; Body: { body?: string; tags?: string[] } }>('/api/v2/needs/:id', async (request, reply) => {
+  app.patch<{ Params: { id: string }; Body: { body?: string; image?: string; tags?: string[] } }>('/api/v2/content/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
-    if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
     requireContentOwnerOrAdmin(user, current);
+    if (current.contentType !== 'need' && current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '内容不存在');
     if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
     const body = parseContentBody(request.body?.body);
-    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '需求内容不能为空且不能超过 5000 字');
     const tags = parseTagRefs(request.body?.tags);
+    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '内容不能为空且不能超过 5000 字');
     if (!tags) return fail(reply, 400, 'VALIDATION_ERROR', '标签格式无效');
-    const need = await updateNeed(database, request.params.id, body, tags);
-    return { data: { need } };
+    if (current.contentType === 'need') return { data: { item: await updateNeed(database, current.id, body, tags) } };
+    const image = parseOptionalImage(request.body?.image);
+    if (image === null) return fail(reply, 400, 'VALIDATION_ERROR', '图片格式无效');
+    return { data: { item: await updateLifePost(database, current.id, body, image, tags) } };
   });
 
-  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/v2/needs/:id', async (request, reply) => {
+  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/v2/content/:id', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
     const current = await requireContent(database, request.params.id);
-    if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
+    if (current.contentType !== 'need' && current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '内容不存在');
     requireContentOwnerOrAdmin(user, current);
     const reason = parseOptionalReason(request.body?.reason);
     if (reason === null) return fail(reply, 400, 'VALIDATION_ERROR', '归档原因格式无效');
@@ -286,55 +292,37 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     return reply.code(204).send();
   });
 
-  app.get('/api/v2/life-posts', async (request, reply) => {
-    const user = await userFrom(request, database);
-    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    return { data: { lifePosts: await listLifePosts(database) } };
-  });
-
-  app.get<{ Params: { id: string } }>('/api/v2/life-posts/:id', async (request, reply) => {
-    const user = await userFrom(request, database);
-    if (!user) return fail(reply, 401, 'UNAUTHORIZED', '请先登录');
-    const lifePost = await getLifePost(database, request.params.id);
-    if (!lifePost) return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
-    return { data: { lifePost } };
-  });
-
-  app.post<{ Body: { body?: string; image?: string; tags?: string[] } }>('/api/v2/life-posts', async (request, reply) => {
+  const contentTypes = new Set(['activity', 'need', 'life']);
+  app.put<{ Params: { type: 'activity' | 'need' | 'life'; id: string } }>('/api/v2/content/:type/:id/bookmark', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const body = parseContentBody(request.body?.body);
-    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
-    const image = parseOptionalImage(request.body?.image);
-    const tags = parseTagRefs(request.body?.tags);
-    if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
-    const lifePost = await createLifePost(database, user.id, body, image, tags);
-    return reply.code(201).send({ data: { lifePost } });
+    if (!contentTypes.has(request.params.type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    const updated = await setContentBookmark(database, user.id, request.params.type, request.params.id, true);
+    if (!updated) return fail(reply, 404, 'NOT_FOUND', '内容不存在或不可见');
+    return { data: { saved: true } };
   });
 
-  app.patch<{ Params: { id: string }; Body: { body?: string; image?: string; tags?: string[] } }>('/api/v2/life-posts/:id', async (request, reply) => {
+  app.delete<{ Params: { type: 'activity' | 'need' | 'life'; id: string } }>('/api/v2/content/:type/:id/bookmark', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const current = await requireContent(database, request.params.id);
-    if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
-    requireContentOwnerOrAdmin(user, current);
-    if (current.status === 'archived') return fail(reply, 409, 'INVALID_STATUS_TRANSITION', '已归档内容不能修改');
-    const body = parseContentBody(request.body?.body);
-    if (!body) return fail(reply, 400, 'VALIDATION_ERROR', '生活动态不能为空且不能超过 5000 字');
-    const image = parseOptionalImage(request.body?.image);
-    const tags = parseTagRefs(request.body?.tags);
-    if (image === null || !tags) return fail(reply, 400, 'VALIDATION_ERROR', '图片或标签格式无效');
-    const lifePost = await updateLifePost(database, request.params.id, body, image, tags);
-    return { data: { lifePost } };
+    if (!contentTypes.has(request.params.type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    const updated = await setContentBookmark(database, user.id, request.params.type, request.params.id, false);
+    if (!updated) return fail(reply, 404, 'NOT_FOUND', '内容不存在或不可见');
+    return { data: { saved: false } };
   });
 
-  app.delete<{ Params: { id: string }; Body: { reason?: string } }>('/api/v2/life-posts/:id', async (request, reply) => {
+  app.put<{ Params: { type: 'activity' | 'need' | 'life'; id: string } }>('/api/v2/content/:type/:id/resonance', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const current = await requireContent(database, request.params.id);
-    if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
-    requireContentOwnerOrAdmin(user, current);
-    const reason = parseOptionalReason(request.body?.reason);
-    if (reason === null) return fail(reply, 400, 'VALIDATION_ERROR', '归档原因格式无效');
-    await archiveContent(database, current.id, user.id, reason);
-    return reply.code(204).send();
+    if (!contentTypes.has(request.params.type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    const updated = await setContentResonance(database, user.id, request.params.type, request.params.id, true);
+    if (!updated) return fail(reply, 404, 'NOT_FOUND', '内容不存在或不可见');
+    return { data: { resonated: true } };
+  });
+
+  app.delete<{ Params: { type: 'activity' | 'need' | 'life'; id: string } }>('/api/v2/content/:type/:id/resonance', async (request, reply) => {
+    const user = await requireAuthenticatedUser(request, database);
+    if (!contentTypes.has(request.params.type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
+    const updated = await setContentResonance(database, user.id, request.params.type, request.params.id, false);
+    if (!updated) return fail(reply, 404, 'NOT_FOUND', '内容不存在或不可见');
+    return { data: { resonated: false } };
   });
 
   app.get<{ Querystring: { contentType?: string; contentId?: string; limit?: string; cursor?: string } }>('/api/v2/comments', async (request, reply) => {
