@@ -44,7 +44,14 @@ export const qaSets = {
   ],
 } satisfies Record<'basic' | 'extra' | 'advanced', QaQuestion[]>;
 
-const pics = ['/assets/food.jpg', '/assets/coffee.jpg', '/assets/hike.jpg', '/assets/art.jpg', '/assets/sport.jpg', '/assets/board.jpg'];
+const pics = [
+  '/assets/qiahao-social-dinner.png',
+  '/assets/qiahao-deep-talk.png',
+  '/assets/qiahao-city-walk.png',
+  '/assets/qiahao-workshop.png',
+  '/assets/qiahao-city-walk.png',
+  '/assets/qiahao-deep-talk.png',
+];
 
 const defaultBoundary = '不强配对、不公开联系方式、不强制交换微信，任何问题都可以选择不回答。';
 const defaultAudience = '多为25-35岁，想认真认识人但排斥强相亲';

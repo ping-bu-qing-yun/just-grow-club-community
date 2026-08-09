@@ -22,9 +22,10 @@ export function ClubActivityDetailPage({
   canEdit?: boolean;
   onUpdate?: (activity: ClubActivity) => void;
 }) {
-  const { state, isClubActivitySaved, isClubActivityJoined, toggleClubActivitySaved, joinClubActivity, cancelClubActivity, dislikeClubActivity, saveClubActivityConsideration, markReservationCommented } = useClub();
+  const { state, isClubActivitySaved, isClubActivityJoined, isClubActivityWaitlisted, toggleClubActivitySaved, joinClubActivity, waitlistClubActivity, cancelClubActivity, dislikeClubActivity, saveClubActivityConsideration, markReservationCommented } = useClub();
   const saved = isClubActivitySaved(activity.id);
   const joined = isClubActivityJoined(activity.id);
+  const waitlisted = isClubActivityWaitlisted(activity.id);
   const isPreActivity = activity.status === '预活动';
   const consideredReasons = state.consideredClubActivityReasons[activity.id] ?? [];
   const disliked = state.dislikedClubActivityIds.includes(activity.id);
@@ -47,6 +48,7 @@ export function ClubActivityDetailPage({
   const needsText = activity.needs.join('、');
   const peopleText = `${activity.people}${activity.people.includes('男女') ? '' : '，男女比例尽量均衡'}`;
   const stats = getClubActivityStats(activity, joined);
+  const isFullForViewer = !joined && !isPreActivity && stats.isFull;
   const actionLabel = isPreActivity ? '预约' : '报名';
   const joinedLabel = isPreActivity ? '已预约' : '已报名';
   const statsActionLabel = isPreActivity ? '人已预约' : '人已报名';
@@ -317,13 +319,32 @@ export function ClubActivityDetailPage({
               取消{actionLabel}
             </button>
           ) : null}
+          {isFullForViewer ? (
+            <button
+              type="button"
+              className="secondary-button secondary-button--compact waitlist-button"
+              disabled={waitlisted}
+              onClick={() => {
+                waitlistClubActivity(activity.id);
+                onNotice?.('已加入捡漏，若有人取消会第一时间通知你');
+              }}
+            >
+              {waitlisted ? '已捡漏' : '捡漏'}
+            </button>
+          ) : null}
           <button
             type="button"
-            className="primary-button"
-            disabled={joined}
-            onClick={() => setShowJoinSheet(true)}
+            className={`primary-button${isFullForViewer ? ' is-full' : ''}`}
+            disabled={joined || isFullForViewer}
+            onClick={() => {
+              if (isFullForViewer) {
+                onNotice?.('这场活动已满员，会优先推荐还可报名的活动');
+                return;
+              }
+              setShowJoinSheet(true);
+            }}
           >
-            {joined ? joinedLabel : actionLabel}
+            {isFullForViewer ? '已满员' : joined ? joinedLabel : actionLabel}
           </button>
         </div>
       </div>

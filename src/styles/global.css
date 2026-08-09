@@ -421,3 +421,191 @@ img { display: block; max-width: 100%; }
   .admin-content-item__meta { align-items: flex-start; flex-wrap: wrap; }
   .admin-content-item__meta small { width: 100%; margin-left: 0; }
 }
+
+/* 最新体验修正：移动端兜底、问卷按钮统一、满员按钮和卡片价格稳定显示 */
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-shell,
+.app-shell__content,
+.page,
+.onboarding-page {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
+.club-activity-meta strong {
+  white-space: nowrap;
+}
+
+.detail-action__buttons {
+  min-width: 0;
+}
+
+.detail-action__buttons button {
+  white-space: nowrap;
+}
+
+.detail-action__buttons .primary-button.is-full,
+.detail-action__buttons .primary-button:disabled {
+  border-color: transparent;
+  background: #d8d5d2;
+  color: #777;
+  box-shadow: none;
+}
+
+.detail-action__buttons .waitlist-button {
+  border-color: rgba(79, 116, 79, .2);
+  background: #eff8f1;
+  color: #4f744f;
+  box-shadow: 0 10px 22px rgba(45, 72, 52, .1);
+}
+
+.detail-action__buttons .waitlist-button:not(:disabled):hover,
+.detail-action__buttons .waitlist-button:not(:disabled):focus-visible {
+  background: #5f7f5e;
+  color: #fff;
+}
+
+.detail-action__buttons .waitlist-button:disabled {
+  border-color: transparent;
+  background: #e8ece8;
+  color: #6f7d70;
+}
+
+.onboarding-actions .secondary-button {
+  border: 1px solid rgba(79, 116, 79, .16);
+  background: #fff;
+  color: #4f744f;
+  box-shadow: 0 14px 30px rgba(45, 72, 52, .13);
+}
+
+.onboarding-actions .secondary-button:hover,
+.onboarding-actions .secondary-button:focus-visible {
+  background: #5f7f5e;
+  color: #fff;
+  box-shadow: 0 16px 34px rgba(45, 72, 52, .25);
+}
+
+@media (max-width: 420px) {
+  .club-home,
+  .explore-page,
+  .needs-page,
+  .records-page,
+  .profile-editor {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .club-home-title {
+    min-width: 94px;
+    padding: 7px 10px;
+  }
+
+  .club-home-title h1 {
+    font-size: 16px;
+  }
+
+  .club-home-user {
+    top: calc(max(18px, env(safe-area-inset-top)) + 66px);
+    font-size: 12px;
+  }
+
+  .club-home-user img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .portrait-strip {
+    min-height: 142px;
+    padding-right: 112px;
+  }
+
+  .interactive-cat {
+    right: 8px;
+    bottom: 16px;
+    width: 94px;
+    height: 70px;
+  }
+
+  .club-activity-card {
+    padding: 7px;
+    border-radius: 16px;
+  }
+
+  .club-activity-copy {
+    padding: 12px 10px 9px;
+  }
+
+  .club-activity-title h3 {
+    font-size: 17px;
+  }
+
+  .club-activity-meta {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+  }
+
+  .club-activity-meta span {
+    min-width: 0;
+  }
+
+  .club-activity-meta span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .detail-action {
+    width: 100%;
+  }
+
+  .detail-action__buttons .primary-button {
+    min-width: 86px;
+    padding: 0 16px;
+  }
+
+  .onboarding-page {
+    min-height: 100svh;
+  }
+
+  .onboarding-body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .onboarding-actions {
+    justify-content: space-between;
+  }
+
+  .onboarding-actions > span {
+    display: none;
+  }
+
+  .onboarding-actions .secondary-button,
+  .onboarding-actions .primary-button,
+  .onboarding-actions .primary-button:not(:disabled) {
+    width: calc((100vw - 54px) / 2);
+    min-width: 0;
+    max-width: 146px;
+  }
+
+  .answer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .qa-levels button {
+    font-size: 9px;
+  }
+}

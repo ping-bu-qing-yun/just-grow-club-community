@@ -10,6 +10,7 @@
     "dev:all": "concurrently -k \"npm:dev:api\" \"npm:dev -- --host 127.0.0.1 --port 5174\"",
     "db:migrate": "node --env-file-if-exists=.env --import tsx server/migrations/run.ts",
     "build": "tsc -b && vite build",
+    "build:sites": "npm run build && node scripts/build-sites-worker.mjs",
     "test": "vitest",
     "test:server": "vitest server --run --no-file-parallelism --maxWorkers=1",
     "test:watch": "vitest",

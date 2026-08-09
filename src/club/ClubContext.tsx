@@ -21,12 +21,14 @@ export interface ClubContextValue {
   isLifePostResonated(id: string): boolean;
   toggleClubActivitySaved(id: string): void;
   joinClubActivity(id: string): void;
+  waitlistClubActivity(id: string): void;
   cancelClubActivity(id: string, reason: string): void;
   dislikeClubActivity(id: string): void;
   saveClubActivityConsideration(id: string, reasons: string[]): void;
   markReservationCommented(id: string): void;
   isClubActivitySaved(id: string): boolean;
   isClubActivityJoined(id: string): boolean;
+  isClubActivityWaitlisted(id: string): boolean;
 }
 
 const ClubContext = createContext<ClubContextValue | null>(null);
@@ -172,10 +174,18 @@ export function ClubProvider({ children }: { children: ReactNode }) {
             : {
                 ...current,
                 joinedClubActivityIds: [...current.joinedClubActivityIds, id],
+                waitlistedClubActivityIds: current.waitlistedClubActivityIds.filter((item) => item !== id),
                 cancelledClubActivityReasons: Object.fromEntries(
                   Object.entries(current.cancelledClubActivityReasons).filter(([activityId]) => activityId !== id),
                 ),
               },
+        );
+      },
+      waitlistClubActivity(id) {
+        setState((current) =>
+          current.waitlistedClubActivityIds.includes(id)
+            ? current
+            : { ...current, waitlistedClubActivityIds: [...current.waitlistedClubActivityIds, id] },
         );
       },
       cancelClubActivity(id, reason) {
@@ -218,6 +228,9 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       },
       isClubActivityJoined(id) {
         return state.joinedClubActivityIds.includes(id);
+      },
+      isClubActivityWaitlisted(id) {
+        return state.waitlistedClubActivityIds.includes(id);
       },
     }),
     [state],
