@@ -1,6 +1,27 @@
+/**
+ * Sheet — the gesture-driven bottom sheet, rebuilt on Motion springs.
+ *
+ * Apple Design (SKILL.md) mapping:
+ *  §1  Response — the panel tracks the pointer 1:1 from the first move.
+ *  §2  Direct manipulation — Pointer Events + setPointerCapture; respects the grab.
+ *  §3  Interruptibility — all motion is a spring driven by a MotionValue that
+ *      always starts from the live on-screen value; a closing sheet grabbed
+ *      mid-flight follows the finger again instead of finishing first.
+ *  §5  Velocity handoff — release velocity becomes the spring's initial velocity.
+ *  §6  Momentum projection — project() decides commit-vs-return, like a flick.
+ *  §9  Rubber-banding — progressive resistance past the bounds.
+ *  §12 Materials — translucent material surface + blur scrim (dim-to-focus).
+ *  §14 Reduced motion — springs collapse to a short cross-fade.
+ *
+ * The focus trap, inert root, and Escape handling are unchanged from the
+ * original hand-rolled implementation.
+ */
 import { X } from 'lucide-react';
+import { animate, motionValue, type MotionValue } from 'motion';
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { project, rubberband } from '../motion/gestures';
+import { sheet as sheetSpring, reducedFade } from '../motion/springs';
 
 const focusableSelector = [
   'a[href]',
@@ -17,7 +38,7 @@ type Gesture = {
   startOffset: number;
   lastY: number;
   lastTime: number;
-  velocity: number;
+  velocity: number; // px/ms, exponential-smoothed
   dragging: boolean;
   offset: number;
 };
@@ -48,20 +69,42 @@ export function Sheet({
   const gestureRef = useRef<Gesture | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const closingRef = useRef(false);
+  const yRef = useRef<MotionValue<number> | null>(null);
+  if (yRef.current === null) yRef.current = motionValue(0);
   const [closing, setClosing] = useState(false);
   closeRef.current = onClose;
 
-  function finishClose() {
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function panelHeight(): number {
+    const panel = panelRef.current;
+    return panel ? panel.offsetHeight : window.innerHeight * 0.5;
+  }
+
+  /** Drive the panel's translateY. Both the MotionValue and the CSS var are
+   *  kept in sync so the entrance keyframe and live transforms agree. */
+  function setOffset(offset: number) {
+    const panel = panelRef.current;
+    yRef.current?.set(offset);
+    panel?.style.setProperty('--sheet-offset', `${offset}px`);
+  }
+
+  function finishClose(velocity = 0) {
     if (closingRef.current) return;
     closingRef.current = true;
     setClosing(true);
-    const panel = panelRef.current;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (panel) {
-      panel.style.transition = reducedMotion ? 'none' : 'transform 180ms cubic-bezier(.32,.72,0,1)';
-      panel.style.setProperty('--sheet-offset', `${Math.max(panel.offsetHeight, window.innerHeight * 0.45)}px`);
+    const target = Math.max(panelHeight(), window.innerHeight * 0.45);
+    if (reducedMotion()) {
+      closeTimerRef.current = window.setTimeout(() => closeRef.current(), 0);
+      return;
     }
-    closeTimerRef.current = window.setTimeout(() => closeRef.current(), reducedMotion ? 0 : 180);
+    // §5 velocity handoff: the panel continues at the finger's velocity (px/ms → px/s).
+    animate(yRef.current!, target, {
+      ...sheetSpring,
+      velocity: Math.max(0, velocity * 1000),
+      onUpdate: (latest) => panelRef.current?.style.setProperty('--sheet-offset', `${latest}px`),
+      onComplete: () => closeRef.current(),
+    });
   }
 
   useEffect(() => {
@@ -112,8 +155,10 @@ export function Sheet({
       else appRoot?.setAttribute('aria-hidden', previousAriaHidden);
       document.body.style.overflow = previousOverflow;
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
+      yRef.current?.stop();
       window.requestAnimationFrame(() => activeElement?.focus());
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -121,10 +166,12 @@ export function Sheet({
     const panel = panelRef.current;
     if (!panel) return;
     event.currentTarget.setPointerCapture(event.pointerId);
+    // §3 interrupt: read the live on-screen offset (mid-flight if closing) and
+    // stop any running spring so the finger takes over from the presentation value.
+    yRef.current?.stop();
     const startOffset = Math.max(0, readTranslateY(panel));
     panel.style.animation = 'none';
-    panel.style.transition = 'none';
-    panel.style.setProperty('--sheet-offset', `${startOffset}px`);
+    setOffset(startOffset);
     gestureRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
@@ -142,19 +189,21 @@ export function Sheet({
     const panel = panelRef.current;
     if (!gesture || !panel || gesture.pointerId !== event.pointerId) return;
     const rawDelta = event.clientY - gesture.startY;
-    if (!gesture.dragging && Math.abs(rawDelta) < 10) return;
+    if (!gesture.dragging && Math.abs(rawDelta) < 10) return; // §10 hysteresis
     gesture.dragging = true;
     const elapsed = Math.max(1, event.timeStamp - gesture.lastTime);
     const instantVelocity = (event.clientY - gesture.lastY) / elapsed;
-    gesture.velocity = gesture.velocity * 0.72 + instantVelocity * 0.28;
+    gesture.velocity = gesture.velocity * 0.72 + instantVelocity * 0.28; // exponential smoothing
     gesture.lastY = event.clientY;
     gesture.lastTime = event.timeStamp;
 
+    const height = panelHeight();
     let offset = gesture.startOffset + rawDelta;
-    if (offset < 0) offset *= 0.18;
-    if (offset > panel.offsetHeight) offset = panel.offsetHeight + (offset - panel.offsetHeight) * 0.18;
+    // §9 rubber-band at both bounds: resist progressively, don't hard-stop.
+    if (offset < 0) offset = -rubberband(-offset, height);
+    else if (offset > height) offset = height + rubberband(offset - height, height);
     gesture.offset = offset;
-    panel.style.setProperty('--sheet-offset', `${offset}px`);
+    setOffset(offset); // §1 track the pointer 1:1 the whole way through
   }
 
   function handlePointerEnd(event: ReactPointerEvent<HTMLDivElement>) {
@@ -165,18 +214,32 @@ export function Sheet({
     gestureRef.current = null;
     if (!gesture.dragging) return;
     const offset = Math.max(0, gesture.offset);
-    const projectedOffset = offset + Math.max(0, gesture.velocity) * 220;
-    const shouldClose = gesture.velocity > 0.55 || projectedOffset > Math.max(120, panel.offsetHeight * 0.32);
+    // §6 momentum projection: decide commit from where the gesture is *going*.
+    const projected = offset + Math.max(0, project(gesture.velocity * 1000));
+    const shouldClose = gesture.velocity > 0.55 || projected > Math.max(120, panelHeight() * 0.32);
     if (shouldClose) {
-      finishClose();
+      finishClose(gesture.velocity);
       return;
     }
-    panel.style.transition = 'transform 320ms cubic-bezier(.22,.8,.28,1)';
-    panel.style.setProperty('--sheet-offset', '0px');
+    if (reducedMotion()) {
+      setOffset(0);
+      return;
+    }
+    // §5 spring back from the live value, handing off the release velocity.
+    animate(yRef.current!, 0, {
+      ...sheetSpring,
+      velocity: gesture.velocity * 1000,
+      onUpdate: (latest) => panel.style.setProperty('--sheet-offset', `${latest}px`),
+    });
   }
 
   return createPortal(
-    <div className={`sheet-backdrop${closing ? ' is-closing' : ''}`} onPointerDown={(event) => { if (event.target === event.currentTarget) finishClose(); }}>
+    <div
+      className={`sheet-backdrop${closing ? ' is-closing' : ''}`}
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) finishClose();
+      }}
+    >
       <section
         ref={panelRef}
         className={`bottom-sheet${className ? ` ${className}` : ''}`}
@@ -195,7 +258,9 @@ export function Sheet({
         >
           <div className="sheet-handle" />
         </div>
-        <button type="button" className="icon-button sheet-close" aria-label="关闭" onClick={finishClose}><X size={20} /></button>
+        <button type="button" className="icon-button sheet-close" aria-label="关闭" onClick={() => finishClose()}>
+          <X size={20} />
+        </button>
         {children}
       </section>
     </div>,

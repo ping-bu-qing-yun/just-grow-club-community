@@ -1,0 +1,79 @@
+/* BottomNav — a floating material tab bar (SKILL §12). Content scrolls under
+   the translucent bar; a bright top edge catches the light. */
+
+.nav {
+  position: fixed;
+  z-index: var(--z-navigation);
+  bottom: 0;
+  left: 50%;
+  display: grid;
+  width: min(100%, 460px);
+  grid-template-columns: repeat(5, 1fr);
+  min-height: calc(70px + env(safe-area-inset-bottom));
+  padding: 6px 4px env(safe-area-inset-bottom);
+  transform: translateX(-50%);
+  border-top: 1px solid var(--line);
+  background: var(--material-thick);
+  box-shadow: var(--material-edge), 0 -10px 34px rgba(31, 31, 35, 0.08);
+  -webkit-backdrop-filter: var(--blur-nav);
+  backdrop-filter: var(--blur-nav);
+}
+
+.item {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--subtle);
+  font-size: 10px;
+  cursor: pointer;
+  will-change: transform;
+}
+
+.item.active {
+  color: var(--brand);
+  font-weight: 750;
+}
+
+.icon {
+  display: grid;
+  width: 30px;
+  height: 26px;
+  place-items: center;
+}
+
+/* Raised central publish button */
+.create {
+  color: var(--subtle);
+}
+
+.createIcon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-top: -22px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 7px 17px color-mix(in srgb, var(--brand) 32%, transparent);
+  will-change: transform;
+}
+
+.create span:last-child {
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .nav {
+    display: none;
+  }
+}

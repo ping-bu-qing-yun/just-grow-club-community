@@ -1,4 +1,7 @@
 import { CalendarHeart, Compass, MessagesSquare, Plus, UserRound } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import { quick } from '../motion/springs';
+import styles from './BottomNav.module.css';
 
 export type AppTab = 'activities' | 'explore' | 'needs' | 'profile';
 
@@ -20,50 +23,45 @@ export function BottomNav({
 }) {
   const left = appNavigationItems.slice(0, 2);
   const right = appNavigationItems.slice(2);
+  const reducedMotion = useReducedMotion();
+  const press = reducedMotion ? { opacity: 0.6 } : { scale: 0.94 };
+
+  const renderItem = ({ id, label, Icon }: (typeof appNavigationItems)[number]) => (
+    <motion.button
+      key={id}
+      type="button"
+      className={`${styles.item} ${activeTab === id ? styles.active : ''}`}
+      aria-current={activeTab === id ? 'page' : undefined}
+      onClick={() => onChange(id)}
+      whileTap={press}
+      transition={quick}
+    >
+      <span className={styles.icon}>
+        <Icon size={22} strokeWidth={2} />
+      </span>
+      <span>{label}</span>
+    </motion.button>
+  );
 
   return (
-    <nav className="bottom-nav" aria-label="主要导航">
-      {left.map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          type="button"
-          className={`bottom-nav__item bottom-nav__item--${id}${activeTab === id ? ' is-active' : ''}`}
-          aria-current={activeTab === id ? 'page' : undefined}
-          onClick={() => onChange(id)}
-        >
-          <span className="bottom-nav__icon">
-            <Icon size={22} strokeWidth={2} />
-          </span>
-          <span>{label}</span>
-        </button>
-      ))}
+    <nav className={styles.nav} aria-label="主要导航">
+      {left.map(renderItem)}
 
-      <button
+      <motion.button
         type="button"
-        className="bottom-nav__item bottom-nav__item--create"
+        className={`${styles.item} ${styles.create}`}
         aria-label="发布"
         onClick={onPublish}
+        whileTap={press}
+        transition={quick}
       >
-        <span className="bottom-nav__icon">
+        <span className={styles.createIcon}>
           <Plus size={26} strokeWidth={2.4} />
         </span>
         <span>发布</span>
-      </button>
+      </motion.button>
 
-      {right.map(({ id, label, Icon }) => (
-        <button
-          key={id}
-          type="button"
-          className={`bottom-nav__item bottom-nav__item--${id}${activeTab === id ? ' is-active' : ''}`}
-          aria-current={activeTab === id ? 'page' : undefined}
-          onClick={() => onChange(id)}
-        >
-          <span className="bottom-nav__icon">
-            <Icon size={22} strokeWidth={2} />
-          </span>
-          <span>{label}</span>
-        </button>
-      ))}
+      {right.map(renderItem)}
     </nav>
   );
 }

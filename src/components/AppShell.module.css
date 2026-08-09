@@ -1,0 +1,58 @@
+/* AppShell — the app frame. Phone: a single mobile column; desktop: a grid
+   with the sidebar rail and a centered content canvas. */
+
+.canvas {
+  min-height: 100vh;
+  background: var(--canvas);
+}
+
+.shell {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.content {
+  min-height: 100vh;
+  padding-bottom: calc(78px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 560px) {
+  .canvas {
+    padding: 24px 0;
+  }
+  .shell {
+    max-width: 460px;
+    min-height: calc(100vh - 48px);
+    border: 1px solid var(--line);
+    box-shadow: 0 24px 70px rgba(44, 37, 33, 0.15);
+  }
+}
+
+@media (min-width: 900px) {
+  .canvas {
+    min-height: 100dvh;
+    padding: 0;
+    background: var(--canvas);
+  }
+  .shell {
+    display: grid;
+    width: 100%;
+    max-width: none;
+    min-height: 100dvh;
+    margin: 0;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .content {
+    min-width: 0;
+    min-height: 100dvh;
+    padding-bottom: 0;
+  }
+}
