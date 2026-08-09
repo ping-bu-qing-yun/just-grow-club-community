@@ -1,5 +1,7 @@
 export type ActivityCategory = '饭搭子' | '咖啡' | '运动' | '徒步' | '看展' | '桌游';
 export type UserRole = 'member' | 'host' | 'operator';
+export type ActivityLifecycle = 'pre' | 'formal' | 'archived';
+export type ParticipationStatus = 'interested' | 'joined';
 
 export interface UserSummary {
   id: string;
@@ -26,6 +28,8 @@ export interface Activity {
   price: number;
   featured?: boolean;
   note?: string;
+  lifecycle: ActivityLifecycle;
+  participationStatus?: ParticipationStatus | null;
 }
 
 export interface CreateActivityInput {

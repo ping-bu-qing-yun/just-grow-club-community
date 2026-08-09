@@ -107,7 +107,7 @@ export function Sheet({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       if (rootWithInert) rootWithInert.inert = previousInert;
-      if (previousAriaHidden === null) appRoot?.removeAttribute('aria-hidden');
+      if (previousAriaHidden == null) appRoot?.removeAttribute('aria-hidden');
       else appRoot?.setAttribute('aria-hidden', previousAriaHidden);
       document.body.style.overflow = previousOverflow;
       if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current);
@@ -121,6 +121,7 @@ export function Sheet({
     if (!panel) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     const startOffset = Math.max(0, readTranslateY(panel));
+    panel.style.animation = 'none';
     panel.style.transition = 'none';
     panel.style.setProperty('--sheet-offset', `${startOffset}px`);
     gestureRef.current = {

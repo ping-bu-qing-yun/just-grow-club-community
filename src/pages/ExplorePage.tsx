@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
@@ -15,8 +16,21 @@ const filters = [
 ] as const;
 
 export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenActivity: (activity: ClubActivity) => void; onOpenNotifications: () => void }) {
-  const [filter, setFilter] = useState('all');
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedFilter = searchParams.get('filter');
+  const filter = filters.some(([id]) => id === requestedFilter) ? requestedFilter as (typeof filters)[number][0] : 'all';
+  const query = searchParams.get('q') ?? '';
+
+  function updateSearch(next: { filter?: string; query?: string }) {
+    const params = new URLSearchParams(searchParams);
+    const nextFilter = next.filter ?? filter;
+    const nextQuery = next.query ?? query;
+    if (nextFilter === 'all') params.delete('filter');
+    else params.set('filter', nextFilter);
+    if (nextQuery.trim()) params.set('q', nextQuery);
+    else params.delete('q');
+    setSearchParams(params, { replace: true });
+  }
 
   const visible = useMemo(
     () =>
@@ -39,13 +53,13 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
         <input
           aria-label="搜索活动"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => updateSearch({ query: event.target.value })}
           placeholder="搜索活动、地点或场景"
         />
       </label>
       <div className="club-filter-strip">
         {filters.map(([id, label]) => (
-          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => setFilter(id)} type="button">
+          <button className={filter === id ? 'is-active' : ''} key={id} onClick={() => updateSearch({ filter: id })} type="button">
             {label}
           </button>
         ))}
@@ -62,8 +76,7 @@ export function ExplorePage({ onOpenActivity, onOpenNotifications }: { onOpenAct
             className="secondary-button"
             type="button"
             onClick={() => {
-              setFilter('all');
-              setQuery('');
+              setSearchParams({}, { replace: true });
             }}
           >
             清除筛选

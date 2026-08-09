@@ -11,7 +11,7 @@ export class AuthorizationError extends Error {
 }
 
 export async function requireAuthenticatedUser(request: FastifyRequest, database: QiahaoDatabase): Promise<AuthenticatedUser> {
-  const user = await authenticateToken(database, request.headers.authorization);
+  const user = await authenticateToken(database, request.headers.authorization, request.headers.cookie);
   if (!user) throw new AuthorizationError(401, 'UNAUTHORIZED', '请先登录');
   return user;
 }

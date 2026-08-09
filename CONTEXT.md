@@ -37,7 +37,7 @@ _Avoid_：已发布活动（与"发布"动作一词混淆）
 _Avoid_：需求卡（口语可，文档统称「需求」）、帖子、post
 
 **生活（LifePost）**：
-用户分享的日常/关系话题动态，以文字+图片为主；与「需求」并列、独立成页发布（见 H5 原型 qiahao-club-h5.html §11b/§11c1「我的动态」「发布动态·生活分享单独成页」）。本期新建后端 `life_posts` 表 + `POST /api/life-posts` + `CreateLifePage`，补齐发布闭环。
+用户分享的日常/关系话题动态，以文字+图片为主；与「需求」并列、独立成页发布。当前入口由 `AppRouter` 路由到 `CreateLifePage`，后端通过 `POST /api/life-posts` 和 `life_posts` 表完成发布闭环。
 _Avoid_：动态（口语可，文档统称「生活」）、moment、朋友圈
 
 ## Flagged ambiguities
