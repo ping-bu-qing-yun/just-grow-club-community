@@ -44,7 +44,7 @@ for (const node of PAGE_INVENTORY) {
           const y = Math.min(innerHeight - 1, Math.max(0, rect.top + rect.height / 2));
           const hit = document.elementFromPoint(x, y);
           const canScrollFurther = scrollY + innerHeight < document.documentElement.scrollHeight - 1;
-          if (hit?.closest('.bottom-nav') && canScrollFurther) return false;
+          if (hit?.closest('nav[aria-label="主要导航"]') && canScrollFurther) return false;
           return Boolean(hit && hit !== element && !element.contains(hit) && !hit.contains(element));
         })
         .map((element) => element.getAttribute('aria-label') || element.textContent?.trim().slice(0, 40)),
