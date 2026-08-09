@@ -1,8 +1,8 @@
 import { afterEach, expect } from 'vitest';
 import { authInject, buildTestApp, mysqlIt } from './helpers';
 
-const resources: Array<{ app: { close: () => Promise<void> }, database: { close: () => void } }> = [];
-afterEach(async () => { for (const resource of resources.splice(0)) { await resource.app.close(); resource.database.close(); } });
+const resources: Array<{ app: { close: () => Promise<void> }, database: { close: () => Promise<void> } }> = [];
+afterEach(async () => { for (const resource of resources.splice(0)) { await resource.app.close(); await resource.database.close(); } });
 
 mysqlIt('lists seeded activities with user state', async () => {
   const resource = await buildTestApp(); resources.push(resource);

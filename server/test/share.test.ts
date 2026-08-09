@@ -2,11 +2,11 @@ import { afterEach, expect } from 'vitest';
 import { buildTestApp, mysqlIt } from './helpers';
 import { getShareActivity } from '../share-catalog';
 
-const resources: Array<{ app: { close: () => Promise<void>; inject: (opts: unknown) => Promise<{ statusCode: number; headers: Record<string, unknown>; body: string }> }; database: { close: () => void } }> = [];
+const resources: Array<{ app: { close: () => Promise<void>; inject: (opts: unknown) => Promise<{ statusCode: number; headers: Record<string, unknown>; body: string }> }; database: { close: () => Promise<void> } }> = [];
 afterEach(async () => {
   for (const resource of resources.splice(0)) {
     await resource.app.close();
-    resource.database.close();
+    await resource.database.close();
   }
 });
 

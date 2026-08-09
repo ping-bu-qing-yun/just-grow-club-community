@@ -1,7 +1,20 @@
 import { afterEach, expect, it } from 'vitest';
 import { authInject, buildTestApp, mysqlIt } from './helpers';
+import { createComment, listComments } from '../comment-repository';
 
 const resources: Array<{ app: { close: () => Promise<void> }; database: { close: () => Promise<void> } }> = [];
+
+it('rejects malformed comment input before touching the database', async () => {
+  const database = {} as Parameters<typeof createComment>[0];
+  await expect(createComment(database, { contentType: 'need', contentId: 'd1', authorId: 'u1', body: 42 })).rejects.toMatchObject({
+    code: 'INVALID_BODY',
+    status: 400,
+  });
+  await expect(listComments(database, { contentType: 'unknown', contentId: 'd1' })).rejects.toMatchObject({
+    code: 'INVALID_CONTENT_TYPE',
+    status: 400,
+  });
+});
 
 afterEach(async () => {
   for (const resource of resources.splice(0)) {
@@ -35,7 +48,7 @@ mysqlIt('returns five comments first and follows a stable cursor', async () => {
   expect(second.json().data.nextCursor).toBeNull();
 });
 
-mysqlIt('requires login to create and lets the operator soft-delete a comment', async () => {
+mysqlIt('requires login to create and lets the admin soft-delete a comment', async () => {
   const resource = await buildTestApp();
   resources.push(resource);
   const anonymous = await resource.app.inject({

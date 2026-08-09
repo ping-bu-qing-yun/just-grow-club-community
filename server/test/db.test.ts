@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { expect, it } from 'vitest';
 import { REQUIRED_MIGRATIONS } from '../db';
 import { migrationStatementCounts } from '../migrations/service';
@@ -14,4 +16,7 @@ it('registers the complete MySQL migration chain and non-empty SQL files', async
   ]);
   expect(counts).toHaveLength(REQUIRED_MIGRATIONS.length);
   expect(counts.every((item) => item.statements > 0)).toBe(true);
+  const tagsSql = await readFile(join(process.cwd(), 'server/migrations/mysql/005_content_tags.sql'), 'utf8');
+  expect(tagsSql).toContain('INSERT IGNORE INTO content_tags');
+  expect(tagsSql).not.toContain('enabled=VALUES(enabled)');
 });

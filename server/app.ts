@@ -58,6 +58,13 @@ function parseOptionalImage(value: unknown): string | undefined | null {
   return image || undefined;
 }
 
+function parseOptionalReason(value: unknown): string | undefined | null {
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value !== 'string' || value.length > 1000) return null;
+  const reason = value.trim();
+  return reason || undefined;
+}
+
 async function userFrom(request: FastifyRequest, database: QiahaoDatabase) {
   return authenticateToken(database, request.headers.authorization);
 }
@@ -68,7 +75,10 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   app.setErrorHandler((error, _request, reply) => {
     if (error instanceof AuthorizationError) return fail(reply, error.status, error.code, error.message);
     if (error instanceof ContentRepositoryError) return fail(reply, error.status, error.code, error.message);
-    if (error instanceof CommentRepositoryError) return fail(reply, error.status, error.code, error.message);
+    if (error instanceof CommentRepositoryError) {
+      const code = ['INVALID_BODY', 'INVALID_CONTENT_TYPE', 'INVALID_CURSOR'].includes(error.code) ? 'VALIDATION_ERROR' : error.code;
+      return fail(reply, error.status, code, error.message);
+    }
     throw error;
   });
 
@@ -82,8 +92,8 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
   });
 
   app.post<{ Body: { phone?: string; password?: string } }>('/api/auth/login', async (request, reply) => {
-    const phone = request.body?.phone?.trim();
-    const password = request.body?.password ?? '';
+    const phone = typeof request.body?.phone === 'string' ? request.body.phone.trim() : undefined;
+    const password = typeof request.body?.password === 'string' ? request.body.password : '';
     const rows = phone
       ? await database.query<LoginRow[]>('SELECT * FROM users WHERE phone=? LIMIT 1', [phone])
       : [];
@@ -205,7 +215,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'need') return fail(reply, 404, 'NOT_FOUND', '需求不存在');
     requireContentOwnerOrAdmin(user, current);
-    await archiveContent(database, current.id, user.id, request.body?.reason);
+    const reason = parseOptionalReason(request.body?.reason);
+    if (reason === null) return fail(reply, 400, 'VALIDATION_ERROR', '归档原因格式无效');
+    await archiveContent(database, current.id, user.id, reason);
     return reply.code(204).send();
   });
 
@@ -254,13 +266,19 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     const current = await requireContent(database, request.params.id);
     if (current.contentType !== 'life') return fail(reply, 404, 'NOT_FOUND', '生活动态不存在');
     requireContentOwnerOrAdmin(user, current);
-    await archiveContent(database, current.id, user.id, request.body?.reason);
+    const reason = parseOptionalReason(request.body?.reason);
+    if (reason === null) return fail(reply, 400, 'VALIDATION_ERROR', '归档原因格式无效');
+    await archiveContent(database, current.id, user.id, reason);
     return reply.code(204).send();
   });
 
   app.get<{ Querystring: { contentType?: string; contentId?: string; limit?: string; cursor?: string } }>('/api/comments', async (request, reply) => {
-    const contentType = request.query.contentType?.trim() ?? '';
-    const contentId = request.query.contentId?.trim() ?? '';
+    const contentType = typeof request.query.contentType === 'string' ? request.query.contentType.trim() : '';
+    const contentId = typeof request.query.contentId === 'string' ? request.query.contentId.trim() : '';
+    if (request.query.contentType !== undefined && typeof request.query.contentType !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '评论内容类型无效');
+    if (request.query.contentId !== undefined && typeof request.query.contentId !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '评论内容标识无效');
+    if (request.query.limit !== undefined && typeof request.query.limit !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '评论分页数量无效');
+    if (request.query.cursor !== undefined && typeof request.query.cursor !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '评论分页游标无效');
     const rawLimit = request.query.limit === undefined ? 5 : Number(request.query.limit);
     if (!Number.isInteger(rawLimit) || rawLimit < 1 || rawLimit > 100) {
       return fail(reply, 400, 'VALIDATION_ERROR', '评论分页数量必须在 1 至 100 之间');
@@ -271,9 +289,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
 
   app.post<{ Body: { contentType?: string; contentId?: string; body?: string } }>('/api/comments', async (request, reply) => {
     const user = await requireAuthenticatedUser(request, database);
-    const contentType = request.body?.contentType?.trim() ?? '';
-    const contentId = request.body?.contentId?.trim() ?? '';
-    const body = request.body?.body ?? '';
+    const contentType = typeof request.body?.contentType === 'string' ? request.body.contentType.trim() : '';
+    const contentId = typeof request.body?.contentId === 'string' ? request.body.contentId.trim() : '';
+    const body = typeof request.body?.body === 'string' ? request.body.body : '';
     const comment = await createComment(database, { contentType, contentId, authorId: user.id, body });
     return reply.code(201).send({ data: { comment } });
   });
@@ -292,6 +310,7 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     requireRole(user, 'admin');
     const type = request.query.type as 'activity' | 'need' | 'life' | undefined;
     const status = request.query.status as 'draft' | 'pending' | 'approved' | 'rejected' | 'archived' | undefined;
+    if (request.query.tag !== undefined && typeof request.query.tag !== 'string') return fail(reply, 400, 'VALIDATION_ERROR', '标签筛选条件无效');
     if (type && !['activity', 'need', 'life'].includes(type)) return fail(reply, 400, 'VALIDATION_ERROR', '内容类型无效');
     if (status && !['draft', 'pending', 'approved', 'rejected', 'archived'].includes(status)) return fail(reply, 400, 'VALIDATION_ERROR', '审核状态无效');
     return { data: { items: await listAdminContent(database, { type, status, tag: request.query.tag?.trim() || undefined }) } };
@@ -302,7 +321,9 @@ export function buildApp({ database, notificationHub = new NotificationHub() }: 
     requireRole(user, 'admin');
     const status = request.body?.status;
     if (!status || !['approved', 'rejected', 'archived', 'pending'].includes(status)) return fail(reply, 400, 'VALIDATION_ERROR', '审核状态无效');
-    const item = await changeModerationStatus(database, request.params.id, status, user.id, request.body?.reason);
+    const reason = parseOptionalReason(request.body?.reason);
+    if (reason === null) return fail(reply, 400, 'VALIDATION_ERROR', '审核原因格式无效');
+    const item = await changeModerationStatus(database, request.params.id, status, user.id, reason);
     const items = await listAdminContent(database, { type: item.contentType, status: item.status });
     const updated = items.find((candidate) => candidate.id === item.id);
     return { data: { item: updated ?? item } };
