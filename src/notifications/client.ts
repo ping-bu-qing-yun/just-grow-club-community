@@ -1,11 +1,14 @@
 import { ApiError, request } from '../api/client';
 import type { AppNotification } from './types';
 
-type NotificationListResponse = { notifications: AppNotification[]; unreadCount: number };
+export type NotificationListResponse = { notifications: AppNotification[]; unreadCount: number; nextCursor: string | null };
 
 export const notificationApi = {
-  async list(): Promise<NotificationListResponse> {
-    const data = await request<NotificationListResponse>('/notifications');
+  async list(input: { cursor?: string | null; limit?: number } = {}): Promise<NotificationListResponse> {
+    const params = new URLSearchParams();
+    if (input.cursor) params.set('cursor', input.cursor);
+    params.set('limit', String(input.limit ?? 50));
+    const data = await request<NotificationListResponse>(`/notifications?${params.toString()}`);
     return data;
   },
   markRead(id: string): Promise<{ notification: AppNotification }> {

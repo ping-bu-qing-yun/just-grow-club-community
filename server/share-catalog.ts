@@ -1,6 +1,7 @@
-import { clubActivities } from '../src/club/seed';
+import type { RowDataPacket } from 'mysql2/promise';
+import type { QiahaoDatabase } from './db';
 
-/** 活动分享卡片字段（由前端 club seed 同源派生，避免双份维护） */
+/** 活动分享卡片字段，生产数据只从 MySQL 活动读取。 */
 export interface ShareActivity {
   id: string;
   title: string;
@@ -10,17 +11,35 @@ export interface ShareActivity {
   location: string;
 }
 
-export const shareActivities: ShareActivity[] = clubActivities.map((activity) => ({
-  id: activity.id,
-  title: activity.title,
-  description: activity.pitch || activity.description,
-  image: activity.image,
-  date: activity.timeRange || activity.date,
-  location: activity.location,
-}));
+type ShareActivityRow = RowDataPacket & {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  date_label: string;
+  time: string;
+  location: string;
+};
 
-export function getShareActivity(id: string): ShareActivity | null {
-  return shareActivities.find((item) => item.id === id) ?? null;
+export async function resolveShareActivity(database: QiahaoDatabase, id: string): Promise<ShareActivity | null> {
+  const rows = await database.query<ShareActivityRow[]>(
+    `SELECT a.id,a.title,a.description,a.image,a.date_label,a.time,a.location
+       FROM activities a
+       JOIN content_items ci ON ci.id=a.id AND ci.content_type='activity' AND ci.status='approved'
+      WHERE a.id=? AND a.lifecycle<>'archived'
+      LIMIT 1`,
+    [id],
+  );
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    image: row.image,
+    date: `${row.date_label} · ${row.time}`,
+    location: row.location,
+  };
 }
 
 export function absoluteUrl(origin: string, path: string): string {

@@ -25,6 +25,8 @@ export interface Activity {
   id: string;
   title: string;
   category: ActivityCategory;
+  categoryKey?: string;
+  themeKey?: 'low' | 'deep' | 'walk' | 'workshop' | 'other';
   image: string;
   dateLabel: string;
   time: string;

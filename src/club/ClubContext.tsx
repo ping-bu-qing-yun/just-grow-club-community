@@ -24,6 +24,7 @@ function useOptionalQiahaoUserId(): string {
 }
 
 export function ClubProvider({ children }: { children: ReactNode }) {
+  const qiahao = useContext(QiahaoContext);
   const userId = useOptionalQiahaoUserId();
   const storageUserId = userId === 'anonymous' ? 'local-user' : userId;
   const jsdomComplete =
@@ -31,22 +32,28 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     && (navigator.userAgent.includes('jsdom') || import.meta.env.MODE === 'preview');
 
   const [state, setState] = useState<ClubState>(() => {
+    if (!jsdomComplete) return qiahao?.profileRecord ?? defaultClubState;
     const saved = readClubState(storageUserId);
-    return jsdomComplete ? { ...saved, onboardingComplete: true } : saved;
+    return { ...saved, onboardingComplete: true };
   });
   const [activeUserId, setActiveUserId] = useState(storageUserId);
 
   // 切换登录用户时加载对应用户的 Club 状态
   useEffect(() => {
     if (storageUserId === activeUserId) return;
-    const next = readClubState(storageUserId);
+    const next = jsdomComplete ? readClubState(storageUserId) : qiahao?.profileRecord ?? defaultClubState;
     setState(jsdomComplete ? { ...next, onboardingComplete: true } : next);
     setActiveUserId(storageUserId);
-  }, [storageUserId, activeUserId, jsdomComplete]);
+  }, [storageUserId, activeUserId, jsdomComplete, qiahao?.profileRecord]);
 
   useEffect(() => {
-    writeClubState(state, storageUserId);
-  }, [state, storageUserId]);
+    if (jsdomComplete) writeClubState(state, storageUserId);
+  }, [jsdomComplete, state, storageUserId]);
+
+  useEffect(() => {
+    if (!qiahao?.profileRecord) return;
+    setState((current) => JSON.stringify(current) === JSON.stringify(qiahao.profileRecord) ? current : qiahao.profileRecord!);
+  }, [qiahao?.profileRecord]);
 
   const value = useMemo<ClubContextValue>(
     () => ({
@@ -77,9 +84,10 @@ export function ClubProvider({ children }: { children: ReactNode }) {
       },
       resetOnboarding() {
         setState((current) => ({ ...current, onboardingComplete: false, onboardingStep: 0 }));
+        void qiahao?.deleteOnboardingProgress();
       },
     }),
-    [state],
+    [qiahao, state],
   );
 
   return <ClubContext.Provider value={value}>{children}</ClubContext.Provider>;

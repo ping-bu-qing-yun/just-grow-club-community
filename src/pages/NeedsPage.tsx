@@ -86,6 +86,11 @@ export function NeedsPage({
               <NeedCard need={need} onOpen={onOpenNeed} key={need.id} />
             ))}
           </div>
+          {qiahao?.hasMoreNeeds ? (
+            <button className="secondary-button feed-load-more" type="button" disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('need')}>
+              {qiahao.loadingMoreContent ? '正在加载…' : '加载更多需求'}
+            </button>
+          ) : null}
         </>
       ) : (
         <>
@@ -100,6 +105,11 @@ export function NeedsPage({
               <LifePostCard post={post} key={post.id} onOpen={onOpenLifePost} />
             ))}
           </div>
+          {qiahao?.hasMoreLifePosts ? (
+            <button className="secondary-button feed-load-more" type="button" disabled={qiahao.loadingMoreContent} onClick={() => void qiahao.loadMoreContent('life')}>
+              {qiahao.loadingMoreContent ? '正在加载…' : '加载更多生活'}
+            </button>
+          ) : null}
         </>
       )}
     </main>

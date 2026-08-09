@@ -28,6 +28,7 @@ type UserRow = RowDataPacket & {
   bio: string;
   verified: number | boolean;
   role: UserRole | string;
+  account_status?: 'active' | 'suspended' | 'deleted';
   password_hash?: string;
   expires_at?: string;
 };
@@ -93,7 +94,7 @@ export async function authenticateToken(database: QiahaoDatabase, authorization?
   const token = sessionTokenFromHeaders(authorization, cookieHeader);
   if (!token) return null;
   const rows = await database.query<UserRow[]>(
-    `SELECT u.id,u.phone,u.name,u.avatar,u.bio,u.verified,u.role,s.expires_at
+    `SELECT u.id,u.phone,u.name,u.avatar,u.bio,u.verified,u.role,u.account_status,s.expires_at
        FROM sessions s
        JOIN users u ON u.id=s.user_id
       WHERE s.token_hash=?
@@ -101,7 +102,12 @@ export async function authenticateToken(database: QiahaoDatabase, authorization?
     [tokenHash(token)],
   );
   const row = rows[0];
-  if (!row || !row.expires_at || Date.parse(row.expires_at) <= Date.now()) return null;
+  if (
+    !row
+    || (row.account_status !== undefined && row.account_status !== 'active')
+    || !row.expires_at
+    || Date.parse(row.expires_at) <= Date.now()
+  ) return null;
   return {
     id: row.id,
     phone: row.phone,

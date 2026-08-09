@@ -2,6 +2,7 @@ import type { RowDataPacket } from 'mysql2/promise';
 import type { AppNotification, NotificationCategory, NotificationTargetType } from '../src/notifications/types';
 import { toIsoTimestamp, toMysqlDateTime } from './db';
 import type { QiahaoDatabase } from './db';
+import { decodeTimestampCursor, encodeTimestampCursor } from './pagination';
 
 type NotificationRow = RowDataPacket & {
   id: string;
@@ -52,14 +53,28 @@ const selectNotification = `
     FROM notifications n
     LEFT JOIN users actor ON actor.id=n.actor_id`;
 
-export async function listNotifications(database: QiahaoDatabase, userId: string): Promise<AppNotification[]> {
+export async function listNotifications(
+  database: QiahaoDatabase,
+  userId: string,
+  input: { limit: number; cursor?: string },
+) {
+  const cursor = input.cursor ? decodeTimestampCursor(input.cursor) : null;
   const rows = await database.query<NotificationRow[]>(
     `${selectNotification}
       WHERE n.user_id=? AND n.archived_at IS NULL
-      ORDER BY n.created_at DESC,n.id DESC`,
-    [userId],
+        ${cursor ? 'AND (n.created_at<? OR (n.created_at=? AND n.id<?))' : ''}
+      ORDER BY n.created_at DESC,n.id DESC
+      LIMIT ?`,
+    cursor
+      ? [userId, cursor.createdAt, cursor.createdAt, cursor.id, input.limit + 1]
+      : [userId, input.limit + 1],
   );
-  return rows.map(toNotification);
+  const pageRows = rows.slice(0, input.limit);
+  const last = pageRows.at(-1);
+  return {
+    notifications: pageRows.map(toNotification),
+    nextCursor: rows.length > input.limit && last ? encodeTimestampCursor({ createdAt: last.created_at, id: last.id }) : null,
+  };
 }
 
 export async function getNotification(database: QiahaoDatabase, userId: string, id: string): Promise<AppNotification | null> {

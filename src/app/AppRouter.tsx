@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { useQuery } from '@tanstack/react-query';
 import {
   Navigate,
   Outlet,
@@ -11,19 +12,24 @@ import {
   useOutletContext,
   useParams,
   useRouteError,
+  type LoaderFunctionArgs,
 } from 'react-router-dom';
 import { AppShell } from '../components/AppShell';
 import type { AppTab } from '../components/BottomNav';
 import { PublishTypeSheet, type PublishKind } from '../components/PublishTypeSheet';
 import { Toast } from '../components/Toast';
-import { clubActivities } from '../club/seed';
 import { domainActivityToClub } from '../club/activity-adapter';
 import { useClub } from '../club/ClubContext';
 import { canPublishActivity, isOperator } from '../domain/roles';
 import { useNotifications } from '../notifications/NotificationContext';
 import type { AppNotification } from '../notifications/types';
-import { useQiahao } from '../state/QiahaoContext';
+import { toLifePost, toNeed, useQiahao } from '../state/QiahaoContext';
 import type { ProfileDestination } from '../pages/ProfilePage';
+import { api, ApiError } from '../api/client';
+import { discoverActivityQueryOptions, type DiscoverActivityFilter } from '../data/activityQueries';
+import { queryClient } from '../data/queryClient';
+import { activityDetailQueryOptions, activityFeedQueryOptions, contentFeedQueryOptions, lifeDetailQueryOptions, needDetailQueryOptions, profileQueryOptions, sessionQueryOptions } from '../data/serverQueries';
+import { notificationQueryOptions } from '../notifications/queries';
 
 const ActivitiesHomePage = lazy(() => import('../pages/ActivitiesHomePage').then((module) => ({ default: module.ActivitiesHomePage })));
 const ActivityFeedbackPage = lazy(() => import('../pages/ActivityFeedbackPage').then((module) => ({ default: module.ActivityFeedbackPage })));
@@ -45,6 +51,7 @@ const OnboardingFlow = lazy(() => import('../pages/onboarding/OnboardingFlow').t
 const ProfileEditorPage = lazy(() => import('../pages/ProfileEditorPage').then((module) => ({ default: module.ProfileEditorPage })));
 const ProfilePage = lazy(() => import('../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
 const ProfileRecordsPage = lazy(() => import('../pages/ProfileRecordsPage').then((module) => ({ default: module.ProfileRecordsPage })));
+const OperatorBusinessConfigPage = lazy(() => import('../pages/OperatorBusinessConfigPage').then((module) => ({ default: module.OperatorBusinessConfigPage })));
 
 type ShellContext = {
   notify(message: string): void;
@@ -68,7 +75,7 @@ function safeNext(search: string, fallback = '/activities'): string {
 function activeTabFor(pathname: string): AppTab {
   if (pathname.startsWith('/discover')) return 'explore';
   if (pathname.startsWith('/needs') || pathname.startsWith('/life')) return 'needs';
-  if (pathname.startsWith('/profile') || pathname.startsWith('/messages') || pathname.startsWith('/operator')) return 'profile';
+  if (pathname.startsWith('/profile') || pathname.startsWith('/messages') || pathname.startsWith('/admin') || pathname.startsWith('/operator')) return 'profile';
   return 'activities';
 }
 
@@ -211,11 +218,13 @@ function ActivityRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { activities, localMode } = useQiahao();
+  const { activities, localMode, user } = useQiahao();
   const { notify } = useShell();
-  const activity = activities.find((item) => item.id === id);
-  const clubActivity = activity ? domainActivityToClub(activity) : localMode ? clubActivities.find((item) => item.id === id) : undefined;
+  const detailQuery = useQuery({ ...activityDetailQueryOptions(user?.id ?? 'anonymous', id), enabled: !localMode && Boolean(user) });
+  const activity = detailQuery.data?.activity ?? activities.find((item) => item.id === id);
+  const clubActivity = activity ? domainActivityToClub(activity) : undefined;
   const focusComments = new URLSearchParams(search).get('comments') === '1';
+  if (!clubActivity && detailQuery.isLoading) return <AppState message="正在加载活动详情…" />;
   if (clubActivity) {
     return <ClubActivityDetailPage activity={clubActivity} onBack={() => navigate('/activities')} onNotice={notify} focusComments={focusComments} />;
   }
@@ -236,8 +245,11 @@ function NeedRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { needs } = useQiahao();
-  const need = useMemo(() => needs.find((item) => item.id === id), [id, needs]);
+  const { needs, localMode, user } = useQiahao();
+  const detailQuery = useQuery({ ...needDetailQueryOptions(user?.id ?? 'anonymous', id), enabled: !localMode && Boolean(user) });
+  const detail = detailQuery.data ? toNeed(detailQuery.data.need) : undefined;
+  const need = detail ?? needs.find((item) => item.id === id);
+  if (!need && detailQuery.isLoading) return <AppState message="正在加载需求详情…" />;
   if (!need) return <MissingResource label="需求" backTo="/needs" />;
   return (
     <NeedDetailPage
@@ -253,8 +265,11 @@ function LifeRoute() {
   const { id = '' } = useParams();
   const { search } = useLocation();
   const navigate = useNavigate();
-  const { lifePosts: serverLifePosts } = useQiahao();
-  const post = useMemo(() => serverLifePosts.find((item) => item.id === id), [id, serverLifePosts]);
+  const { lifePosts: serverLifePosts, localMode, user } = useQiahao();
+  const detailQuery = useQuery({ ...lifeDetailQueryOptions(user?.id ?? 'anonymous', id), enabled: !localMode && Boolean(user) });
+  const detail = detailQuery.data ? toLifePost(detailQuery.data.lifePost) : undefined;
+  const post = detail ?? serverLifePosts.find((item) => item.id === id);
+  if (!post && detailQuery.isLoading) return <AppState message="正在加载生活动态…" />;
   if (!post) return <MissingResource label="生活动态" backTo="/needs" />;
   return <LifePostDetailPage post={post} onBack={() => navigate('/needs?view=life')} focusComments={new URLSearchParams(search).get('comments') === '1'} />;
 }
@@ -270,7 +285,8 @@ function ProfileRoute() {
     dynamics: '/needs',
     portrait: '/onboarding?next=%2Fprofile',
     attended: '/profile/records/attended',
-    'admin-content': '/operator/content',
+    'admin-content': '/admin/content',
+    'operator-business': '/operator/business',
   };
   return <ProfilePage onNotice={notify} onNavigate={(destination) => navigate(destinations[destination])} />;
 }
@@ -358,9 +374,9 @@ function FeedbackRoute() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { notify } = useShell();
-  const { activities, localMode } = useQiahao();
+  const { activities } = useQiahao();
   const domainActivity = activities.find((item) => item.id === id);
-  const activity = domainActivity ? domainActivityToClub(domainActivity) : localMode ? clubActivities.find((item) => item.id === id) : undefined;
+  const activity = domainActivity ? domainActivityToClub(domainActivity) : undefined;
   if (!activity) return <MissingResource label="活动反馈" backTo="/activities" />;
   return (
     <ActivityFeedbackPage
@@ -383,7 +399,7 @@ function CreateActivityRoute() {
     <CreateActivityPage
       onBack={() => navigate('/activities')}
       onCreated={(activity) => {
-        notify('活动已发布，正在首页等候新搭子');
+        notify('预活动已创建，正在首页等待兴趣预约');
         navigate(`/activities/${encodeURIComponent(activity.id)}`);
       }}
     />
@@ -407,6 +423,13 @@ function OperatorContentRoute() {
   return <AdminContentPage onBack={() => navigate('/profile')} />;
 }
 
+function OperatorBusinessRoute() {
+  const navigate = useNavigate();
+  const { user } = useQiahao();
+  if (!isOperator(user)) return <AppState message="只有运营者可以管理业务配置" action={{ label: '返回个人页', run: () => navigate('/profile') }} />;
+  return <OperatorBusinessConfigPage onBack={() => navigate('/profile')} />;
+}
+
 function MissingResource({ label, backTo }: { label: string; backTo: string }) {
   const navigate = useNavigate();
   return <AppState message={`${label}不存在或已不可见`} action={{ label: '返回', run: () => navigate(backTo) }} />;
@@ -418,11 +441,50 @@ function RouteErrorPage() {
   return <AppState message={message} action={{ label: '返回首页', run: () => window.location.assign('/activities') }} />;
 }
 
+function usesLocalPreviewData(): boolean {
+  return import.meta.env.MODE === 'preview'
+    || (typeof navigator !== 'undefined' && navigator.userAgent.includes('jsdom'));
+}
+
+async function discoverLoader({ request }: LoaderFunctionArgs) {
+  if (usesLocalPreviewData()) return null;
+  const url = new URL(request.url);
+  const requestedFilter = url.searchParams.get('filter');
+  const filter: DiscoverActivityFilter = isDiscoverFilter(requestedFilter) ? requestedFilter : 'all';
+  try {
+    await queryClient.ensureInfiniteQueryData(discoverActivityQueryOptions(filter, url.searchParams.get('q') ?? ''));
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+  }
+  return null;
+}
+
+function isDiscoverFilter(value: string | null): value is DiscoverActivityFilter {
+  return value === 'all' || value === 'pre' || Boolean(value?.startsWith('category:'));
+}
+
+async function protectedDataLoader() {
+  if (usesLocalPreviewData()) return null;
+  try {
+    const session = await queryClient.ensureQueryData(sessionQueryOptions());
+    await Promise.all([
+      queryClient.ensureQueryData(activityFeedQueryOptions(session.user.id)),
+      queryClient.ensureQueryData(contentFeedQueryOptions(session.user.id)),
+      queryClient.ensureQueryData(profileQueryOptions(session.user.id)),
+      queryClient.ensureQueryData(notificationQueryOptions(session.user.id)),
+    ]);
+  } catch (error) {
+    if (!(error instanceof ApiError) || error.status !== 401) throw error;
+  }
+  return null;
+}
+
 const router = createBrowserRouter([
   { path: '/', element: <RootRedirect /> },
   { path: '/login', element: <LoginRoute /> },
   { path: '/onboarding', element: <OnboardingRoute /> },
   {
+    loader: protectedDataLoader,
     element: <ProtectedAccess />,
     errorElement: <RouteErrorPage />,
     children: [
@@ -432,7 +494,7 @@ const router = createBrowserRouter([
           { path: '/activities', element: <ActivitiesRoute /> },
           { path: '/activities/:id', element: <ActivityRoute /> },
           { path: '/activities/:id/feedback', element: <FeedbackRoute /> },
-          { path: '/discover', element: <ExploreRoute /> },
+          { path: '/discover', loader: discoverLoader, element: <ExploreRoute /> },
           { path: '/needs', element: <NeedsRoute /> },
           { path: '/needs/:id', element: <NeedRoute /> },
           { path: '/life/:id', element: <LifeRoute /> },
@@ -446,7 +508,9 @@ const router = createBrowserRouter([
           { path: '/publish/activity', element: <CreateActivityRoute /> },
           { path: '/publish/need', element: <CreateNeedRoute /> },
           { path: '/publish/life', element: <CreateLifeRoute /> },
-          { path: '/operator/content', element: <OperatorContentRoute /> },
+          { path: '/admin/content', element: <OperatorContentRoute /> },
+          { path: '/operator/content', element: <Navigate replace to="/admin/content" /> },
+          { path: '/operator/business', element: <OperatorBusinessRoute /> },
         ],
       },
     ],

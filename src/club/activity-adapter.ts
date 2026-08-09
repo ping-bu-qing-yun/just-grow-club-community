@@ -2,7 +2,7 @@ import type { ApiActivity } from '../api/types';
 import type { Activity, UserSummary } from '../domain/types';
 import type { ClubActivity } from './types';
 
-const categoryTheme: Record<Activity['category'], ClubActivity['theme']> = {
+const categoryTheme: Record<string, ClubActivity['theme']> = {
   '饭搭子': 'low',
   '咖啡': 'deep',
   '运动': 'walk',
@@ -63,7 +63,9 @@ export function domainActivityToClub(activity: Activity | ApiActivity): ClubActi
       ];
   return {
     id: activity.id,
-    theme: categoryTheme[activity.category],
+    hostId: activity.host.id,
+    categoryKey: activity.categoryKey,
+    theme: activity.themeKey ?? categoryTheme[activity.category] ?? 'other',
     status: activity.lifecycle === 'pre' ? '预活动' : '成熟活动',
     title: activity.title,
     tags: tags.length ? tags : [activity.category],

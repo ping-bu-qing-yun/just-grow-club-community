@@ -33,11 +33,11 @@ _Avoid_：草稿、draft（语义不同：预活动是已对用户可见的预�
 _Avoid_：已发布活动（与"发布"动作一词混淆）
 
 **需求（Need / NeedCard）**：
-用户表达的关系/生活方式诉求卡片，发布后立即展示、不需小CC审核（PRD §3.1、§8.2）。⚠️ 当前仅有前端 `CreateNeedPage` → `ClubContext.publishNeed`（本地 state），无后端表/接口；本期需补齐后端发布闭环。
+用户表达的关系/生活方式诉求卡片，发布后立即展示、不需小CC审核（PRD §3.1、§8.2）。当前由 `CreateNeedPage` 写入 `POST /api/v2/content`（`type=need`），正式状态以 `content_items + needs` 为唯一来源。
 _Avoid_：需求卡（口语可，文档统称「需求」）、帖子、post
 
 **生活（LifePost）**：
-用户分享的日常/关系话题动态，以文字+图片为主；与「需求」并列、独立成页发布。当前入口由 `AppRouter` 路由到 `CreateLifePage`，后端通过 `POST /api/life-posts` 和 `life_posts` 表完成发布闭环。
+用户分享的日常/关系话题动态，以文字+图片为主；与「需求」并列、独立成页发布。当前入口由 `AppRouter` 路由到 `CreateLifePage`，后端通过 `POST /api/v2/content`（`type=life`）和 `content_items + life_posts` 完成发布闭环。
 _Avoid_：动态（口语可，文档统称「生活」）、moment、朋友圈
 
 ## Flagged ambiguities
@@ -51,8 +51,8 @@ _Avoid_：动态（口语可，文档统称「生活」）、moment、朋友圈
 - **角色模型**：✅ 已定（见 ADR-0003）——`users.role` 取值 `'member' | 'host' | 'operator'`；演示账号 `13800000000`=operator，`13800000001`=member，`13800000002`=host。
 - **管理者能否发需求/生活**：✅ 已定——三项全能。operator 的「+」菜单显示「活动 / 需求 / 生活」；member 仅显示「需求 / 生活」。
 - **主理人「+」菜单与提案闭环本期范围**：✅ 已定——三角色枚举就位（`member|host|operator`）；host 的「+」菜单同 member（需求/生活）；「活动提案」闭环本期不做，需求详情不出现「我来发起活动」。
-- **审核状态管理范围**：✅ 已定——仅活动有 `pre|formal`（ADR-0001）；需求与生活发布即上线、免审（PRD §3.1）。
-- **内容分类标签**：✅ 已定——复用现有字段：活动 `category`、需求 `tags`、生活 `kind`/`tag` 选择器；本期不建统一标签字典。
+- **审核状态管理范围**：✅ 已定——活动有 `pre|formal|archived` 生命周期（ADR-0001）；需求与生活发布即上线，但仍可由运营治理为 rejected/archived（PRD §3.1）。
+- **内容分类标签**：✅ 已定——活动保留 `category`，三类内容同时通过 `content_tags + content_item_tags` 使用统一标签字典；复合外键保证标签类型与内容类型一致。
 
 ## Example dialogue
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Heart, Share2, ShieldCheck } from 'lucide-react';
+import { Archive, ArrowLeft, Heart, Pencil, Save, Share2, ShieldCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ClubActivity } from '../club/types';
 import { useQiahao } from '../state/QiahaoContext';
@@ -40,13 +40,31 @@ export function ClubActivityDetailPage({
   onNotice?: (message: string) => void;
   focusComments?: boolean;
 }) {
-  const { savedIds, joinedIds, toggleSaved, joinActivity } = useQiahao();
+  const { businessConfig, localMode, user, savedIds, joinedIds, toggleSaved, joinActivity, cancelActivity, updateActivity, archiveActivity, changeActivityLifecycle, setActivityInterest } = useQiahao();
   const saved = savedIds.has(activity.id);
   const joined = joinedIds.has(activity.id);
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [feedback, setFeedback] = useState<'consider' | 'dislike' | null>(null);
   const [showDislikeReasons, setShowDislikeReasons] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState('');
+  const [draft, setDraft] = useState({
+    title: activity.title,
+    category: activity.categoryKey ?? '',
+    description: activity.description,
+    dateLabel: activity.date,
+    time: activity.timeRange.match(/\b\d{2}:\d{2}\b/)?.[0] ?? '19:00',
+    location: activity.location,
+    capacity: Number.parseInt(activity.people, 10) || 4,
+    price: Number.parseInt(activity.fee.replace(/[^\d]/g, ''), 10) || 0,
+  });
+  const canManage = user?.role === 'operator' || Boolean(user && activity.hostId === user.id);
+  const categoryOptions = businessConfig?.activityCategories ?? [];
+  const historicalCategory = draft.category && !categoryOptions.some((category) => category.key === draft.category)
+    ? [{ key: draft.category, label: activity.tags[0] ?? draft.category }]
+    : [];
 
   const feeLabel = activity.fee === '免费' ? '免费参加' : activity.fee;
   const needsText = activity.needs.join('、');
@@ -61,6 +79,10 @@ export function ClubActivityDetailPage({
   function handleConsider() {
     setFeedback('consider');
     onNotice?.('已记下你的考虑，稍后可在消息里提醒你');
+    void setActivityInterest(activity.id, 'consider').catch(() => {
+      setFeedback(null);
+      onNotice?.('暂时无法保存活动意向，请稍后重试');
+    });
   }
 
   function handleDislike() {
@@ -74,12 +96,28 @@ export function ClubActivityDetailPage({
 
     setFeedback('dislike');
     onNotice?.(`已记下不考虑（${nextCount}/3），会少推相似活动`);
+    void setActivityInterest(activity.id, 'not_interested').catch(() => {
+      setFeedback(null);
+      onNotice?.('暂时无法保存活动意向，请稍后重试');
+    });
   }
 
-  function handleDislikeReasonSelect(reason: string) {
+  const previewReasons = [
+    ['want_attendees', '想看看来的人'], ['too_blind_date', '怕太像相亲'], ['time_conflict', '时间不合适'],
+    ['too_far', '地点有点远'], ['group_size', '人数有顾虑'], ['topic_mismatch', '话题没击中'],
+  ].map(([key, label]) => ({ key, label }));
+  const dislikeReasons = businessConfig?.feedbackOptions
+    .filter((item) => item.groupKey === 'activity_dislike_reason')
+    .map(({ key, label }) => ({ key, label })) ?? (localMode ? previewReasons : []);
+
+  function handleDislikeReasonSelect(reasonKey: string, reasonLabel: string) {
     setShowDislikeReasons(false);
     setFeedback('dislike');
-    onNotice?.(`已记下不考虑：${reason}`);
+    onNotice?.(`已记下不考虑：${reasonLabel}`);
+    void setActivityInterest(activity.id, 'not_interested', reasonKey).catch(() => {
+      setFeedback(null);
+      onNotice?.('暂时无法保存活动意向，请稍后重试');
+    });
   }
 
   async function handleShare() {
@@ -93,6 +131,63 @@ export function ClubActivityDetailPage({
       onNotice?.('暂时无法分享，请稍后重试');
     } finally {
       setSharing(false);
+    }
+  }
+
+  async function saveChanges() {
+    setPending(true);
+    setError('');
+    try {
+      const { category, ...unchangedCategoryDraft } = draft;
+      await updateActivity(activity.id, category === activity.categoryKey ? unchangedCategoryDraft : draft);
+      setEditing(false);
+      onNotice?.('活动信息已更新');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '活动保存失败');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function archive() {
+    setPending(true);
+    setError('');
+    try {
+      await archiveActivity(activity.id, '主理人或运营归档');
+      onBack();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '活动归档失败');
+      setPending(false);
+    }
+  }
+
+  async function promoteToFormal() {
+    setPending(true);
+    setError('');
+    try {
+      await changeActivityLifecycle(activity.id, 'formal');
+      onNotice?.('活动已转为正式活动');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '活动状态更新失败');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function toggleParticipation() {
+    if (!joined) {
+      setShowJoinSheet(true);
+      return;
+    }
+    setPending(true);
+    setError('');
+    try {
+      await cancelActivity(activity.id);
+      onNotice?.('已取消报名或预约');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '取消报名失败');
+    } finally {
+      setPending(false);
     }
   }
 
@@ -130,6 +225,9 @@ export function ClubActivityDetailPage({
       </div>
 
       <div className="detail-content">
+        {canManage ? <div className="content-owner-actions"><button type="button" onClick={() => setEditing((value) => !value)}><Pencil size={15} />{editing ? '取消编辑' : '编辑'}</button>{user?.role === 'operator' && activity.status === '预活动' ? <button type="button" disabled={pending} onClick={() => void promoteToFormal()}><Save size={15} />转为正式</button> : null}<button type="button" disabled={pending} onClick={() => void archive()}><Archive size={15} />归档</button></div> : null}
+        {editing ? <section className="content-inline-editor"><label>活动标题<input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label><label>活动分类<select value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))}>{[...historicalCategory, ...categoryOptions].map((category) => <option value={category.key} key={category.key}>{category.label}{historicalCategory.includes(category) ? '（已停用）' : ''}</option>)}</select></label><label>活动介绍<textarea value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))} rows={5} /></label><label>日期说明<input value={draft.dateLabel} onChange={(event) => setDraft((current) => ({ ...current, dateLabel: event.target.value }))} /></label><label>开始时间<input type="time" value={draft.time} onChange={(event) => setDraft((current) => ({ ...current, time: event.target.value }))} /></label><label>地点<input value={draft.location} onChange={(event) => setDraft((current) => ({ ...current, location: event.target.value }))} /></label><label>人数<input type="number" min={2} max={50} value={draft.capacity} onChange={(event) => setDraft((current) => ({ ...current, capacity: Number(event.target.value) }))} /></label><label>费用<input type="number" min={0} value={draft.price} onChange={(event) => setDraft((current) => ({ ...current, price: Number(event.target.value) }))} /></label><button type="button" className="primary-button" disabled={pending} onClick={() => void saveChanges()}><Save size={15} />{pending ? '保存中…' : '保存修改'}</button></section> : null}
+        {error ? <p className="field-error" role="alert">{error}</p> : null}
         <div className="detail-label-row">
           {activity.matchLabel && <span className="category-label">{activity.matchLabel}</span>}
           <span className="category-label category-label--muted">{activity.status}</span>
@@ -214,10 +312,10 @@ export function ClubActivityDetailPage({
         <button
           type="button"
           className="primary-button"
-          disabled={joined}
-          onClick={() => setShowJoinSheet(true)}
+          disabled={pending}
+          onClick={() => void toggleParticipation()}
         >
-          {joined ? '已报名' : activity.status === '预活动' ? '预约兴趣' : '报名'}
+          {joined ? (activity.status === '预活动' ? '取消预约' : '取消报名') : activity.status === '预活动' ? '预约兴趣' : '报名'}
         </button>
       </div>
 
@@ -251,6 +349,7 @@ export function ClubActivityDetailPage({
 
       {showDislikeReasons && (
         <DislikeReasonSheet
+          options={dislikeReasons}
           onSelect={handleDislikeReasonSelect}
           onClose={() => setShowDislikeReasons(false)}
         />

@@ -1,8 +1,11 @@
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import type { ClubActivity } from '../club/types';
+import { useQiahao } from '../state/QiahaoContext';
 
-const moods = ['舒服自然', '有点紧张', '收获很大', '一般般', '不太合适'] as const;
+const previewMoods = [
+  ['comfortable', '舒服自然'], ['nervous', '有点紧张'], ['rewarding', '收获很大'], ['neutral', '一般般'], ['not_suitable', '不太合适'],
+].map(([key, label], sortOrder) => ({ groupKey: 'activity_mood', key, label, description: '', enabled: true, sortOrder, updatedAt: '' }));
 
 export function ActivityFeedbackPage({
   activity,
@@ -13,16 +16,28 @@ export function ActivityFeedbackPage({
   onBack: () => void;
   onSubmitted: () => void;
 }) {
-  const [mood, setMood] = useState<(typeof moods)[number] | null>(null);
+  const { businessConfig, localMode, submitActivityFeedback } = useQiahao();
+  const moods = (businessConfig?.feedbackOptions ?? (localMode ? previewMoods : [])).filter((item) => item.groupKey === 'activity_mood');
+  const [mood, setMood] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
 
-  function submit() {
+  async function submit() {
     if (!mood) {
       setError('先选一个整体感受');
       return;
     }
-    onSubmitted();
+    setPending(true);
+    setError('');
+    try {
+      await submitActivityFeedback(activity.id, mood, note);
+      onSubmitted();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '反馈提交失败');
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -52,15 +67,15 @@ export function ActivityFeedbackPage({
       <div className="tag-picks" role="group" aria-label="整体感受">
         {moods.map((item) => (
           <button
-            key={item}
+            key={item.key}
             type="button"
-            className={mood === item ? 'is-active' : ''}
+            className={mood === item.key ? 'is-active' : ''}
             onClick={() => {
-              setMood(item);
+              setMood(item.key);
               setError('');
             }}
           >
-            {item}
+            {item.label}
           </button>
         ))}
       </div>
@@ -73,8 +88,8 @@ export function ActivityFeedbackPage({
       />
       {error ? <p className="field-error">{error}</p> : null}
 
-      <button type="button" className="primary-button primary-button--wide" onClick={submit}>
-        提交反馈
+      <button type="button" className="primary-button primary-button--wide" disabled={pending} onClick={() => void submit()}>
+        {pending ? '提交中…' : '提交反馈'}
       </button>
     </main>
   );

@@ -122,18 +122,20 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
       [activityId],
     );
     const activity = activities[0];
-    if (!activity) return { kind: 'missing' as const };
+    if (!activity || activity.lifecycle === 'archived') return { kind: 'missing' as const };
 
     const existing = await connection.query<Array<RowDataPacket & { status: ParticipationStatus }>>(
       'SELECT status FROM activity_members WHERE user_id=? AND activity_id=? LIMIT 1',
       [userId, activityId],
     );
     const threadId = `thread-${activityId}`;
-    if (existing[0]) return {
-      kind: 'ok' as const,
-      participationStatus: existing[0].status,
-      thread: existing[0].status === 'joined' ? await readThread(connection, threadId, userId) : null,
-    };
+    if (existing[0]?.status === 'joined' || (existing[0]?.status === 'interested' && activity.lifecycle === 'pre')) {
+      return {
+        kind: 'ok' as const,
+        participationStatus: existing[0].status,
+        thread: existing[0].status === 'joined' ? await readThread(connection, threadId, userId) : null,
+      };
+    }
 
     const participationStatus: ParticipationStatus = activity.lifecycle === 'pre' ? 'interested' : 'joined';
 
@@ -146,10 +148,19 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
     if (participationStatus === 'joined' && Number(countRows[0]?.count ?? 0) >= Number(activity.capacity)) return { kind: 'full' as const };
 
     const now = toMysqlDateTime();
-    await connection.query(
-      'INSERT INTO activity_members (user_id,activity_id,status,created_at) VALUES (?,?,?,?)',
-      [userId, activityId, participationStatus, now],
-    );
+    if (existing[0]?.status === 'interested') {
+      await connection.query(
+        "UPDATE activity_members SET status='joined',updated_at=?,cancelled_at=NULL WHERE user_id=? AND activity_id=? AND status='interested'",
+        [now, userId, activityId],
+      );
+    } else {
+      await connection.query(
+        `INSERT INTO activity_members (user_id,activity_id,status,created_at)
+         VALUES (?,?,?,?)
+         ON DUPLICATE KEY UPDATE status=VALUES(status),updated_at=VALUES(created_at),cancelled_at=NULL`,
+        [userId, activityId, participationStatus, now],
+      );
+    }
     if (participationStatus === 'interested') return { kind: 'ok' as const, thread: null, participationStatus };
     await connection.query(
       `INSERT INTO threads (id,activity_id,title,is_system,image,created_at)
@@ -181,7 +192,8 @@ export async function joinActivity(database: QiahaoDatabase, userId: string, act
 async function readThread(connection: QiahaoDatabase | QiahaoConnection, id: string, userId?: string): Promise<MessageThread | null> {
   const rows = await connection.query<ThreadRow[]>(
     `SELECT t.id,t.activity_id,t.title,t.image,t.is_system AS system,
-            latest.body AS last_message,latest.created_at AS message_created_at,
+            CASE WHEN latest.deleted_at IS NULL THEN latest.body ELSE '消息已撤回' END AS last_message,
+            latest.created_at AS message_created_at,
             tm.unread
        FROM threads t
        JOIN thread_members tm ON tm.thread_id=t.id
@@ -226,11 +238,79 @@ export async function listMessages(database: QiahaoDatabase, userId: string, thr
   );
   if (!member.length) return { kind: 'forbidden' as const };
   const messages = await database.query(
-    `SELECT id,thread_id AS threadId,sender_id AS senderId,body,created_at AS createdAt
+    `SELECT id,thread_id AS threadId,sender_id AS senderId,
+            CASE WHEN deleted_at IS NULL THEN body ELSE '' END AS body,
+            created_at AS createdAt,updated_at AS updatedAt,deleted_at IS NOT NULL AS withdrawn
        FROM messages
       WHERE thread_id=?
       ORDER BY created_at,messages.id`,
     [threadId],
   );
+  await database.query('UPDATE thread_members SET unread=0,last_read_at=? WHERE thread_id=? AND user_id=?', [toMysqlDateTime(), threadId, userId]);
   return { kind: 'ok' as const, messages };
+}
+
+export async function cancelActivity(database: QiahaoDatabase, userId: string, activityId: string): Promise<'missing' | 'not-joined' | 'removed'> {
+  return database.transaction(async (connection) => {
+    const rows = await connection.query<Array<RowDataPacket & { status: ParticipationStatus }>>(
+      `SELECT m.status FROM activity_members m
+        JOIN activities a ON a.id=m.activity_id
+       WHERE m.user_id=? AND m.activity_id=? FOR UPDATE`,
+      [userId, activityId],
+    );
+    if (!rows[0]) {
+      const activities = await connection.query<RowDataPacket[]>('SELECT 1 FROM activities WHERE id=? LIMIT 1', [activityId]);
+      return activities.length ? 'not-joined' as const : 'missing' as const;
+    }
+    if (rows[0].status === 'cancelled') return 'not-joined' as const;
+    const now = toMysqlDateTime();
+    await connection.query(
+      "UPDATE activity_members SET status='cancelled',cancelled_at=?,updated_at=? WHERE user_id=? AND activity_id=?",
+      [now, now, userId, activityId],
+    );
+    const threadId = `thread-${activityId}`;
+    await connection.query('DELETE FROM thread_members WHERE thread_id=? AND user_id=?', [threadId, userId]);
+    return 'removed' as const;
+  });
+}
+
+export async function sendMessage(database: QiahaoDatabase, userId: string, threadId: string, body: string) {
+  const cleanBody = body.trim();
+  if (!cleanBody || cleanBody.length > 2000) return { kind: 'invalid' as const };
+  return database.transaction(async (connection) => {
+    const members = await connection.query<RowDataPacket[]>(
+      'SELECT 1 FROM thread_members WHERE thread_id=? AND user_id=? LIMIT 1',
+      [threadId, userId],
+    );
+    if (!members.length) {
+      const threads = await connection.query<RowDataPacket[]>('SELECT 1 FROM threads WHERE id=? LIMIT 1', [threadId]);
+      return { kind: threads.length ? 'forbidden' as const : 'missing' as const };
+    }
+    const id = randomUUID();
+    const now = toMysqlDateTime();
+    await connection.query(
+      `INSERT INTO messages (id,thread_id,sender_id,message_type,body,created_at,updated_at)
+       VALUES (?,?,?,'text',?,?,?)`,
+      [id, threadId, userId, cleanBody, now, now],
+    );
+    await connection.query('UPDATE threads SET updated_at=? WHERE id=?', [now, threadId]);
+    await connection.query('UPDATE thread_members SET unread=unread+1 WHERE thread_id=? AND user_id<>?', [threadId, userId]);
+    return { kind: 'ok' as const, message: { id, threadId, senderId: userId, body: cleanBody, createdAt: now, updatedAt: now, withdrawn: false } };
+  });
+}
+
+export async function withdrawMessage(database: QiahaoDatabase, userId: string, messageId: string): Promise<'missing' | 'forbidden' | 'withdrawn'> {
+  return database.transaction(async (connection) => {
+    const rows = await connection.query<Array<RowDataPacket & { sender_id: string | null; deleted_at: string | null }>>(
+      'SELECT sender_id,deleted_at FROM messages WHERE id=? FOR UPDATE',
+      [messageId],
+    );
+    const message = rows[0];
+    if (!message) return 'missing' as const;
+    if (message.sender_id !== userId) return 'forbidden' as const;
+    if (message.deleted_at) return 'withdrawn' as const;
+    const now = toMysqlDateTime();
+    await connection.query('UPDATE messages SET deleted_at=?,updated_at=? WHERE id=?', [now, now, messageId]);
+    return 'withdrawn' as const;
+  });
 }

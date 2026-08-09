@@ -409,6 +409,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .activity-card, .club-activity-card, .need-card-large, .life-post { border-radius: var(--radius-card); }
 .club-feature, .discover-hero { border-radius: var(--radius-card); }
 .primary-button, .secondary-button, .login-submit { border-radius: var(--radius-control); }
+.discover-load-more, .feed-load-more { width: 100%; margin-top: 18px; }
 .portrait-strip, .portrait-progress, .editor-score, .publish-note, .sheet-note,
 .club-search, .question-section button, .tag-picks button, .guide-chips button,
 .comment-section__toggle, .message-safety-note { background: var(--surface-secondary); }
@@ -462,9 +463,40 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .message-thread-card { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-control); }
 .message-thread-card small { color: var(--muted); }
 .message-thread-card p { margin: 5px 0 0; line-height: 1.65; }
+.message-thread-list { display: grid; gap: 10px; margin-top: 16px; }
+.message-thread-list article { width: min(82%, 420px); padding: 11px 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.message-thread-list article.is-mine { justify-self: end; background: var(--green-soft); }
+.message-thread-list article p { margin: 0 0 5px; white-space: pre-wrap; }
+.message-thread-list article small { color: var(--muted); }
+.message-thread-list article button { margin-left: 8px; border: 0; background: none; color: var(--muted); }
+.message-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 16px; }
+.message-composer textarea { min-height: 72px; padding: 12px; resize: vertical; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); }
+.message-composer button { align-self: end; display: inline-flex; align-items: center; gap: 5px; min-height: 42px; padding: 0 14px; border: 0; border-radius: var(--radius-control); background: var(--green); color: white; }
 .message-safety-note { display: flex; gap: 10px; margin-top: 16px; padding: 14px; border-radius: var(--radius-control); color: var(--muted); }
 .message-safety-note svg { flex: 0 0 auto; color: var(--green); }
 .message-safety-note p { margin: 0; font-size: 12px; }
+.operator-business { display: grid; gap: 18px; padding-bottom: 48px; }
+.operator-notice { position: sticky; top: 8px; z-index: 2; margin: 0; padding: 12px 14px; border-radius: var(--radius-control); background: var(--surface); box-shadow: var(--shadow-soft); }
+.operator-panel { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); }
+.operator-panel > header, .operator-panel > header > div, .operator-proposal-list form > div { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.operator-panel h2 { margin: 0; font-size: 18px; }
+.operator-panel > header button, .operator-domain-tabs button { display: inline-flex; align-items: center; gap: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-secondary); color: var(--ink); }
+.operator-domain-tabs { display: flex; gap: 7px; overflow-x: auto; }
+.operator-domain-tabs button { flex: 0 0 auto; }
+.operator-domain-tabs button.is-active { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+.operator-config-preview { max-height: 320px; margin: 0; padding: 12px; overflow: auto; border-radius: var(--radius-control); background: var(--surface-secondary); font-size: 11px; white-space: pre-wrap; }
+.operator-config-form, .operator-proposal-list, .operator-proposal-list form { display: grid; gap: 12px; }
+.operator-config-form label, .operator-proposal-list label { display: grid; gap: 6px; font-size: 12px; color: var(--muted); }
+.operator-config-form input, .operator-config-form select, .operator-config-form textarea, .operator-proposal-list input, .operator-proposal-list select, .operator-proposal-list textarea { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); }
+.operator-proposal-list form { padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-control); }
+.operator-audit-list { display: grid; gap: 8px; margin-top: 10px; }
+.operator-audit-list p { display: grid; gap: 2px; margin: 0; padding: 9px; border-radius: 9px; background: var(--surface-secondary); }
+.operator-audit-list small { color: var(--muted); }
+.content-owner-actions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
+.content-owner-actions button { display: inline-flex; align-items: center; gap: 5px; padding: 8px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-secondary); color: var(--ink); }
+.content-inline-editor { display: grid; gap: 11px; margin: 12px 0; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface-secondary); }
+.content-inline-editor label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+.content-inline-editor input, .content-inline-editor select, .content-inline-editor textarea { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); }
 .create-page__header { align-items: start; }
 .create-page__header p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
 

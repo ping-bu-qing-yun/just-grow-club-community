@@ -1,12 +1,6 @@
-import { clubActivities } from '../club/seed';
 import type { ClubActivity } from '../club/types';
 
 export const ACTIVITY_QUERY_KEY = 'activity';
-
-export function getClubActivityById(id: string | null | undefined): ClubActivity | null {
-  if (!id) return null;
-  return clubActivities.find((item) => item.id === id) ?? null;
-}
 
 export function readActivityIdFromLocation(search = window.location.search): string | null {
   try {

@@ -1,6 +1,4 @@
 import type { ApiComment, CommentContentType } from '../api/types';
-import { clubActivities, lifePosts, seedNeeds } from '../club/seed';
-import { seedActivities } from '../domain/seed';
 
 const authors = [
   { id: 'u1', name: '阿岚', avatar: '/assets/avatar-1.jpg' },
@@ -21,12 +19,11 @@ const bodies = [
 ];
 
 function countFor(contentType: CommentContentType, contentId: string): number {
-  if (contentType === 'need') return seedNeeds.find((item) => item.id === contentId)?.comments ?? 0;
-  if (contentType === 'life') return lifePosts.find((item) => item.id === contentId)?.comments ?? 0;
-  return clubActivities.some((item) => item.id === contentId) || seedActivities.some((item) => item.id === contentId) ? 6 : 0;
+  if (!contentId) return 0;
+  return contentType === 'activity' ? 6 : contentType === 'need' ? 4 : 3;
 }
 
-/** JSDOM/local-preview fallback. Production reads the same shape from /api/comments. */
+/** JSDOM/local-preview fallback. Production reads the same shape from /api/v2/comments. */
 export function localCommentsFor(contentType: CommentContentType, contentId: string): ApiComment[] {
   const count = countFor(contentType, contentId);
   return Array.from({ length: count }, (_, index) => {
