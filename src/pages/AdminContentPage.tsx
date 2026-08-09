@@ -3,6 +3,7 @@ import { ArrowLeft, Bot, CalendarDays, Check, ChevronRight, Coins, Eye, Lightbul
 import type { ClubActivity, Need } from '../club/types';
 import { clubActivities } from '../club/seed';
 import { useQiahao } from '../state/QiahaoContext';
+import styles from './AdminContentPage.module.css';
 
 type AdminView = 'home' | 'proposals' | 'detail' | 'daily' | 'revenue' | 'activities' | 'activity-detail' | 'confirm' | 'push' | 'preview';
 type ProposalStatus = 'pending' | 'approved' | 'rejected';
@@ -221,7 +222,7 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
   }, [needs]);
 
   if (user?.role !== 'operator') {
-    return <main className="page standard-page"><button type="button" className="icon-button" aria-label="返回" onClick={onBack}><ArrowLeft /></button><div className="empty-state"><ShieldAlert size={28} /><h2>无权访问</h2><p>运营权限由服务器确认。</p></div></main>;
+    return <main className="page"><button type="button" className={styles.backButton} aria-label="返回" onClick={onBack}><ArrowLeft /></button><div className={styles.empty}><ShieldAlert size={28} /><h2>无权访问</h2><p>运营权限由服务器确认。</p></div></main>;
   }
 
   const estimatedRevenue = revenueMonths[0].amount;
@@ -287,31 +288,31 @@ export function AdminContentPage({ onBack, onGenerateActivity }: { onBack: () =>
   const filteredActivities = managedActivities.filter((item) => activityFilter === 'all' || item.phase === activityFilter);
 
   return (
-    <main className="page standard-page admin-content-page">
-      <header className="subpage-header">
-        <button type="button" aria-label="返回" onClick={view === 'home' ? onBack : () => go('home')}><ArrowLeft /></button>
+    <main className={`page ${styles.page}`}>
+      <header className={styles.header}>
+        <button type="button" className={styles.backButton} aria-label="返回" onClick={view === 'home' ? onBack : () => go('home')}><ArrowLeft /></button>
         <div><small>小CC管理</small><h1>{viewTitle(view)}</h1></div>
       </header>
-      {notice ? <p className="operator-notice">{notice}</p> : null}
+      {notice ? <p className={styles.notice}>{notice}</p> : null}
 
       {view === 'home' ? (
-        <>
-          <section className="operator-metrics">
+        <div className={styles.stack}>
+          <section className={styles.metrics}>
             {metrics.map((metric) => {
               const Icon = metric.icon;
               return <button type="button" key={metric.label} onClick={() => go(metric.target)}><Icon size={16} /><b>{metric.value}</b><span>{metric.label}</span></button>;
             })}
           </section>
-          <section className="admin-action-card">
+          <section className={styles.actionCard}>
             <small>管理动作</small>
-            <button type="button" onClick={() => go('proposals')}><span className="admin-action-icon">AI</span><b>AI 活动提案</b><em>基于高频需求生成可发起的见面</em><ChevronRight /></button>
-            <button type="button" onClick={() => go('daily')}><span className="admin-action-icon">芽</span><b>小CC 每日分身</b><em>关系小芽替你盯着今天</em><ChevronRight /></button>
-            <button type="button" onClick={() => go('revenue')}><span className="admin-action-icon is-money">¥</span><b>经营明细</b><em>本月 ¥{estimatedRevenue.toLocaleString('zh-CN')} · 按月/按年看收入</em><ChevronRight /></button>
-            <button type="button" onClick={() => go('activities')}><span className="admin-action-icon">活</span><b>活动管理</b><em>预活动、报名、反馈、评分一览</em><ChevronRight /></button>
-            <button type="button" onClick={() => setNotice('消息中心将在下一步接入企微提醒和用户反馈线程')}><span className="admin-action-icon">信</span><b>我的消息</b><em>系统通知 / 用户联系 / 反馈提醒</em><i>{messages.length}</i><ChevronRight /></button>
+            <button type="button" onClick={() => go('proposals')}><span className={styles.actionIcon}>AI</span><b>AI 活动提案</b><em>基于高频需求生成可发起的见面</em><ChevronRight /></button>
+            <button type="button" onClick={() => go('daily')}><span className={styles.actionIcon}>芽</span><b>小CC 每日分身</b><em>关系小芽替你盯着今天</em><ChevronRight /></button>
+            <button type="button" onClick={() => go('revenue')}><span className={`${styles.actionIcon} ${styles.actionIconMoney}`}>¥</span><b>经营明细</b><em>本月 ¥{estimatedRevenue.toLocaleString('zh-CN')} · 按月/按年看收入</em><ChevronRight /></button>
+            <button type="button" onClick={() => go('activities')}><span className={styles.actionIcon}>活</span><b>活动管理</b><em>预活动、报名、反馈、评分一览</em><ChevronRight /></button>
+            <button type="button" onClick={() => setNotice('消息中心将在下一步接入企微提醒和用户反馈线程')}><span className={styles.actionIcon}>信</span><b>我的消息</b><em>系统通知 / 用户联系 / 反馈提醒</em><i>{messages.length}</i><ChevronRight /></button>
           </section>
           <DemandInsight clusters={demandClusters} />
-        </>
+        </div>
       ) : null}
 
       {view === 'proposals' ? <ProposalList proposals={proposals} pendingCount={pendingCount} onOpen={openProposal} /> : null}
@@ -370,9 +371,9 @@ function viewTitle(view: AdminView): string {
 
 function DemandInsight({ clusters }: { clusters: Array<{ label: string; count: number; resonance: number; examples: Need[] }> }) {
   return (
-    <section className="operator-panel">
+    <section className={styles.panel}>
       <header><span>DEMAND INSIGHT</span><h2>需求分类洞察</h2></header>
-      <div className="operator-clusters">
+      <div className={styles.clusters}>
         {clusters.map((cluster) => (
           <article key={cluster.label}>
             <div><b>{cluster.label}</b><span>{cluster.count} 条需求 · {cluster.resonance} 人共鸣</span></div>
@@ -386,15 +387,15 @@ function DemandInsight({ clusters }: { clusters: Array<{ label: string; count: n
 
 function ProposalList({ proposals, pendingCount, onOpen }: { proposals: Proposal[]; pendingCount: number; onOpen: (proposal: Proposal) => void }) {
   return (
-    <section className="admin-proposal-page">
-      <header className="operator-title-row"><h2>AI活动提案</h2><span>{pendingCount}条待判断</span></header>
+    <section className={styles.proposalPage}>
+      <header className={styles.titleRow}><h2>AI活动提案</h2><span>{pendingCount}条待判断</span></header>
       <p>每一份提案都用同一套模板生成：核心命题 → 需求洞察 → 细化流程 → 现场提问 → 吸引谁。小CC 只需要判断：要不要做。</p>
-      <div className="admin-proposal-list">
+      <div className={styles.proposalList}>
         {proposals.map((proposal) => (
           <article key={proposal.id}>
-            <div className="admin-proposal-card-head"><b>提案 {proposal.code}｜{proposal.title}</b><span className={`proposal-status is-${proposal.status}`}>{proposal.status === 'pending' ? '待拍板' : proposal.status === 'approved' ? '已通过' : '已拒绝'}</span></div>
+            <div className={styles.proposalHead}><b>提案 {proposal.code}｜{proposal.title}</b><span className={`${styles.proposalStatus} ${styles[`is-${proposal.status}`]}`}>{proposal.status === 'pending' ? '待拍板' : proposal.status === 'approved' ? '已通过' : '已拒绝'}</span></div>
             <small>{proposal.resonance} 人共鸣 · {proposal.tags.join(' · ')}</small>
-            <div className="proposal-core">核心命题：{proposal.core}</div>
+            <div className={styles.proposalCore}>核心命题：{proposal.core}</div>
             <p>{proposal.flow.length} 段流程 · {proposal.flow.reduce((sum, stage) => sum + stage.cards.length, 0)} 道现场提问<br />回应需求「{proposal.fromDemand}」</p>
             <button type="button" onClick={() => onOpen(proposal)}>看完整提案</button>
           </article>
@@ -422,8 +423,8 @@ function ProposalDetail({
   onBack: () => void;
 }) {
   return (
-    <section className="proposal-detail">
-      <header className="proposal-detail-hero">
+    <section className={styles.proposalDetail}>
+      <header className={styles.proposalDetailHero}>
         <span>提案{proposal.code} · {proposal.status === 'pending' ? '待拍板' : proposal.status === 'approved' ? '已通过' : '已拒绝'}</span>
         {editing ? (
           <>
@@ -441,32 +442,32 @@ function ProposalDetail({
       <ProposalBlock index={1} title="为什么是这场（需求洞察）">
         {editing ? <textarea value={proposal.insight} onChange={(event) => setDrafts((current) => ({ ...current, [proposal.id]: { title: proposal.title, core: proposal.core, insight: event.target.value } }))} /> : <p>{proposal.insight}</p>}
       </ProposalBlock>
-      <ProposalBlock index={2} title="活动基本盘"><div className="proposal-info-table">{proposal.info.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div></ProposalBlock>
+      <ProposalBlock index={2} title="活动基本盘"><div className={styles.infoTable}>{proposal.info.map(([label, value]) => <div key={label}><span>{label}</span><b>{value}</b></div>)}</div></ProposalBlock>
       <ProposalBlock index={3} title="细化流程与现场提问">
         <p>共 {proposal.flow.length} 段，{proposal.flow.reduce((sum, stage) => sum + stage.cards.length, 0)} 道提问。每段都写清了目标、小CC 怎么开口、用哪些问题，以及要避的坑。</p>
-        <div className="proposal-stage-list">
+        <div className={styles.stageList}>
           {proposal.flow.map((stage) => (
             <article key={stage.title}>
               <header><b>{stage.title}</b><span>{stage.time}</span></header>
-              <div className="stage-goal">目标：{stage.goal}</div>
-              <div className="stage-script"><strong>小CC 现场怎么开口</strong><p>{stage.script}</p></div>
+              <div className={styles.stageGoal}>目标：{stage.goal}</div>
+              <div className={styles.stageScript}><strong>小CC 现场怎么开口</strong><p>{stage.script}</p></div>
               <ul>{stage.cards.map((card) => <li key={card}>{card}</li>)}</ul>
-              <p className="stage-tip">{stage.tip}</p>
+              <p className={styles.stageTip}>{stage.tip}</p>
             </article>
           ))}
         </div>
       </ProposalBlock>
-      <ProposalBlock index={4} title="互动机制"><ul className="proposal-bullet-list">{proposal.mechanics.map((item) => <li key={item}>{item}</li>)}</ul></ProposalBlock>
+      <ProposalBlock index={4} title="互动机制"><ul className={styles.bulletList}>{proposal.mechanics.map((item) => <li key={item}>{item}</li>)}</ul></ProposalBlock>
       <ProposalBlock index={5} title="这场提案凭什么成立">
-        <div className="proposal-verdict"><b>能吸引到谁</b><p>{proposal.attract}</p></div>
-        <div className="proposal-verdict is-warm"><b>解决什么困惑</b><p>{proposal.resolve}</p></div>
-        <div className="proposal-verdict is-cool"><b>风险与提醒</b><p>{proposal.risk}</p></div>
+        <div className={styles.verdict}><b>能吸引到谁</b><p>{proposal.attract}</p></div>
+        <div className={`${styles.verdict} ${styles['is-warm']}`}><b>解决什么困惑</b><p>{proposal.resolve}</p></div>
+        <div className={`${styles.verdict} ${styles['is-cool']}`}><b>风险与提醒</b><p>{proposal.risk}</p></div>
       </ProposalBlock>
-      <div className="proposal-actions">
+      <div className={styles.proposalActions}>
         {editing ? <button type="button" onClick={() => setEditing(false)}><Check size={17} />保存修改</button> : <button type="button" onClick={onApprove}><Check size={17} />同意，生成预活动</button>}
         <button type="button" onClick={() => setEditing((value) => !value)}><Pencil size={17} />{editing ? '取消编辑' : '修改内容'}</button>
-        <button type="button" className="is-danger" onClick={onReject}><X size={17} />拒绝这份提案</button>
-        <button type="button" className="is-muted" onClick={onBack}>返回提案列表</button>
+        <button type="button" className={styles['is-danger']} onClick={onReject}><X size={17} />拒绝这份提案</button>
+        <button type="button" className={styles['is-muted']} onClick={onBack}>返回提案列表</button>
       </div>
     </section>
   );
@@ -474,31 +475,31 @@ function ProposalDetail({
 
 function ActivityPreview({ activity, onActivities, onProposals }: { activity: ClubActivity; onActivities: () => void; onProposals: () => void }) {
   return (
-    <section className="admin-preview">
-      <header className="operator-title-row"><h2>用户端预览</h2><span>{activity.status}</span></header>
-      <article className="club-feature admin-preview-card">
+    <section>
+      <header className={styles.titleRow}><h2>用户端预览</h2><span>{activity.status}</span></header>
+      <article className={`${styles.feature} ${styles.previewCard}`}>
         <img src={activity.image} alt="" />
         <div><small>{activity.status} · {activity.matchLabel}</small><h2>{activity.title}</h2><p>{activity.people} · {activity.location} · {activity.date}</p></div>
       </article>
-      <section className="operator-panel"><header><span>SHOW TO USER</span><h2>对外展示信息</h2></header><p>{activity.pitch}</p><div className="club-tags">{activity.tags.map((tagItem) => <span key={tagItem}>{tagItem}</span>)}</div></section>
-      <div className="proposal-actions"><button type="button" onClick={onActivities}><Eye size={17} />进入活动管理</button><button type="button" className="is-muted" onClick={onProposals}>返回提案列表</button></div>
+      <section className={styles.panel}><header><span>SHOW TO USER</span><h2>对外展示信息</h2></header><p>{activity.pitch}</p><div className={styles.tagRow}>{activity.tags.map((tagItem) => <span key={tagItem}>{tagItem}</span>)}</div></section>
+      <div className={styles.proposalActions}><button type="button" onClick={onActivities}><Eye size={17} />进入活动管理</button><button type="button" className={styles['is-muted']} onClick={onProposals}>返回提案列表</button></div>
     </section>
   );
 }
 
 function DailyPage({ needs, pendingCount, feedbackCount, proposals, onOpenProposal, onDraft }: { needs: Need[]; pendingCount: number; feedbackCount: number; proposals: Proposal[]; onOpenProposal: (proposal: Proposal) => void; onDraft: () => void }) {
   return (
-    <section className="cc-daily-page">
-      <section className="cc-daily-hero"><span><Sparkles size={18} /></span><div><small>关系小芽 · 小CC 的每日分身</small><h2>今天，我帮你盯着这几件事</h2></div></section>
-      <div className="cc-daily-metrics">
+    <section className={styles.stack}>
+      <section className={styles.dailyHero}><span><Sparkles size={18} /></span><div><small>关系小芽 · 小CC 的每日分身</small><h2>今天，我帮你盯着这几件事</h2></div></section>
+      <div className={styles.dailyMetrics}>
         <article><b>{needs.length}</b><span>今日新增需求</span><em>待回应</em></article>
         <article><b>{pendingCount}</b><span>待你拍板提案</span><em>AI 已起草</em></article>
         <article><b>1</b><span>报名/缴费异常</span><em>需跟进</em></article>
         <article><b>{feedbackCount}</b><span>待收反馈</span><em>已结束</em></article>
       </div>
-      <section className="operator-panel cc-brief"><header><h2>小芽的今日简报</h2><span>08-09 早</span></header><p>昨晚「深度对谈夜局」刚结束，有 1 位用户还没写反馈；广场上“想认识靠谱的人”又多了几条共鸣，已经快到成局线。我建议你今天先做三件事：</p><ul><li>把「周末低压力认识局」从预活动升级</li><li>给犹豫的用户发一条轻提醒</li><li>起草一份「附近早餐局」承接新需求</li></ul></section>
-      <section className="operator-panel"><header><h2>待你拍板</h2><span>{pendingCount} 条</span></header><div className="cc-pending-list">{proposals.map((proposal) => <button type="button" key={proposal.id} onClick={() => onOpenProposal(proposal)}><b>提案 {proposal.code}｜{proposal.title}</b><span>{proposal.resonance} 人共鸣 · {proposal.flow.length} 段流程</span><em>去拍板</em></button>)}<button type="button"><b>1 人报名夜谈但余额不足</b><span>需要你决定是否保留名额</span><em>发提醒</em></button></div><p className="cc-note">点任意一条会打开完整提案，看清流程和现场提问后再决定同意还是拒绝。</p></section>
-      <section className="operator-panel cc-suggest"><header><h2>小芽想跟你说</h2></header><p>你一个人运营很累，这些重复的活我来扛。今天要不要我直接起草一份「附近早餐局」？你点一下就能发出去。</p><div><button type="button" onClick={onDraft}>好，起草一份</button><button type="button">稍后再说</button></div></section>
+      <section className={`${styles.panel} ${styles.brief}`}><header><h2>小芽的今日简报</h2><span>08-09 早</span></header><p>昨晚「深度对谈夜局」刚结束，有 1 位用户还没写反馈；广场上“想认识靠谱的人”又多了几条共鸣，已经快到成局线。我建议你今天先做三件事：</p><ul><li>把「周末低压力认识局」从预活动升级</li><li>给犹豫的用户发一条轻提醒</li><li>起草一份「附近早餐局」承接新需求</li></ul></section>
+      <section className={styles.panel}><header><h2>待你拍板</h2><span>{pendingCount} 条</span></header><div className={styles.pendingList}>{proposals.map((proposal) => <button type="button" key={proposal.id} onClick={() => onOpenProposal(proposal)}><b>提案 {proposal.code}｜{proposal.title}</b><span>{proposal.resonance} 人共鸣 · {proposal.flow.length} 段流程</span><em>去拍板</em></button>)}<button type="button"><b>1 人报名夜谈但余额不足</b><span>需要你决定是否保留名额</span><em>发提醒</em></button></div><p className={styles.note}>点任意一条会打开完整提案，看清流程和现场提问后再决定同意还是拒绝。</p></section>
+      <section className={`${styles.panel} ${styles.suggest}`}><header><h2>小芽想跟你说</h2></header><p>你一个人运营很累，这些重复的活我来扛。今天要不要我直接起草一份「附近早餐局」？你点一下就能发出去。</p><div><button type="button" onClick={onDraft}>好，起草一份</button><button type="button">稍后再说</button></div></section>
     </section>
   );
 }
@@ -508,12 +509,12 @@ function RevenuePage({ mode, setMode }: { mode: 'month' | 'year'; setMode: (mode
   const current = data[0];
   const max = Math.max(...data.map((item) => item.amount));
   return (
-    <section className="revenue-page">
-      <header className="operator-title-row"><h2>经营明细</h2><span>报名与收入</span></header>
-      <div className="revenue-tabs"><button type="button" className={mode === 'month' ? 'is-active' : ''} onClick={() => setMode('month')}>按月看</button><button type="button" className={mode === 'year' ? 'is-active' : ''} onClick={() => setMode('year')}>按年看</button></div>
-      <section className="revenue-hero"><span>{mode === 'month' ? '本月收入' : '本年收入'}</span><b>¥{current.amount.toLocaleString('zh-CN')}</b><p>{current.label} · {current.signups} 人次报名 · {current.acts} 场活动</p></section>
-      <div className="revenue-summary"><article><b>¥{Math.round(current.amount / current.signups)}</b><span>人均客单</span><small>{current.acts} 场活动</small></article><article><b>¥{Math.round(current.amount / current.acts).toLocaleString('zh-CN')}</b><span>单场平均收入</span><small>{(current.signups / current.acts).toFixed(1)} 人/场</small></article></div>
-      <section className="operator-panel"><header><h2>{mode === 'month' ? '近 6 个月' : '近 2 年'}</h2><span>累计 ¥{data.reduce((sum, item) => sum + item.amount, 0).toLocaleString('zh-CN')}</span></header><div className="revenue-list">{data.map((item) => <article key={item.label}><div><b>{item.label}</b><strong>¥{item.amount.toLocaleString('zh-CN')}</strong></div><span>{item.signups} 人次报名 · {item.acts} 场活动</span><i><em style={{ width: `${Math.round((item.amount / max) * 100)}%` }} /></i></article>)}</div></section>
+    <section className={styles.stack}>
+      <header className={styles.titleRow}><h2>经营明细</h2><span>报名与收入</span></header>
+      <div className={styles.tabs}><button type="button" className={mode === 'month' ? styles.active : ''} onClick={() => setMode('month')}>按月看</button><button type="button" className={mode === 'year' ? styles.active : ''} onClick={() => setMode('year')}>按年看</button></div>
+      <section className={styles.revenueHero}><span>{mode === 'month' ? '本月收入' : '本年收入'}</span><b>¥{current.amount.toLocaleString('zh-CN')}</b><p>{current.label} · {current.signups} 人次报名 · {current.acts} 场活动</p></section>
+      <div className={styles.revenueSummary}><article><b>¥{Math.round(current.amount / current.signups)}</b><span>人均客单</span><small>{current.acts} 场活动</small></article><article><b>¥{Math.round(current.amount / current.acts).toLocaleString('zh-CN')}</b><span>单场平均收入</span><small>{(current.signups / current.acts).toFixed(1)} 人/场</small></article></div>
+      <section className={styles.panel}><header><h2>{mode === 'month' ? '近 6 个月' : '近 2 年'}</h2><span>累计 ¥{data.reduce((sum, item) => sum + item.amount, 0).toLocaleString('zh-CN')}</span></header><div className={styles.revenueList}>{data.map((item) => <article key={item.label}><div><b>{item.label}</b><strong>¥{item.amount.toLocaleString('zh-CN')}</strong></div><span>{item.signups} 人次报名 · {item.acts} 场活动</span><i><em style={{ width: `${Math.round((item.amount / max) * 100)}%` }} /></i></article>)}</div></section>
     </section>
   );
 }
@@ -521,10 +522,10 @@ function RevenuePage({ mode, setMode }: { mode: 'month' | 'year'; setMode: (mode
 function ActivitiesManagePage({ activities, filter, setFilter, onOpen }: { activities: ManagedActivity[]; filter: ActivityPhase | 'all'; setFilter: (filter: ActivityPhase | 'all') => void; onOpen: (item: ManagedActivity) => void }) {
   const filters: Array<[ActivityPhase | 'all', string]> = [['all', '全部'], ['recruiting', '报名中'], ['pre', '预活动'], ['feedback', '待反馈'], ['ended', '已结束']];
   return (
-    <section className="activity-manage-page">
-      <header className="operator-title-row"><h2>活动一览</h2><span>按进展阶段</span></header>
-      <div className="activity-stage-filter">{filters.map(([value, label]) => <button type="button" className={filter === value ? 'is-active' : ''} onClick={() => setFilter(value)} key={value}>{label}</button>)}</div>
-      <div className="admin-activity-list">
+    <section className={styles.stack}>
+      <header className={styles.titleRow}><h2>活动一览</h2><span>按进展阶段</span></header>
+      <div className={styles.stageFilter}>{filters.map(([value, label]) => <button type="button" className={filter === value ? styles.active : ''} onClick={() => setFilter(value)} key={value}>{label}</button>)}</div>
+      <div className={styles.activityList}>
         {activities.map((item) => (
           <button type="button" key={item.activity.id} onClick={() => onOpen(item)}>
             <img src={item.activity.image} alt="" />
@@ -540,12 +541,12 @@ function ActivitiesManagePage({ activities, filter, setFilter, onOpen }: { activ
 function ActivityManageDetail({ item, onConfirm, onPush, onPreview }: { item: ManagedActivity; onConfirm: () => void; onPush: () => void; onPreview: () => void }) {
   const activity = item.activity;
   return (
-    <section className="activity-manage-detail">
-      <div className="activity-admin-hero"><img src={activity.image} alt="" /><span>{phaseLabel(item.phase)}</span><h2>{activity.title}</h2><p>{activity.pitch || activity.description}</p></div>
-      <section className="operator-panel"><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className="activity-kpi-grid"><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article></div></section>
-      <section className="operator-panel"><header><h2>活动信息</h2><span>可编辑</span></header><div className="proposal-info-table"><div><span>时间</span><b>{activity.timeRange}</b></div><div><span>地点</span><b>{activity.location}</b></div><div><span>人数</span><b>{activity.people}</b></div><div><span>费用</span><b>{activity.fee}</b></div><div><span>适合谁</span><b>{activity.audience}</b></div></div></section>
-      <section className="operator-panel"><header><h2>流程亮点</h2></header><div className="activity-flow-mini">{activity.flow.map((step) => <article key={step.title}><b>{step.title}</b><p>{step.body}</p></article>)}</div></section>
-      <div className="proposal-actions">
+    <section className={styles.stack}>
+      <div className={styles.adminHero}><img src={activity.image} alt="" /><span>{phaseLabel(item.phase)}</span><h2>{activity.title}</h2><p>{activity.pitch || activity.description}</p></div>
+      <section className={styles.panel}><header><h2>运营数据</h2><span>{item.score.toFixed(1)} 分</span></header><div className={styles.kpiGrid}><article><b>{item.views}</b><span>看过</span></article><article><b>{item.signups}</b><span>报名/预约</span></article><article><b>{item.feedbacks}</b><span>反馈</span></article><article><b>¥{(parseFee(activity.fee) * item.signups).toLocaleString('zh-CN')}</b><span>预计收入</span></article></div></section>
+      <section className={styles.panel}><header><h2>活动信息</h2><span>可编辑</span></header><div className={styles.infoTable}><div><span>时间</span><b>{activity.timeRange}</b></div><div><span>地点</span><b>{activity.location}</b></div><div><span>人数</span><b>{activity.people}</b></div><div><span>费用</span><b>{activity.fee}</b></div><div><span>适合谁</span><b>{activity.audience}</b></div></div></section>
+      <section className={styles.panel}><header><h2>流程亮点</h2></header><div className={styles.flowMini}>{activity.flow.map((step) => <article key={step.title}><b>{step.title}</b><p>{step.body}</p></article>)}</div></section>
+      <div className={styles.proposalActions}>
         {item.phase === 'pre' ? <button type="button" onClick={onConfirm}><Check size={17} />运营确认 · 转成熟活动</button> : <button type="button" onClick={onPush}><Megaphone size={17} />AI 整理推送招募</button>}
         <button type="button" onClick={onPreview}><Eye size={17} />预览给用户看</button>
       </div>
@@ -557,28 +558,28 @@ function ActivityConfirmPage({ item, checks, setChecks, onSubmit }: { item: Mana
   const options = ['时间与地点已最终确定', '人数上限与费用已确认无误', '现场流程与安全须知已检查', '已安排主理人 / 小CC 现场引导'];
   const ready = options.every((option) => checks.includes(option));
   return (
-    <section className="activity-confirm-page">
-      <section className="operator-panel"><header><h2>预活动已收集到足够兴趣</h2><span>{item.signups} 人预约</span></header><p>请核对后确认上线。提交后这场活动会从预活动转为成熟活动，并可以开启 AI 推送招募。</p></section>
-      <section className="operator-panel"><header><h2>运营摘要</h2></header><div className="proposal-info-table"><div><span>活动</span><b>{item.activity.title}</b></div><div><span>时间</span><b>{item.activity.timeRange}</b></div><div><span>地点</span><b>{item.activity.location}</b></div><div><span>人数费用</span><b>{item.activity.people} · {item.activity.fee}</b></div></div></section>
-      <section className="operator-panel"><header><h2>确认清单</h2><span>{checks.length}/4</span></header><div className="confirm-checks">{options.map((option) => <label key={option}><input type="checkbox" checked={checks.includes(option)} onChange={(event) => setChecks((current) => event.target.checked ? [...current, option] : current.filter((itemText) => itemText !== option))} /><span>{option}</span></label>)}</div></section>
-      <div className="proposal-actions"><button type="button" disabled={!ready} onClick={onSubmit}><Check size={17} />确认转为成熟活动</button></div>
+    <section className={styles.stack}>
+      <section className={styles.panel}><header><h2>预活动已收集到足够兴趣</h2><span>{item.signups} 人预约</span></header><p>请核对后确认上线。提交后这场活动会从预活动转为成熟活动，并可以开启 AI 推送招募。</p></section>
+      <section className={styles.panel}><header><h2>运营摘要</h2></header><div className={styles.infoTable}><div><span>活动</span><b>{item.activity.title}</b></div><div><span>时间</span><b>{item.activity.timeRange}</b></div><div><span>地点</span><b>{item.activity.location}</b></div><div><span>人数费用</span><b>{item.activity.people} · {item.activity.fee}</b></div></div></section>
+      <section className={styles.panel}><header><h2>确认清单</h2><span>{checks.length}/4</span></header><div className={styles.confirmChecks}>{options.map((option) => <label key={option}><input type="checkbox" checked={checks.includes(option)} onChange={(event) => setChecks((current) => event.target.checked ? [...current, option] : current.filter((itemText) => itemText !== option))} /><span>{option}</span></label>)}</div></section>
+      <div className={styles.proposalActions}><button type="button" disabled={!ready} onClick={onSubmit}><Check size={17} />确认转为成熟活动</button></div>
     </section>
   );
 }
 
 function PushPage({ item, draft, setDraft, onSend }: { item: ManagedActivity; draft: { title: string; value: string; audience: string; sent: boolean }; setDraft: Dispatch<SetStateAction<{ title: string; value: string; audience: string; sent: boolean }>>; onSend: () => void }) {
   return (
-    <section className="push-page">
-      <section className="operator-panel"><header><span>AI PUSH</span><h2>智能推送招募</h2></header><p>小芽已根据活动标签、历史参与、收藏和需求共鸣整理招募文案。小CC 可以编辑后推送到首页推荐和企微客户朋友圈。</p></section>
-      <label className="admin-field"><span>推送标题</span><input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label>
-      <label className="admin-field"><span>核心价值</span><textarea value={draft.value} onChange={(event) => setDraft((current) => ({ ...current, value: event.target.value }))} /></label>
-      <label className="admin-field"><span>面向群体</span><input value={draft.audience} onChange={(event) => setDraft((current) => ({ ...current, audience: event.target.value }))} /></label>
-      <section className="operator-panel"><header><h2>预览</h2><span>{item.activity.title}</span></header><div className="push-preview"><b>{draft.title}</b><p>{draft.value}</p><span>{item.activity.timeRange} · {item.activity.location}</span></div></section>
-      <div className="proposal-actions"><button type="button" onClick={onSend}><Send size={17} />确认推送并进入报名中</button></div>
+    <section className={styles.stack}>
+      <section className={styles.panel}><header><span>AI PUSH</span><h2>智能推送招募</h2></header><p>小芽已根据活动标签、历史参与、收藏和需求共鸣整理招募文案。小CC 可以编辑后推送到首页推荐和企微客户朋友圈。</p></section>
+      <label className={styles.field}><span>推送标题</span><input value={draft.title} onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))} /></label>
+      <label className={styles.field}><span>核心价值</span><textarea value={draft.value} onChange={(event) => setDraft((current) => ({ ...current, value: event.target.value }))} /></label>
+      <label className={styles.field}><span>面向群体</span><input value={draft.audience} onChange={(event) => setDraft((current) => ({ ...current, audience: event.target.value }))} /></label>
+      <section className={styles.panel}><header><h2>预览</h2><span>{item.activity.title}</span></header><div className={styles.pushPreview}><b>{draft.title}</b><p>{draft.value}</p><span>{item.activity.timeRange} · {item.activity.location}</span></div></section>
+      <div className={styles.proposalActions}><button type="button" onClick={onSend}><Send size={17} />确认推送并进入报名中</button></div>
     </section>
   );
 }
 
 function ProposalBlock({ index, title, children }: { index: number; title: string; children: ReactNode }) {
-  return <section className="proposal-block"><h3><span>{index}</span>{title}</h3>{children}</section>;
+  return <section className={styles.proposalBlock}><h3><span>{index}</span>{title}</h3>{children}</section>;
 }
