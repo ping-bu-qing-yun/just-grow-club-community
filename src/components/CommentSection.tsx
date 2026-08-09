@@ -8,11 +8,11 @@ const localViewer: CommentViewer = {
   id: 'me',
   name: '小恰',
   avatar: '/assets/avatar-me.jpg',
-  role: 'admin',
+  role: 'operator',
 };
 
 function canDeleteComment(viewer: CommentViewer | null, authorId: string): boolean {
-  return Boolean(viewer && (viewer.id === authorId || viewer.role === 'admin'));
+  return Boolean(viewer && (viewer.id === authorId || viewer.role === 'operator'));
 }
 
 function formatCommentTime(value: string): string {

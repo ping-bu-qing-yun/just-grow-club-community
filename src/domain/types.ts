@@ -1,5 +1,5 @@
 export type ActivityCategory = '饭搭子' | '咖啡' | '运动' | '徒步' | '看展' | '桌游';
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'member' | 'host' | 'operator';
 
 export interface UserSummary {
   id: string;

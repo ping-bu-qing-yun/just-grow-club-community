@@ -4,6 +4,7 @@ import type { RowDataPacket } from 'mysql2/promise';
 import type { QiahaoDatabase } from './db';
 import { toMysqlDateTime } from './db';
 import type { UserRole } from '../src/domain/types';
+import { normalizeUserRole } from '../src/domain/roles';
 
 const scrypt = promisify(scryptCallback);
 
@@ -83,7 +84,7 @@ export async function authenticateToken(database: QiahaoDatabase, header?: strin
     avatar: row.avatar,
     bio: row.bio,
     verified: Boolean(row.verified),
-    role: row.role === 'admin' ? 'admin' : 'user',
+    role: normalizeUserRole(row.role),
   };
 }
 

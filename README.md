@@ -8,12 +8,23 @@
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev:all
 ```
 
 打开 [http://127.0.0.1:5174/](http://127.0.0.1:5174/)。演示账号已预填：手机号 `13800000000`，密码 `qiahao123`。
 
-API 默认运行在 `http://127.0.0.1:3001`，健康检查为 `/api/health`。首次启动前需要准备已执行迁移的 MySQL 数据库，应用通过 `MYSQL_HOST`、`MYSQL_PORT`、`MYSQL_USER`、`MYSQL_PASSWORD`、`MYSQL_DATABASE` 读取连接信息，也可以用 `QIAHAO_API_HOST` 和 `QIAHAO_API_PORT` 覆盖监听地址。
+API 默认运行在 `http://127.0.0.1:3001`，健康检查为 `/api/health`。首次启动前需要复制 `.env.example` 为 `.env` 并填写 MySQL 连接参数；`dev:api`、`start` 和 `db:migrate` 会通过 Node 的原生 `--env-file-if-exists=.env` 自动加载它。应用通过 `MYSQL_HOST`、`MYSQL_PORT`、`MYSQL_USER`、`MYSQL_PASSWORD`、`MYSQL_DATABASE` 读取连接信息，也可以用 `QIAHAO_API_HOST` 和 `QIAHAO_API_PORT` 覆盖监听地址。
+
+### 数据库和 Redis 配置
+
+`.env` 是本地私密文件，已被 Git 忽略，不能提交真实密码。可以先运行只读预检：
+
+```bash
+npm run db:migrate
+```
+
+预检只连接数据库、读取表元数据并列出迁移 SQL，不会执行迁移；需要执行迁移时才显式追加 `-- --apply`。Redis 使用 `REDIS_URL`，格式为 `redis://:password@host:6379/0`；未配置或不可用时，应用会退回到单进程通知推送。
 
 ### 活动分享（直达 + 微信图文）
 

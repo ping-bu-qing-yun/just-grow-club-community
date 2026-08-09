@@ -9,7 +9,7 @@ export const currentUser: UserSummary = {
   name: '小恰',
   avatar: '/assets/avatar-me.jpg',
   verified: true,
-  role: 'admin',
+  role: 'operator',
   bio: '喜欢城市散步、咖啡和不赶时间的周末。',
 };
 
