@@ -10,7 +10,7 @@
 
 1. 解压 ZIP。
 2. 直接打开 `index.html`，或用任意静态文件服务托管当前目录。
-3. 在线版本可访问：https://ping-bu-qing-yun.github.io/just-grow-club-community/?v=a9ae795
+3. 在线版本可访问：https://ping-bu-qing-yun.github.io/just-grow-club-community/?reset=registration&v=20260810-release
 
 ## 依赖说明
 
