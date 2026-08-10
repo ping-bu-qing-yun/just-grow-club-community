@@ -1,4 +1,4 @@
-# 恰好关系俱乐部 Demo
+# 恰好关系俱乐部
 
 一个帮主理人把“用户交友需求”反向生成线下活动、并按需招募到对的人的 AI Agent。
 
@@ -6,7 +6,7 @@
 
 ## 在线体验
 
-- 外部可访问 Demo：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
+- 外部可访问 Demo：[https://ping-bu-qing-yun.github.io/just-grow-club-community/?v=d7b0a70)
 - GitHub 仓库：[https://github.com/ping-bu-qing-yun/just-grow-club-community](https://github.com/ping-bu-qing-yun/just-grow-club-community)
 
 ## 我从谁开始创作
