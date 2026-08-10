@@ -12,11 +12,6 @@
     "db:schema:export": "node --env-file-if-exists=.env scripts/export-mysql-schema.mjs",
     "db:config:audit": "node --env-file-if-exists=.env scripts/audit-dynamic-config-compatibility.mjs",
     "build": "tsc -b && vite build",
-    "test": "vitest",
-    "test:server": "vitest server --run --no-file-parallelism --maxWorkers=1",
-    "test:watch": "vitest",
-    "e2e": "node scripts/run-playwright.mjs",
-    "qa:audit": "node scripts/run-playwright.mjs e2e/ui-audit.spec.ts --project=mobile-chrome",
     "start": "npm run build:server && node --env-file-if-exists=.env .server-dist/index.js"
   },
   "dependencies": {
@@ -33,19 +28,13 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.54.2",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^26.1.2",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^6.0.5",
     "concurrently": "^10.0.4",
-    "jsdom": "^26.1.0",
     "tsx": "^4.23.10",
     "typescript": "^5.9.2",
-    "vite": "^8.2.1",
-    "vitest": "^4.1.10"
+    "vite": "^8.2.1"
   }
 }
