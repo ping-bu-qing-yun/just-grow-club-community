@@ -10,7 +10,8 @@
 
 https://ping-bu-qing-yun.github.io/just-grow-club-community/?reset=registration&v=20260810-release
 
-📦 **GitHub 仓库**
+📦 **GitHub 仓库：**
+
 https://github.com/ping-bu-qing-yun/just-grow-club-community
 
 ## 运行方式
