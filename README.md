@@ -12,8 +12,13 @@ https://ping-bu-qing-yun.github.io/just-grow-club-community/?v=a9ae795
 📦 **GitHub 仓库**
 https://github.com/ping-bu-qing-yun/just-grow-club-community
 
-本地预览链接：
-http://127.0.0.1:5180/
+## 运行方式
+
+这是一个可直接访问、可直接运行的静态 Agent Demo，不依赖 MCP、数据库或后端服务。
+
+- 在线运行：打开上方外部 Demo 链接。
+- 本地运行：解压源码 ZIP 后，直接打开 `index.html`，或在目录中启动任意静态文件服务后访问 `index.html`。
+- 数据说明：当前演示数据、用户画像、活动提案、运营工作台内容都内置在前端源码中；用户操作状态保存在浏览器本地，不需要额外数据库。
 
 ## 我从谁开始创作
 
