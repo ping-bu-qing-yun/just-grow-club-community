@@ -5,6 +5,7 @@ import type { ApiUser, QiahaoApi, ApiNeed, ApiLifePost, ApiActivity, ApiThread, 
 import { categoryImages, currentUser, seedActivities, seedMessages } from '../domain/seed';
 import type { Activity, CreateActivityInput, PersistedState } from '../domain/types';
 import type { ClubState, LifePost, Need } from '../club/types';
+import type { OnboardingQuestionConfig } from '../config/types';
 import { lifePosts as seededLifePosts, seedNeeds } from '../club/seed';
 import { clubActivities } from '../club/seed';
 import { clubActivityToDomain } from '../club/activity-adapter';
@@ -36,6 +37,28 @@ type ActivityFeedData = { activities: ApiActivity[]; threads: ApiThread[] };
 
 function mergeById<T extends { id: string }>(current: readonly T[], incoming: readonly T[]): T[] {
   return [...new Map([...current, ...incoming].map((item) => [item.id, item])).values()];
+}
+
+export function serializeOnboardingAnswers(
+  record: Pick<ClubState, 'lightAnswers' | 'qaAnswers'>,
+  onboardingQuestions: readonly Pick<OnboardingQuestionConfig, 'key' | 'sectionKey'>[],
+): Record<string, string[]> {
+  const answers: Record<string, string[]> = {};
+  const lightQuestions = onboardingQuestions.filter((question) => question.sectionKey === 'light');
+  const configuredQuestionKeys = new Set(onboardingQuestions.map((question) => question.key));
+
+  record.lightAnswers.forEach((values, index) => {
+    const key = lightQuestions[index]?.key ?? ['light:intent', 'light:scene', 'light:barrier'][index];
+    if (key && values.length) answers[key] = values;
+  });
+  for (const [key, value] of Object.entries(record.qaAnswers)) {
+    const prefixedQuestionKey = `qa:${key}`;
+    const questionKey = configuredQuestionKeys.has(key) || !configuredQuestionKeys.has(prefixedQuestionKey)
+      ? key
+      : prefixedQuestionKey;
+    if (value.trim()) answers[questionKey] = [value.trim()];
+  }
+  return answers;
 }
 
 export function toNeed(item: ApiNeed): Need {
@@ -516,13 +539,7 @@ export function QiahaoProvider({ children, apiClient = api }: { children: ReactN
     },
     async saveOnboardingProgress(record) {
       if (localMode) return;
-      const lightQuestions = (configQuery.data?.onboarding ?? []).filter((question) => question.sectionKey === 'light');
-      const answers: Record<string, string[]> = {};
-      record.lightAnswers.forEach((values, index) => {
-        const key = lightQuestions[index]?.key ?? ['light:intent', 'light:scene', 'light:barrier'][index];
-        if (key && values.length) answers[key] = values;
-      });
-      for (const [key, value] of Object.entries(record.qaAnswers)) if (value.trim()) answers[key] = [value.trim()];
+      const answers = serializeOnboardingAnswers(record, configQuery.data?.onboarding ?? []);
       await apiClient.saveOnboardingAnswers({ answers, currentStep: record.onboardingStep, completed: record.onboardingComplete });
       await queryClient.invalidateQueries({ queryKey: queryKeys.onboarding });
     },
