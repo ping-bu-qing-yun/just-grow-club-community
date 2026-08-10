@@ -1,0 +1,19 @@
+{
+  "name": "恰好 - 城市搭子",
+  "short_name": "恰好",
+  "description": "发现附近刚刚好的同伴。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f2f1ef",
+  "theme_color": "#ffffff",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "/brand-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
