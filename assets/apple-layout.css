@@ -127,3 +127,88 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+@media (min-width: 768px) {
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 50% -10%, rgba(95, 127, 94, 0.12), transparent 32%),
+      linear-gradient(180deg, #faf7f2 0%, #f3efe8 100%);
+  }
+
+  .app-canvas {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 0 40px;
+    background: transparent;
+  }
+
+  .app-shell {
+    width: min(430px, calc(100vw - 40px));
+    min-height: min(760px, calc(100vh - 48px));
+    height: min(932px, calc(100vh - 48px));
+    border: 1px solid rgba(95, 127, 94, 0.16);
+    border-radius: 28px;
+    box-shadow: 0 28px 70px rgba(45, 72, 52, 0.18);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .app-shell__content {
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-bottom: calc(78px + env(safe-area-inset-bottom));
+  }
+
+  .app-shell__content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .app-shell__content::-webkit-scrollbar-thumb {
+    background: rgba(95, 127, 94, 0.22);
+    border-radius: 999px;
+  }
+
+  .bottom-nav,
+  .detail-action {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: none;
+  }
+
+  .bottom-nav {
+    bottom: 0;
+    border-radius: 0 0 28px 28px;
+  }
+
+  .detail-action {
+    bottom: calc(70px + env(safe-area-inset-bottom));
+  }
+
+  .club-home,
+  .explore-page,
+  .needs-page,
+  .records-page,
+  .profile-editor,
+  .standard-page,
+  .detail-page {
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  .toast {
+    position: absolute;
+  }
+}

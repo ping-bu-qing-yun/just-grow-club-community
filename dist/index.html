@@ -15,11 +15,80 @@
     <link rel="icon" href="./brand-mark.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./brand-mark.svg" />
     <title>恰好</title>
-    <script type="module" crossorigin src="./assets/index-BWw9JfLO.js"></script>
+    <style>
+      .boot-fallback {
+        min-height: 100vh;
+        min-height: 100dvh;
+        box-sizing: border-box;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: #fff;
+        background: linear-gradient(180deg, rgba(21, 31, 26, 0.18), rgba(21, 31, 26, 0.58)), url("./assets/welcome-bg.png") center top / cover no-repeat, #f5f1eb;
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      }
+      .boot-card {
+        width: min(320px, 100%);
+        text-align: center;
+      }
+      .boot-logo {
+        width: 138px;
+        height: auto;
+        margin: 0 auto min(18vh, 120px);
+        filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.16));
+      }
+      .boot-card p,
+      .boot-card h1 {
+        margin: 0;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.24);
+      }
+      .boot-card p {
+        font-size: 28px;
+        font-weight: 850;
+        line-height: 1.25;
+      }
+      .boot-card h1 {
+        margin-top: 4px;
+        font-size: 34px;
+        font-weight: 900;
+        line-height: 1.15;
+      }
+      .boot-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 172px;
+        height: 52px;
+        margin-top: 30px;
+        border-radius: 999px;
+        color: #5f7f5e;
+        background: #fff;
+        font-weight: 850;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+      }
+      .boot-hint {
+        display: block;
+        margin-top: 14px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+    </style>
+    <script defer src="./assets/index-legacy.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-Cl0gxHMJ.css">
     <link rel="stylesheet" href="./assets/apple-layout.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="boot-fallback" aria-label="恰好加载中">
+        <section class="boot-card">
+          <img class="boot-logo" src="./brand-mark.svg" alt="Just Grow Club" />
+          <p>让恰好的关系</p>
+          <h1>从见面开始</h1>
+          <span class="boot-button">正在进入...</span>
+          <small class="boot-hint">如果停留太久，请刷新或在浏览器打开</small>
+        </section>
+      </main>
+    </div>
   </body>
 </html>
