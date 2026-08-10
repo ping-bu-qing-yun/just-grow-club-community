@@ -7,6 +7,7 @@ import { resolveRootDestination } from './app/AppRouter';
 import { Sheet } from './components/Sheet';
 import { activityListQuerySchema, contentListQuerySchema, createActivityInputSchema, cursorPageQuerySchema, loginRequestSchema, participationStatusSchema } from './contracts/api';
 import { canPublishActivity, normalizeUserRole } from './domain/roles';
+import { serializeOnboardingAnswers } from './state/QiahaoContext';
 
 function SheetHarness() {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,30 @@ describe('shared product contracts', () => {
     expect(loginRequestSchema.safeParse({ phone: '13800000000', password: 'qiahao123' }).success).toBe(true);
     expect(participationStatusSchema.options).toEqual(['interested', 'joined', 'cancelled', 'waitlisted']);
     expect(participationStatusSchema.safeParse('cancelled').success).toBe(true);
+  });
+
+  it('serializes legacy QA state with the configured API question keys', () => {
+    const answers = serializeOnboardingAnswers(
+      {
+        lightAnswers: [['想认识靠谱的人'], ['轻松散步'], ['怕尴尬']],
+        qaAnswers: { 'basic:0': '  做自己很舒服  ', 'extra:0': '自然表达在意' },
+      },
+      [
+        { key: 'light:intent', sectionKey: 'light' },
+        { key: 'light:scene', sectionKey: 'light' },
+        { key: 'light:barrier', sectionKey: 'light' },
+        { key: 'qa:basic:0', sectionKey: 'qa-basic' },
+        { key: 'qa:extra:0', sectionKey: 'qa-extra' },
+      ],
+    );
+
+    expect(answers).toEqual({
+      'light:intent': ['想认识靠谱的人'],
+      'light:scene': ['轻松散步'],
+      'light:barrier': ['怕尴尬'],
+      'qa:basic:0': ['做自己很舒服'],
+      'qa:extra:0': ['自然表达在意'],
+    });
   });
 });
 
