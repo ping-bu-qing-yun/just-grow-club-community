@@ -6,7 +6,7 @@
 
 ## 在线体验
 
-- 外部可访问 Demo：[https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/main/index.html](https://htmlpreview.github.io/?https://github.com/ping-bu-qing-yun/just-grow-club-community/blob/main/index.html)
+- 外部可访问 Demo：[https://ping-bu-qing-yun.github.io/just-grow-club-community/](https://ping-bu-qing-yun.github.io/just-grow-club-community/)
 - GitHub 仓库：[https://github.com/ping-bu-qing-yun/just-grow-club-community](https://github.com/ping-bu-qing-yun/just-grow-club-community)
 
 ## 我从谁开始创作
