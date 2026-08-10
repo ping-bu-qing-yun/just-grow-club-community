@@ -27,6 +27,9 @@ https://github.com/ping-bu-qing-yun/just-grow-club-community
 小CC在上海做线下关系活动。她遇到的不是“没有人想认识人”，而是很多人明明想认识新朋友、想进入亲密关系，却害怕一上来就交换微信、害怕活动像相亲、害怕人太多、也害怕自己不知道怎么表达需求。
 
 小CC真正需要的，不只是一个活动发布工具，而是一个能帮她持续理解用户、整理交友需求、反向生成线下活动提案、再把活动按需招募给合适人群的 Agent。
+<img width="1024" height="768" alt="恰好交友俱乐部 对外宣传版" src="https://github.com/user-attachments/assets/9d1a2ea9-a28d-40bc-b59b-3f0986351a1d" />
+<img width="1024" height="768" alt="恰好交友俱乐部 对外宣传版 (1)" src="https://github.com/user-attachments/assets/e6d062eb-557c-44e8-86e3-be6b39a895bd" />
+
 
 ## 真实场景中的问题
 
