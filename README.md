@@ -6,10 +6,11 @@
 
 ## 在线体验
 
-- 外部可访问 Demo：[https://ping-bu-qing-yun.github.io/just-grow-club-community/?v=d7b0a70)
-- GitHub 仓库：[https://github.com/ping-bu-qing-yun/just-grow-club-community](https://github.com/ping-bu-qing-yun/just-grow-club-community)
+最新外部链接：
+https://ping-bu-qing-yun.github.io/just-grow-club-community/?v=a9ae795
 本地预览链接：
-http://127.0.0.1:5179/
+http://127.0.0.1:5180/
+
 ## 我从谁开始创作
 
 这个作品从“小CC”开始。
