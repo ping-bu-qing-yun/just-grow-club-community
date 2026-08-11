@@ -18,13 +18,28 @@
       <view class="bridge"></view>
       <view class="lens right"></view>
     </view>
-    <view class="welcome-brand">恰好俱乐部</view>
-    <view class="welcome-title">你的回答，是你最好的自我介绍</view>
-    <view class="welcome-slogan">先立体识人，而后心生欢喜</view>
-    <view class="welcome-copy">我们会问你三个问题，慢慢认识真实的你</view>
-    <button class="welcome-start" bindtap="go" data-view="auth">开始认识彼此</button>
-    <view class="welcome-note">不急着匹配，先从一次真实表达开始</view>
+    <view class="welcome-brand">让恰好的关系</view>
+    <view class="welcome-title">从见面开始</view>
+    <button class="welcome-start" bindtap="go" data-view="introLetter">开始认识彼此</button>
   </view>
+
+  <scroll-view wx:if="{{view === 'introLetter'}}" scroll-y class="screen letter-screen">
+    <image class="letter-portrait" src="/pages/index/images/portrait-user.jpg" mode="aspectFit" />
+    <view class="letter-head">
+      <view class="letter-kicker">见字如面。</view>
+      <view class="letter-body">我是90后的小CC，和此刻正在读这封信的你一样，也想在这个快节奏的城市里，认真寻找并建立一段长期而真实的亲密关系。</view>
+      <view class="letter-body">我相信，所有恰好关系都是从见面开始的。所以我开设了针对不同情感需求场景的线下交友活动，想给你一个机会——<text class="letter-em">认真认识别人，也被认真认识。</text></view>
+      <view class="letter-body">我做这个小程序，是想先更懂你们真正的交友需求，<text class="letter-em">再用恰好的方式，把你与恰好的人的见面方式精准推送到你面前</text>，少一点出门的犹豫，多一点线下相遇的可能——让可靠的关系，从一次真实的见面开始。</view>
+      <view class="letter-sign">小CC</view>
+    </view>
+    <view class="letter-faith">
+      <view class="letter-faith-title">恰好的信奉</view>
+      <view class="faith-item">喜欢要从见面开始</view>
+      <view class="faith-item">先立体识人，而后心生欢喜</view>
+      <view class="faith-item">接住不同情感需求场景</view>
+    </view>
+    <button class="primary-btn wide letter-next" bindtap="go" data-view="lightQa">开始吧 →</button>
+  </scroll-view>
 
   <scroll-view wx:elif="{{view === 'auth'}}" scroll-y class="screen auth-screen">
     <view class="auth-hero">
@@ -58,7 +73,7 @@
     <view class="wechat-time">今天 19:36</view>
     <view class="wx-row">
       <view class="wx-avatar"></view>
-      <view class="wx-bubble">你之前说「怕人多，也怕太像相亲」。这周有一场6-8人轻聊天晚餐局，流程很清楚，在KIC附近。</view>
+      <view class="wx-bubble">你之前说「怕人多，也怕无效社交」。这周有一场6-8人轻聊天晚餐局，流程很清楚，在KIC附近。</view>
     </view>
     <button class="wx-card" bindtap="go" data-view="activityDetail">
       <view class="wx-cover">
@@ -70,156 +85,66 @@
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'lightQa'}}" scroll-y class="screen">
-    <view class="section-title">先问3个轻问题 <text>约30秒</text></view>
-    <view class="question-card">
-      <view class="q-title">1. 你最近最想解决什么？</view>
-      <view class="option-grid">
-        <button class="option {{selectedNeeds.reliable ? 'active' : ''}}" data-key="reliable" bindtap="toggleOption">想认识靠谱的人</button>
-        <button class="option {{selectedNeeds.natural ? 'active' : ''}}" data-key="natural" bindtap="toggleOption">想自然一点脱单</button>
-        <button class="option {{selectedNeeds.deep ? 'active' : ''}}" data-key="deep" bindtap="toggleOption">想找能深聊的人</button>
-        <button class="option {{selectedNeeds.social ? 'active' : ''}}" data-key="social" bindtap="toggleOption">想扩大线下社交圈</button>
-        <button class="option {{selectedNeeds.understand ? 'active' : ''}}" data-key="understand" bindtap="toggleOption">想理解关系模式</button>
-        <button class="option {{selectedNeeds.unknown ? 'active' : ''}}" data-key="unknown" bindtap="toggleOption">暂时不确定</button>
-      </view>
+    <view class="qa-intro">
+      <view class="qa-kicker">先问 6 个轻问题 · 约 1 分钟</view>
+      <view class="qa-main-title">帮你挑一场阻力最小的见面</view>
+      <view class="qa-small">只看这次的需求，不给你下定义。答不上来的可以先跳过。</view>
+    </view>
+    <view class="entry-bar">
+      <view class="entry-bar-fill" style="width: {{(entryIndex + 1) * 16.67}}%"></view>
     </view>
     <view class="question-card">
-      <view class="q-title">2. 你更容易接受哪种见面场景？</view>
+      <view class="entry-step">第 {{entryIndex + 1}} / {{entryQuestions.length}} 题</view>
+      <view class="q-title">{{entryQuestions[entryIndex].title}}</view>
+      <view class="entry-hint">{{entryQuestions[entryIndex].hint}}</view>
       <view class="option-grid">
-        <button class="option {{selectedNeeds.dinner ? 'active' : ''}}" data-key="dinner" bindtap="toggleOption">少人数饭局</button>
-        <button class="option">轻松散步</button>
-        <button class="option {{selectedNeeds.topic ? 'active' : ''}}" data-key="topic" bindtap="toggleOption">主题deep talk</button>
-        <button class="option {{selectedNeeds.hobby ? 'active' : ''}}" data-key="hobby" bindtap="toggleOption">共同兴趣活动</button>
-        <button class="option {{selectedNeeds.workshop ? 'active' : ''}}" data-key="workshop" bindtap="toggleOption">关系工作坊</button>
-        <button class="option {{selectedNeeds.group ? 'active' : ''}}" data-key="group" bindtap="toggleOption">小组匹配</button>
-      </view>
-    </view>
-    <view class="question-card">
-      <view class="q-title">3. 你最大的出门阻力是什么？</view>
-      <view class="option-grid">
-        <button class="option {{selectedNeeds.worry ? 'active' : ''}}" data-key="worry" bindtap="toggleOption">怕尴尬</button>
-        <button class="option {{selectedNeeds.crowd ? 'active' : ''}}" data-key="crowd" bindtap="toggleOption">怕人多</button>
-        <button class="option {{selectedNeeds.matchmaking ? 'active' : ''}}" data-key="matchmaking" bindtap="toggleOption">怕太像相亲</button>
-        <button class="option {{selectedNeeds.hardTalk ? 'active' : ''}}" data-key="hardTalk" bindtap="toggleOption">怕聊不起来</button>
-        <button class="option {{selectedNeeds.far ? 'active' : ''}}" data-key="far" bindtap="toggleOption">地点太远</button>
-        <button class="option {{selectedNeeds.unknown ? 'active' : ''}}" data-key="unknown" bindtap="toggleOption">不知道来的人怎样</button>
-      </view>
-      <view class="quick-voice-card">
-        <view class="quick-voice-title">你也可以说说近期的想法与期待</view>
-        <view class="quick-voice-desc">不想打字的话，像发微信语音一样说一句就好。</view>
-        <button class="voice-bar quick-voice-button {{recording && recordTarget === 'quick' ? 'recording' : ''}}" catchtouchstart="startRecordQuick" catchtouchend="stopRecordQa" catchtouchcancel="cancelRecordQa">
-          <text class="mic-icon">{{recording && recordTarget === 'quick' ? '●' : '◉'}}</text>
-          <text>{{recording && recordTarget === 'quick' ? '正在录音 ' + recordSeconds + 's' : '按住说话'}}</text>
-          <text class="voice-sub">{{recording && recordTarget === 'quick' ? '松开发送' : recordHint}}</text>
+        <button
+          wx:for="{{entryQuestions[entryIndex].options}}"
+          wx:key="index"
+          class="option entry-full {{entryAnswers[entryQuestions[entryIndex].id][index] ? 'active' : ''}}"
+          data-qid="{{entryQuestions[entryIndex].id}}"
+          data-oi="{{index}}"
+          bindtap="toggleEntryOption"
+        >
+          <text>{{item.text}}</text>
+          <text wx:if="{{item.sub}}" class="option-sub">{{item.sub}}</text>
         </button>
-        <textarea class="quick-voice-editor" value="{{quickVoiceText}}" bindinput="updateQuickVoice" maxlength="300" placeholder="语音文字会出现在这里，也可以直接输入" />
-        <button wx:if="{{quickVoiceText}}" class="tiny-btn primary quick-submit" bindtap="submitQuickVoice">收进纸杯记忆库</button>
       </view>
     </view>
-    <button class="primary-btn wide" bindtap="go" data-view="deepQa">继续：QA卡牌</button>
+    <view class="entry-foot">
+      <button wx:if="{{entryIndex > 0}}" class="entry-prev" bindtap="entryPrev">‹ 上一题</button>
+      <button wx:else class="entry-skip" bindtap="entryNext">先跳过</button>
+      <button class="primary-btn entry-next" bindtap="entryNext">{{entryIndex < entryQuestions.length - 1 ? '下一步' : '看推荐'}}</button>
+    </view>
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'deepQa'}}" scroll-y class="screen">
     <view class="qa-intro">
-      <view class="qa-main-title">你的回答，就是最好的自我介绍</view>
-      <view class="qa-small">先从初级3张卡开始。你可以用语音说，确认文字后再发送。</view>
+      <view class="qa-kicker">QA 问答 · 必答 · 30秒</view>
+      <view class="qa-main-title">慢一点，说一句真实的话</view>
+      <view class="qa-small">初级和中级用选择完成，高级可选答。答得越多，活动推荐和小CC提案越贴近。</view>
     </view>
     <view class="qa-tabs">
-      <button class="{{qaMode === 'basic' ? 'active' : ''}}" data-mode="basic" bindtap="switchQaMode">初级 · 必答</button>
-      <button class="{{qaMode === 'extra' ? 'active' : ''}}" data-mode="extra" bindtap="switchQaMode">中级 · 6题</button>
-      <button class="{{qaMode === 'advanced' ? 'active' : ''}}" data-mode="advanced" bindtap="switchQaMode">高级 · 自选</button>
+      <button class="{{qaMode === 'basic' ? 'active' : ''}}" data-mode="basic" bindtap="switchQaMode">初级 · 4题</button>
+      <button class="{{qaMode === 'medium' ? 'active' : ''}}" data-mode="medium" bindtap="switchQaMode">中级 · 4题</button>
+      <button class="{{qaMode === 'advanced' ? 'active' : ''}}" data-mode="advanced" bindtap="switchQaMode">高级 · 3题</button>
     </view>
 
-    <view wx:if="{{qaMode === 'basic' && qaIndex < 3}}" class="qa-card">
+    <view class="qa-card">
       <view class="qa-card-top">
-        <text class="qa-badge">{{activeQa.dim}}</text>
-        <text class="qa-count">{{qaIndex + 1}}/3</text>
+        <text class="qa-badge">{{qaMode === 'basic' ? '初级' : qaMode === 'medium' ? '中级' : '高级'}}</text>
+        <text class="qa-count">{{qaIndex + 1}}/{{qaTotal}}</text>
       </view>
       <view class="qa-question">{{activeQa.q}}</view>
-      <view class="qa-help">可以按住语音说，也可以直接输入；文字确认后才会发送。</view>
-      <view class="voice-input {{recording && recordTarget === 'qa' ? 'recording' : ''}}">
-        <button class="voice-bar" catchtouchstart="startRecordQa" catchtouchend="stopRecordQa" catchtouchcancel="cancelRecordQa">
-          <text class="mic-icon">{{recording && recordTarget === 'qa' ? '●' : '◉'}}</text>
-          <text>{{recording && recordTarget === 'qa' ? '正在录音 ' + recordSeconds + 's' : '按住说话'}}</text>
-          <text class="voice-sub">{{recording && recordTarget === 'qa' ? '松开发送' : recordHint}}</text>
-        </button>
+      <view wx:if="{{!activeQa.text}}" class="option-grid">
+        <button wx:for="{{activeQa.options}}" wx:key="*this" class="option {{qaSelections[qaKey] && qaSelections[qaKey].indexOf(item) > -1 ? 'active' : ''}}" data-option="{{item}}" bindtap="toggleQaOption">{{item}}</button>
       </view>
-      <view class="qa-transcript">
-        <text>{{qaHasTranscript ? '文字已准备好，可以修改' : '也可以直接输入，不会被麦克风权限卡住'}}</text>
-        <textarea class="transcript-editor" value="{{activeTranscript}}" bindinput="updateActiveTranscript" bindblur="updateActiveTranscript" maxlength="400" />
+      <view wx:else class="qa-transcript">
+        <view class="qa-help">{{activeQa.hint}}</view>
+        <textarea class="transcript-editor" value="{{qaTexts[qaKey]}}" bindinput="updateQaText" maxlength="400" placeholder="{{activeQa.placeholder}}" />
       </view>
       <view class="qa-actions">
-        <button class="ghost-btn" catchtap="startRecordQa">重新说</button>
-        <button wx:if="{{voiceFilePath}}" class="ghost-btn" bindtap="playVoice">播放录音</button>
-        <button class="primary-btn" bindtap="sendQa">发送回答</button>
-      </view>
-    </view>
-
-    <view wx:elif="{{qaMode === 'basic' && qaIndex >= 3}}" class="qa-finish">
-      <view class="card">
-        <view class="card-title">谢谢你的认真回答</view>
-        <view class="card-text">这3个回答已经足够生成初回画像。如果你愿意让我们更了解你，可以继续选择中级或高级话题；不想继续也可以先跳过。</view>
-      </view>
-      <view class="tier-label">中级 · 从 6 个生活共识问题里自选</view>
-      <view class="question-preview">
-        <button wx:for="{{extraQuestions}}" wx:key="q" class="preview-q {{qaExtraAnswered[index] ? 'answered' : ''}}" data-index="{{index}}" bindtap="pickExtra">{{index + 1}}. {{item.q}}</button>
-      </view>
-      <view class="tier-label">高级 · 从 6 个关系实践问题里自选</view>
-      <view class="question-preview">
-        <button wx:for="{{advancedQuestions}}" wx:key="q" class="preview-q advanced-preview" data-index="{{index}}" bindtap="pickAdvanced">{{index + 1}}. {{item.q}}</button>
-      </view>
-      <view class="btn-row">
-        <button class="ghost-btn" bindtap="skipQa">先跳过</button>
-        <button class="primary-btn" bindtap="go" data-view="basicInfo">继续填写资料</button>
-      </view>
-    </view>
-
-    <view wx:elif="{{qaMode === 'extra'}}" class="qa-card">
-      <view class="qa-card-top">
-        <text class="qa-badge">{{activeQa.dim}}</text>
-        <text class="qa-count">选答</text>
-      </view>
-      <view class="qa-question">{{activeQa.q}}</view>
-      <view class="qa-help">选答题只回答你想说的部分，文字确认后才会发送。</view>
-      <view class="voice-input {{recording && recordTarget === 'qa' ? 'recording' : ''}}">
-        <button class="voice-bar" catchtouchstart="startRecordQa" catchtouchend="stopRecordQa" catchtouchcancel="cancelRecordQa">
-          <text class="mic-icon">{{recording && recordTarget === 'qa' ? '●' : '◉'}}</text>
-          <text>{{recording && recordTarget === 'qa' ? '正在录音 ' + recordSeconds + 's' : '按住说话'}}</text>
-          <text class="voice-sub">{{recording && recordTarget === 'qa' ? '松开发送' : recordHint}}</text>
-        </button>
-      </view>
-      <view class="qa-transcript">
-        <text>{{qaHasTranscript ? '文字已准备好，可以修改' : '也可以直接输入，不会被麦克风权限卡住'}}</text>
-        <textarea class="transcript-editor" value="{{activeTranscript}}" bindinput="updateActiveTranscript" bindblur="updateActiveTranscript" maxlength="400" />
-      </view>
-      <view class="qa-actions">
-        <button class="ghost-btn" catchtap="startRecordQa">重新说</button>
-        <button wx:if="{{voiceFilePath}}" class="ghost-btn" bindtap="playVoice">播放录音</button>
-        <button class="primary-btn" bindtap="sendQa">发送回答</button>
-      </view>
-    </view>
-
-    <view wx:elif="{{qaMode === 'advanced'}}" class="qa-card">
-      <view class="qa-card-top">
-        <text class="qa-badge">{{activeQa.dim}}</text>
-        <text class="qa-count">自选 · {{qaIndex + 1}}/6</text>
-      </view>
-      <view class="qa-question">{{activeQa.q}}</view>
-      <view class="qa-help">这是更深一层的话题，只回答你愿意说的部分。</view>
-      <view class="voice-input {{recording && recordTarget === 'qa' ? 'recording' : ''}}">
-        <button class="voice-bar" catchtouchstart="startRecordQa" catchtouchend="stopRecordQa" catchtouchcancel="cancelRecordQa">
-          <text class="mic-icon">{{recording && recordTarget === 'qa' ? '●' : '◉'}}</text>
-          <text>{{recording && recordTarget === 'qa' ? '正在录音 ' + recordSeconds + 's' : '按住说话'}}</text>
-          <text class="voice-sub">{{recording && recordTarget === 'qa' ? '松开发送' : recordHint}}</text>
-        </button>
-      </view>
-      <view class="qa-transcript">
-        <text>{{qaHasTranscript ? '文字已准备好，可以修改' : '也可以直接输入，不会被麦克风权限卡住'}}</text>
-        <textarea class="transcript-editor" value="{{activeTranscript}}" bindinput="updateActiveTranscript" bindblur="updateActiveTranscript" maxlength="400" />
-      </view>
-      <view class="qa-actions">
-        <button class="ghost-btn" catchtap="startRecordQa">重新说</button>
-        <button wx:if="{{voiceFilePath}}" class="ghost-btn" bindtap="playVoice">播放录音</button>
-        <button class="primary-btn" bindtap="sendQa">发送回答</button>
+        <button class="primary-btn" bindtap="nextQa">{{qaIndex + 1 >= qaTotal ? '完成，去填基础资料' : '下一题'}}</button>
       </view>
     </view>
   </scroll-view>
@@ -255,6 +180,7 @@
       </view>
       <button wx:if="{{avatarUrl}}" class="remove-avatar" bindtap="removeAvatar">移除头像</button>
     </view>
+    <view class="covenant-card">来这里，即愿意一起守护三件事：真实、尊重、友好。你可以不说完，但请不带评判地听完别人。</view>
     <button class="primary-btn wide" bindtap="go" data-view="profile">生成我的初回画像</button>
   </scroll-view>
 
@@ -356,13 +282,22 @@
       <text>{{activeActivity.subtitle}}</text>
       <view>{{activeActivity.title}}</view>
       <text>{{activeActivity.detail}}</text>
+      <text wx:if="{{activeActivity.matchLabel}}" class="detail-match">{{activeActivity.matchLabel}}</text>
     </view>
     <view class="detail-info">
       <view><text>解决需求</text><text>{{activeActivity.subtitle}}</text></view>
       <view><text>时间</text><text>{{activeActivity.date}} {{activeActivity.weekday}} {{activeActivity.time}}</text></view>
-      <view><text>地点</text><text>KIC / 大学路附近</text></view>
+      <view><text>地点</text><text>{{activeActivity.location}}</text></view>
       <view><text>参与人数</text><text>{{activeActivity.people}}</text></view>
-      <view><text>来的人</text><text>25-35岁，想认真认识人但排斥强相亲</text></view>
+      <view><text>来的人</text><text>{{activeActivity.crowd}}</text></view>
+    </view>
+    <view wx:if="{{activeActivity.schedule && activeActivity.schedule.length}}" class="detail-schedule">
+      <view class="detail-section-title">活动流程 <text>每个环节都是低压力设计</text></view>
+      <view wx:for="{{activeActivity.schedule}}" wx:key="time" class="schedule-item">
+        <view class="schedule-dot"></view>
+        <text class="schedule-time">{{item.time}}</text>
+        <text class="schedule-text">{{item.title}}</text>
+      </view>
     </view>
     <button class="primary-btn wide" bindtap="registerActivity">{{activeActivityRegistered ? '已报名，等待活动确认' : '立即报名'}}</button>
     <view class="detail-action-row">
@@ -408,7 +343,7 @@
     <view wx:if="{{showNeedComposer}}" class="need-composer card">
       <view class="card-title">写下你最近的需求</view>
       <view class="card-text">先说给恰好听，也许会有人和你有同样的期待。</view>
-      <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="200" placeholder="例如：想认识有生活感的人，但不想参加强相亲局" />
+      <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="200" placeholder="例如：想认识有生活感的人，但不想再无效社交" />
       <view class="btn-row"><button class="ghost-btn" bindtap="cancelNeedComposer">取消</button><button class="primary-btn" bindtap="publishNeed">发布需求卡</button></view>
     </view>
   </scroll-view>
@@ -455,7 +390,7 @@
         <view wx:for="{{demandHistory}}" wx:if="{{!item.hidden}}" wx:key="id" class="history-card">
           <view class="history-top"><text class="history-status {{item.status === '已解决' ? 'resolved' : ''}}">{{item.status}}</text><text>{{item.date}}</text></view>
           <view class="history-title-text">{{item.title}}</view>
-          <view class="history-activity">匹配活动：{{item.activity}}</view>
+          <view class="history-activity">对应活动：{{item.activity}}</view>
           <view class="history-actions">
             <button class="tiny-btn primary" wx:if="{{item.status !== '已解决'}}" data-index="{{index}}" bindtap="markDemandResolved">标记有改善</button>
             <button class="tiny-btn" data-id="dinner" bindtap="openActivity">回顾活动</button>

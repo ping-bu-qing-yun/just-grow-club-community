@@ -1,7 +1,92 @@
 {
   "description": "恰好关系俱乐部小程序 Demo",
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "assets"
+      },
+      {
+        "type": "folder",
+        "value": "dist"
+      },
+      {
+        "type": "folder",
+        "value": "node_modules"
+      },
+      {
+        "type": "folder",
+        "value": "data"
+      },
+      {
+        "type": "folder",
+        "value": ".server-dist"
+      },
+      {
+        "type": "folder",
+        "value": ".pnpm-store"
+      },
+      {
+        "type": "suffix",
+        "value": "zip"
+      },
+      {
+        "type": "file",
+        "value": "index.html"
+      },
+      {
+        "type": "file",
+        "value": "demo.html"
+      },
+      {
+        "type": "file",
+        "value": "manifest.webmanifest"
+      },
+      {
+        "type": "file",
+        "value": "brand-mark.svg"
+      },
+      {
+        "type": "file",
+        "value": "README.md"
+      },
+      {
+        "type": "file",
+        "value": "SUBMISSION.md"
+      },
+      {
+        "type": "file",
+        "value": "AGENTS.md"
+      },
+      {
+        "type": "file",
+        "value": "产品定位.md"
+      },
+      {
+        "type": "file",
+        "value": "小程序基础资料.md"
+      },
+      {
+        "type": "file",
+        "value": "小程序实现注意事项.md"
+      },
+      {
+        "type": "file",
+        "value": "小程序头像-144.png"
+      },
+      {
+        "type": "file",
+        "value": "小程序头像-512.png"
+      },
+      {
+        "type": "file",
+        "value": ".env"
+      },
+      {
+        "type": "file",
+        "value": ".gitignore"
+      }
+    ],
     "include": []
   },
   "setting": {
@@ -32,7 +117,7 @@
   },
   "compileType": "miniprogram",
   "libVersion": "3.8.0",
-  "appid": "touristappid",
+  "appid": "wxbbac26f6c800f503",
   "projectname": "qiahao-miniprogram",
   "condition": {},
   "miniprogramRoot": "./",

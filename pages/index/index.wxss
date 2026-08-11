@@ -82,6 +82,7 @@ button::after {
   height: 100vh;
   padding: 122rpx 28rpx 40rpx;
   background: #fdfcf8;
+  box-sizing: border-box;
 }
 
 .with-tab {
@@ -134,7 +135,7 @@ button::after {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, #fdfcf8, #e8f4ed);
+  background: url("/pages/index/images/welcome-bg.webp") center top / cover no-repeat, linear-gradient(180deg, #fdfcf8, #e8f4ed);
 }
 
 .cup-logo {
@@ -195,18 +196,19 @@ button::after {
 .welcome-title {
   max-width: 620rpx;
   text-align: center;
-  font-size: 42rpx;
+  font-size: 58rpx;
   font-weight: 900;
   color: #4a6b4a;
-  margin-bottom: 16rpx;
+  margin-bottom: 8rpx;
+  text-shadow: 0 2rpx 12rpx rgba(255, 255, 255, 0.6);
 }
 
 .welcome-brand {
-  color: #4a6b4a;
-  font-size: 28rpx;
+  color: rgba(74, 107, 74, 0.85);
+  font-size: 26rpx;
   font-weight: 900;
   letter-spacing: 2rpx;
-  margin-bottom: 18rpx;
+  margin-bottom: 8rpx;
 }
 
 .welcome-slogan {
@@ -223,16 +225,18 @@ button::after {
 }
 
 .welcome-start {
-  width: 300rpx;
-  height: 92rpx;
+  width: 320rpx;
+  height: 96rpx;
   border-radius: 999rpx;
-  background: #6b8e6b;
-  color: #fff;
-  font-size: 28rpx;
+  background: #fff;
+  color: #5f7f5e;
+  font-size: 30rpx;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 12rpx 30rpx rgba(0, 0, 0, 0.12);
+  margin-top: 30rpx;
 }
 
 .welcome-note {
@@ -993,6 +997,69 @@ button::after {
 .cover-walk, .activity-poster.cover-walk { background: linear-gradient(155deg, #6b8e6b, #c6a86c); }
 .cover-ai, .activity-poster.cover-ai { background: linear-gradient(155deg, #57748a, #92b5a3); }
 .cover-coffee, .activity-poster.cover-coffee { background: linear-gradient(155deg, #607a56, #c68e5e); }
+.cover-workshop, .activity-poster.cover-workshop { background: linear-gradient(155deg, #6d5a7a, #b08ea6); }
+.cover-lunch, .activity-poster.cover-lunch { background: linear-gradient(155deg, #b0794a, #e0b06a); }
+
+.detail-match {
+  display: inline-block;
+  margin-top: 14rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: #5f7f5e;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.detail-schedule {
+  margin: 20rpx 0 8rpx;
+  padding: 26rpx 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+}
+
+.detail-section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #222;
+  margin-bottom: 18rpx;
+}
+
+.detail-section-title text {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: #999;
+  margin-left: 10rpx;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12rpx 0;
+}
+
+.schedule-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #5f7f5e;
+  margin: 12rpx 18rpx 0 4rpx;
+  flex-shrink: 0;
+}
+
+.schedule-time {
+  min-width: 108rpx;
+  font-size: 27rpx;
+  font-weight: 800;
+  color: #5f7f5e;
+}
+
+.schedule-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #444;
+  line-height: 1.5;
+}
 
 .activity-feed-body {
   min-width: 0;
@@ -2125,4 +2192,185 @@ button::after {
 
 .rec-actions {
   margin-top: auto;
+}
+
+.letter-screen {
+  padding: 24rpx 30rpx 30rpx;
+  background: linear-gradient(180deg, #fdfcf8, #f4efe6);
+  overflow-x: hidden;
+}
+
+.letter-portrait {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 50%;
+  display: block;
+  margin: 2rpx auto 14rpx;
+  box-shadow: 0 6rpx 18rpx rgba(0, 0, 0, 0.12);
+}
+
+.letter-head {
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 22rpx 22rpx;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.05);
+}
+
+.letter-kicker {
+  font-size: 32rpx;
+  font-weight: 900;
+  color: #222;
+  margin-bottom: 10rpx;
+}
+
+.letter-body {
+  display: block;
+  font-size: 24rpx;
+  color: #444;
+  line-height: 1.6;
+  margin-bottom: 10rpx;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.letter-em {
+  background: rgba(217, 178, 106, 0.28);
+  color: #5a4630;
+  font-weight: 800;
+  padding: 2rpx 6rpx;
+  border-radius: 8rpx;
+}
+
+.letter-sign {
+  text-align: right;
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #5f7f5e;
+  margin-top: 2rpx;
+}
+
+.letter-faith {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 16rpx 0 12rpx;
+}
+
+.letter-faith-title {
+  font-size: 26rpx;
+  font-weight: 800;
+  color: #5f7f5e;
+  margin-bottom: 8rpx;
+}
+
+.faith-item {
+  font-size: 24rpx;
+  color: #555;
+  padding: 6rpx 0 6rpx 24rpx;
+  position: relative;
+}
+
+.faith-item::before {
+  content: "";
+  position: absolute;
+  left: 4rpx;
+  top: 18rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #d9b26a;
+}
+
+.letter-next {
+  width: 100%;
+  margin-top: 40rpx;
+}
+
+.qa-kicker {
+  font-size: 24rpx;
+  font-weight: 800;
+  color: #d97757;
+  letter-spacing: 1rpx;
+  margin-bottom: 10rpx;
+}
+
+.entry-bar {
+  height: 6rpx;
+  background: #ece7dc;
+  border-radius: 99rpx;
+  margin: 0 0 28rpx;
+  overflow: hidden;
+}
+
+.entry-bar-fill {
+  height: 100%;
+  background: #d97757;
+  border-radius: 99rpx;
+  transition: width .3s ease;
+}
+
+.entry-step {
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #d97757;
+  letter-spacing: 1rpx;
+  margin-bottom: 12rpx;
+}
+
+.entry-hint {
+  font-size: 24rpx;
+  color: #8a867c;
+  line-height: 1.6;
+  margin-top: 10rpx;
+}
+
+.entry-full {
+  width: 100% !important;
+}
+
+.option-sub {
+  display: block;
+  font-size: 22rpx;
+  color: #8a867c;
+  margin-top: 4rpx;
+  font-weight: 400;
+}
+
+.option.active .option-sub {
+  color: rgba(74, 107, 74, .78);
+}
+
+.entry-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-top: 30rpx;
+}
+
+.entry-prev,
+.entry-skip {
+  background: none;
+  border: none;
+  font-size: 26rpx;
+  color: #8a867c;
+  padding: 20rpx 8rpx;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.entry-next {
+  flex: 1;
+  height: 84rpx;
+}
+
+.covenant-card {
+  background: #f4f0e6;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx;
+  font-size: 24rpx;
+  color: #3d3a34;
+  line-height: 1.7;
+  margin: 24rpx 0 28rpx;
 }

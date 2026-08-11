@@ -1,2 +1,9 @@
 project.private.config.json
 .DS_Store
+.env
+node_modules/
+.pnpm-store/
+data/
+.server-dist/
+qiahao-club-source-*.zip
+*.log

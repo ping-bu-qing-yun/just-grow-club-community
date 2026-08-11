@@ -83,10 +83,32 @@ const advancedQuestions = [
   }
 ]
 
+const qaTiers = {
+  basic: [
+    { q: "你更喜欢哪种规模的活动？", multi: true, options: ["6人以下私密小局", "10-20人", "20-50人", "50人以上大型派对"] },
+    { q: "你能接受单次活动的最长时长是？", options: ["1-2小时", "2-4小时", "半天", "全天"] },
+    { q: "参加活动时，你能接受的路程时间是？", options: ["30分钟内", "1小时内", "只要值得，距离不限"] },
+    { q: "未来7天，你的可约档期是？", multi: true, options: ["工作日晚间（周一至周四19:00后）", "周五晚上（开启周末模式）", "周六白天", "周六晚上", "周日白天", "周日晚上", "最近想先线上聊聊，暂不见面"] }
+  ],
+  medium: [
+    { q: "初次见面，怎样开始让你最舒服？", options: ["有主持人/规则，先玩个游戏再聊", "从共同兴趣聊起，不愁没话题", "慢热型，先给点独处空间", "直接来深处话题，不想浪费时间客套"] },
+    { q: "在喜欢的人面前，你通常是？", options: ["主动型，喜欢就会靠近", "慢热型，熟了之后话很多", "被动型，需要对方给我信号", "状态型，感觉对了就主动"] },
+    { q: "哪句话最接近你的感情观？", options: ["先看感觉，感觉对了什么都可以谈", "三观合拍比心动更重要", "关系是两个人一起修出来的，不存在天生就合适", "爱自己要优先于爱对方"] },
+    { q: "你现在在感情上更接近哪种状态？", options: ["单身很久，想认真认识人但不想将就", "有目标类型，但一直没遇到对的", "刚结束一段关系，想先找回自己", "佛系随缘，碰到同频的再说", "母胎单身，需要有人带带"] }
+  ],
+  advanced: [
+    { q: "最容易被异性哪种特质吸引？", multi: true, options: ["外在 · 长相干净舒服", "外在 · 穿搭有品味", "外在 · 气质好有辨识度", "内在 · 温柔有耐心，接得住情绪", "内在 · 幽默有趣，能接梗抛梗", "内在 · 情绪稳定，不情绪化", "处事 · 有主见，不随波逐流", "处事 · 遇事有解决问题的能力", "处事 · 有自己热爱的事，很专注"] },
+    { q: "如果和一个人聊得还不错，哪些是阻碍你下一步行动的阻力？", multi: true, options: ["害怕主动", "不确定对方态度", "生活节奏忙", "担心破坏现有关系", "慢热需要时间", "对线下见面有焦虑"] },
+    { q: "亲密关系里，你如何看待边界感与个人空间？哪些事你不愿被干涉？", text: true, hint: "可以打字，也可以用语音说一段。比如：我需要彼此信任，不希望被干涉消费决定、兴趣爱好、社交方式。", placeholder: "写下你的想法…" }
+  ]
+}
+
+const entryQuestions = require("./entry-questions.js")
+
 const viewTitles = {
   wxTouch: "微信触达",
   lightQa: "认识彼此",
-  deepQa: "QA 卡牌",
+  deepQa: "QA 问答",
   basicInfo: "基础资料",
   profile: "我的初回画像",
   auth: "登录恰好",
@@ -117,7 +139,7 @@ const baseCards = [
     color: "orange",
     type: "预活动",
     title: "深度对谈夜局",
-    tags: ["deep talk", "价值观", "不强相亲"],
+    tags: ["deep talk", "价值观", "先看人"],
     meta: "6人 · 大学路 · 正在准备",
     desc: "围绕三个真实关系问题，先收集感兴趣人数。"
   },
@@ -157,58 +179,116 @@ const activityFeed = [
   {
     id: "dinner",
     type: "low",
-    date: "8/02",
+    date: "8/14",
     weekday: "周五",
     time: "19:30",
     title: "周五轻聊天晚餐局",
-    subtitle: "关系连接 · 少人数 · 低压力",
-    tags: ["低压力", "主推"],
+    subtitle: "成熟活动 · 少人数 · 想认识靠谱的人",
+    tags: ["低压力", "少人数"],
     coverClass: "cover-night",
     coverText: "晚餐局",
-    people: "42人想参加 | 6人成局",
-    detail: "用清楚流程和少人数桌局，降低第一次见面的尴尬。"
-  },
-  {
-    id: "walk",
-    type: "walk",
-    date: "8/03",
-    weekday: "周六",
-    time: "16:00",
-    title: "晨间散步 + 轻食补给",
-    subtitle: "健康生活 · 轻运动 · 慢慢认识人",
-    tags: ["健康", "轻食"],
-    coverClass: "cover-walk",
-    coverText: "城市散步",
-    people: "18人共鸣 | 招募中",
-    detail: "一段不赶时间的城市散步，边走边聊最近的生活节奏。"
+    people: "6-8人 · 高同频",
+    detail: "流程清楚的小桌轻餐，适合第一次低压力见面。",
+    location: "KIC / 大学路附近",
+    crowd: "多为25-35岁，想认真认识、不想无效社交的人",
+    matchLabel: "高同频",
+    schedule: [
+      { time: "19:30", title: "到场 · 小CC/主理人轻破冰，不做简历式自我介绍" },
+      { time: "19:45", title: "共桌轻餐 · 围绕3个低压力话题自然聊天" },
+      { time: "20:35", title: "自由换座 · 可继续聊，也可加入散步小组" },
+      { time: "21:20", title: "反馈 · 写下想继续认识谁、还顾虑什么" }
+    ]
   },
   {
     id: "ai",
     type: "deep",
-    date: "8/07",
-    weekday: "周四",
-    time: "19:00",
-    title: "AI 入门共学桌",
-    subtitle: "成长探索 · 小桌共学 · 认识同行的人",
-    tags: ["成长", "备选"],
+    date: "8/14",
+    weekday: "周五",
+    time: "20:00",
+    title: "深度对谈夜局",
+    subtitle: "预活动 · 价值观 · 先看人",
+    tags: ["价值观", "先看人"],
     coverClass: "cover-ai",
-    coverText: "共学桌",
-    people: "16人想学 | 待成局",
-    detail: "一起带着一个具体问题来，在轻松共学里认识同频的人。"
+    coverText: "深谈",
+    people: "6人 · 正在准备",
+    detail: "围绕三个真实关系问题，先听彼此，再决定要不要靠近。",
+    location: "大学路合作空间",
+    crowd: "喜欢慢聊、愿意分享真实想法的人",
+    matchLabel: "深聊向",
+    schedule: [
+      { time: "20:00", title: "到场 · 简单认识，确认今晚的三个问题" },
+      { time: "20:15", title: "深度对谈 · 分组围绕价值观与关系体验自然聊天" },
+      { time: "21:20", title: "自由交流 · 可继续聊，也可提前安静离开" },
+      { time: "21:50", title: "收束 · 写下今晚印象最深的一句话" }
+    ]
+  },
+  {
+    id: "walk",
+    type: "walk",
+    date: "8/15",
+    weekday: "周六",
+    time: "19:00",
+    title: "我们向月亮走去 · 周五散步局",
+    subtitle: "散步 · 轻社交 · 附近 · 免费",
+    tags: ["散步", "轻社交", "免费"],
+    coverClass: "cover-walk",
+    coverText: "月亮",
+    people: "5人成行 · 免费",
+    detail: "城市散步，5人成行，走到哪聊到哪。",
+    location: "江湾体育场出发",
+    crowd: "想慢慢认识、不喜欢室内局的人",
+    matchLabel: "附近",
+    schedule: [
+      { time: "19:00", title: "集合 · 江湾体育场门口轻破冰，确认路线" },
+      { time: "19:15", title: "边走边聊 · 两三人一组自然聊天，可随时换位" },
+      { time: "20:10", title: "补给 · 找地方喝水休息，想继续的人可加一段" },
+      { time: "20:30", title: "散场 · 各自离开，不强制合影或加微信" }
+    ]
   },
   {
     id: "workshop",
     type: "workshop",
-    date: "8/10",
+    date: "8/15",
     weekday: "周六",
-    time: "10:00",
-    title: "大学路早咖啡散步",
-    subtitle: "低强度社交 · 适合慢热 · 轻松开口",
-    tags: ["散步", "轻社交"],
-    coverClass: "cover-coffee",
-    coverText: "早咖啡",
-    people: "24人收藏 | 开始报名",
-    detail: "从一杯咖啡和一小段散步开始，适合第一次参加恰好活动的人。"
+    time: "14:00",
+    title: "关系说明书工作坊",
+    subtitle: "工作坊 · 关系模式 · 慢了解",
+    tags: ["关系模式", "工作坊", "慢了解"],
+    coverClass: "cover-workshop",
+    coverText: "工作坊",
+    people: "10人 · 报名中",
+    detail: "用一份关系说明书，练习说出自己的靠近方式。",
+    location: "大学路",
+    crowd: "对关系有困惑、愿意认真练习表达的人",
+    matchLabel: "练习向",
+    schedule: [
+      { time: "14:00", title: "开场 · 说明规则与安全边界，不做公开点名" },
+      { time: "14:20", title: "个人书写 · 写下自己的关系说明书要点" },
+      { time: "15:10", title: "小组共创 · 小范围分享，可选择只听不说" },
+      { time: "16:30", title: "收束 · 带走一张属于自己的说明书" }
+    ]
+  },
+  {
+    id: "lunch",
+    type: "low",
+    date: "8/12",
+    weekday: "周三",
+    time: "12:30",
+    title: "午间同频小桌",
+    subtitle: "预活动 · 午间 · 一小时认识附近的人",
+    tags: ["午间", "附近"],
+    coverClass: "cover-lunch",
+    coverText: "午间",
+    people: "4人 · 正在准备",
+    detail: "一小时，一顿饭的时间，认识附近的人。",
+    location: "静安寺附近",
+    crowd: "工作日想轻松认识附近人的上班族",
+    matchLabel: "附近",
+    schedule: [
+      { time: "12:30", title: "入座 · 4人小桌，简单自我介绍一句即可" },
+      { time: "12:40", title: "共餐聊天 · 围绕最近生活与周末计划自然聊" },
+      { time: "13:20", title: "收束 · 想继续认识的人可自行约定" }
+    ]
   }
 ]
 
@@ -237,25 +317,10 @@ Page({
     authMode: "wechat",
     phoneNumber: "",
     verificationCode: "",
-    selectedNeeds: {
-      reliable: false,
-      deep: false,
-      dinner: false,
-      worry: false,
-      crowd: false,
-      natural: false,
-      social: false,
-      understand: false,
-      walk: false,
-      topic: false,
-      hobby: false,
-      workshop: false,
-      group: false,
-      matchmaking: false,
-      hardTalk: false,
-      far: false,
-      unknown: false
-    },
+    entryQuestions,
+    entryIndex: 0,
+    entryDone: false,
+    entryAnswers: { q1: {}, q2: {}, q3: {}, q4: {}, q5: {}, q6: {} },
     basicInfo: {
       birth: "1997-08-12",
       gender: "女",
@@ -266,11 +331,15 @@ Page({
       idealType: "情绪稳定、愿意沟通，也有自己的生活节奏",
       relationshipExperience: "经历过几段关系，现在更想慢一点认识彼此",
       lifeRhythm: "轻运动、咖啡、城市散步，周末不喜欢排太满",
-      relationshipNeed: "想认识靠谱的人，但不想一开始就像相亲"
+      relationshipNeed: "想认识靠谱的人，但不想一开始就条件交换"
     },
     mineTab: "profile",
     qaMode: "basic",
     qaIndex: 0,
+    qaKey: "basic-0",
+    qaTotal: 4,
+    qaSelections: {},
+    qaTexts: {},
     qaHasTranscript: false,
     activeTranscript: "",
     qaAnswers: {},
@@ -285,16 +354,16 @@ Page({
     qaBasicDone: false,
     qaMediumDone: false,
     qaExtraAnswered: {},
-    activeQa: qaSets.basic[0],
+    activeQa: qaTiers.basic[0],
     extraQuestions: qaSets.extra,
     advancedQuestions,
     profileTitle: "低压力线下重启型",
-    profilePills: ["想认识靠谱的人", "怕太像相亲", "适合少人数", "需要自然话题"],
+    profilePills: ["想认识靠谱的人", "拒绝条件交换", "适合少人数", "需要自然话题"],
     profileInsight: "你不是不想见人，而是需要一个可以慢慢观察、不会被催促、也不用马上交换微信的场景。",
     recommendCards: baseCards,
     showReasonModal: false,
     showTab: false,
-    reasonOptions: ["想看看来的人", "怕太像相亲", "时间不合适", "地点有点远", "人数有顾虑", "话题没击中"],
+    reasonOptions: ["想看看来的人", "怕无效社交", "时间不合适", "地点有点远", "人数有顾虑", "话题没击中"],
     showDemandDetail: false,
     activeDemand: null,
     demandFlipped: false,
@@ -330,6 +399,15 @@ Page({
 
   onLoad(options = {}) {
     const saved = wx.getStorageSync("qiahaoDraft") || {}
+    const rawEntry = saved.entryAnswers && typeof saved.entryAnswers === "object" ? saved.entryAnswers : {}
+    const entryAnswers = {
+      q1: rawEntry.q1 && typeof rawEntry.q1 === "object" ? rawEntry.q1 : {},
+      q2: rawEntry.q2 && typeof rawEntry.q2 === "object" ? rawEntry.q2 : {},
+      q3: rawEntry.q3 && typeof rawEntry.q3 === "object" ? rawEntry.q3 : {},
+      q4: rawEntry.q4 && typeof rawEntry.q4 === "object" ? rawEntry.q4 : {},
+      q5: rawEntry.q5 && typeof rawEntry.q5 === "object" ? rawEntry.q5 : {},
+      q6: rawEntry.q6 && typeof rawEntry.q6 === "object" ? rawEntry.q6 : {}
+    }
     this.introTimer = setTimeout(() => this.setView(options.activity ? "activityDetail" : "welcome", { push: false, resetHistory: true }), 1400)
     recorderManager.onStart(() => {
       this.setData({ recording: true, recordHint: "正在听你说，松开发送" })
@@ -374,13 +452,19 @@ Page({
       profileDetails: saved.profileDetails || this.data.profileDetails,
       mineTab: saved.mineTab || "profile",
       avatarUrl: saved.avatarUrl || "",
-      selectedNeeds: saved.selectedNeeds || this.data.selectedNeeds,
+      entryAnswers,
+      entryIndex: saved.entryIndex || 0,
+      entryDone: Boolean(saved.entryDone),
       quickVoiceText: saved.quickVoiceText || "",
       quickVoiceDone: Boolean(saved.quickVoiceDone),
       qaAnswers: saved.qaAnswers || {},
       qaMode: saved.qaMode || "basic",
       qaIndex: Number.isInteger(saved.qaIndex) ? saved.qaIndex : 0,
-      activeQa: saved.activeQa || this.data.activeQa,
+      qaKey: saved.qaKey || "basic-0",
+      qaTotal: saved.qaTotal || 4,
+      qaSelections: saved.qaSelections || {},
+      qaTexts: saved.qaTexts || {},
+      activeQa: saved.activeQa && saved.activeQa.options ? saved.activeQa : this.data.activeQa,
       activeTranscript: saved.activeTranscript || "",
       qaHasTranscript: Boolean(saved.activeTranscript),
       qaStarted: Boolean(saved.qaStarted),
@@ -452,7 +536,7 @@ Page({
   go(e) {
     const view = e.currentTarget.dataset.view
     const current = this.data.view
-    if (view === "deepQa" && current === "lightQa" && !this.data.qaStarted) {
+    if (view === "deepQa" && current === "lightQa") {
       this.resetQa()
     }
     if (view === "home") {
@@ -517,11 +601,39 @@ Page({
     this.setView(previous, { push: false, history })
   },
 
-  toggleOption(e) {
-    const key = e.currentTarget.dataset.key
-    if (!key) return
-    this.setData({ [`selectedNeeds.${key}`]: !this.data.selectedNeeds[key] })
+  toggleEntryOption(e) {
+    const qid = e.currentTarget.dataset.qid
+    const oi = e.currentTarget.dataset.oi
+    const q = entryQuestions[this.data.entryIndex]
+    if (!q || q.id !== qid) return
+    const map = { ...(this.data.entryAnswers[qid] || {}) }
+    if (q.multi) {
+      if (map[oi]) delete map[oi]
+      else map[oi] = true
+      this.setData({ [`entryAnswers.${qid}`]: map })
+    } else {
+      const next = {}
+      if (!map[oi]) next[oi] = true
+      this.setData({ [`entryAnswers.${qid}`]: next })
+    }
     this.persistDraft()
+  },
+
+  entryNext() {
+    if (this.data.entryIndex < entryQuestions.length - 1) {
+      this.setData({ entryIndex: this.data.entryIndex + 1 })
+    } else {
+      this.setData({ entryDone: true })
+      this.setView("deepQa")
+    }
+    this.persistDraft()
+  },
+
+  entryPrev() {
+    if (this.data.entryIndex > 0) {
+      this.setData({ entryIndex: this.data.entryIndex - 1 })
+      this.persistDraft()
+    }
   },
 
   updateBasicField(e) {
@@ -552,46 +664,47 @@ Page({
     this.setData({
       qaMode: "basic",
       qaIndex: 0,
-      qaHasTranscript: false,
-      activeTranscript: "",
-      qaAnswers: {},
+      qaKey: "basic-0",
+      qaTotal: qaTiers.basic.length,
+      qaSelections: {},
+      qaTexts: {},
       qaStarted: true,
-      recording: false,
-      recordSeconds: 0,
-      voiceFilePath: "",
-      recordHint: "按住说话",
-      qaBasicDone: false,
-      qaMediumDone: false,
-      qaExtraAnswered: {},
-      activeQa: qaSets.basic[0]
+      activeQa: qaTiers.basic[0]
     })
   },
 
   switchQaMode(e) {
     const mode = e.currentTarget.dataset.mode
-    if (mode === "deep") {
-      wx.showToast({ title: "高级卡牌稍后再答", icon: "none" })
+    const tier = qaTiers[mode]
+    if (!tier) return
+    this.setData({ qaMode: mode, qaIndex: 0, qaKey: `${mode}-0`, qaTotal: tier.length, activeQa: tier[0] })
+  },
+
+  toggleQaOption(e) {
+    const option = e.currentTarget.dataset.option
+    if (!option) return
+    const key = this.data.qaKey
+    const current = this.data.qaSelections[key] || []
+    const next = current.includes(option) ? current.filter((o) => o !== option) : [...current, option]
+    this.setData({ [`qaSelections.${key}`]: next })
+    this.persistDraft()
+  },
+
+  updateQaText(e) {
+    this.setData({ [`qaTexts.${this.data.qaKey}`]: e.detail.value })
+    this.persistDraft()
+  },
+
+  nextQa() {
+    const { qaMode, qaIndex, qaTotal } = this.data
+    const tier = qaTiers[qaMode]
+    const nextIndex = qaIndex + 1
+    if (nextIndex < qaTotal) {
+      this.setData({ qaIndex: nextIndex, qaKey: `${qaMode}-${nextIndex}`, activeQa: tier[nextIndex] })
       return
     }
-    if ((mode === "extra" || mode === "advanced") && !this.data.qaBasicDone) {
-      wx.showToast({ title: "先完成初级3张卡", icon: "none" })
-      return
-    }
-    if (mode === "advanced" && !this.data.qaMediumDone) {
-      wx.showToast({ title: "可以先完成中级卡牌", icon: "none" })
-      return
-    }
-    if (mode === "extra") {
-      const firstUnanswered = qaSets.extra.findIndex((_, index) => !this.data.qaExtraAnswered[index])
-      const nextIndex = firstUnanswered < 0 ? 0 : firstUnanswered
-      this.setData({ qaMode: "extra", qaIndex: nextIndex, activeQa: qaSets.extra[nextIndex], qaHasTranscript: false, activeTranscript: "", voiceFilePath: "", recordHint: "按住说话" })
-      return
-    }
-    if (mode === "advanced") {
-      this.setData({ qaMode: mode, qaIndex: 0, activeQa: advancedQuestions[0], qaHasTranscript: false, activeTranscript: "", voiceFilePath: "", recordHint: "按住说话" })
-      return
-    }
-    this.setData({ qaMode: mode, qaIndex: 0, activeQa: qaSets[mode][0], qaHasTranscript: false, activeTranscript: "", voiceFilePath: "" })
+    wx.showToast({ title: "回答已保存", icon: "success" })
+    this.setView("basicInfo")
   },
 
   startRecordQa() {
@@ -797,13 +910,19 @@ Page({
       profileDetails: this.data.profileDetails,
       mineTab: this.data.mineTab,
       avatarUrl: this.data.avatarUrl,
-      selectedNeeds: this.data.selectedNeeds,
+      entryAnswers: this.data.entryAnswers,
+      entryIndex: this.data.entryIndex,
+      entryDone: this.data.entryDone,
       quickVoiceText: this.data.quickVoiceText,
       quickVoiceDone: this.data.quickVoiceDone,
       qaStarted: this.data.qaStarted,
       qaAnswers: this.data.qaAnswers,
       qaMode: this.data.qaMode,
       qaIndex: this.data.qaIndex,
+      qaKey: this.data.qaKey,
+      qaTotal: this.data.qaTotal,
+      qaSelections: this.data.qaSelections,
+      qaTexts: this.data.qaTexts,
       activeQa: this.data.activeQa,
       activeTranscript: this.data.activeTranscript,
       qaBasicDone: this.data.qaBasicDone,
@@ -825,19 +944,38 @@ Page({
   },
 
   generateProfile() {
-    const needs = this.data.selectedNeeds
+    const a = this.data.entryAnswers
+    const texts = (qid) => Object.keys(a[qid] || {}).map(i => entryQuestions.find(q => q.id === qid).options[Number(i)].text)
+    const q1 = texts("q1")
+    const q2 = texts("q2")
+    const q3 = texts("q3")
+    const q6 = texts("q6").join("")
+    const j1 = q1.join("")
+    const j2 = q2.join("")
+    const j3 = q3.join("")
     const pills = []
-    if (needs.reliable) pills.push("想认识靠谱的人")
-    if (needs.deep) pills.push("想找能深聊的人")
-    if (needs.dinner) pills.push("适合少人数")
-    if (needs.worry || needs.matchmaking) pills.push("不想强相亲")
-    if (needs.crowd) pills.push("希望人数少一点")
-    if (needs.topic) pills.push("自然话题")
-    const finalPills = pills.length ? pills.slice(0, 4) : ["愿意慢慢认识人", "希望线下见面", "低压力社交"]
-    const title = needs.deep || needs.topic ? "慢热深聊探索型" : "低压力线下重启型"
-    const insight = needs.worry || needs.matchmaking
-      ? "你不是不想见人，而是需要一个可以慢慢观察、不会被催促、也不用马上交换微信的场景。"
-      : "你愿意认识真实的人，也在寻找一个不必表演、不急着下结论的见面方式。"
+    if (q2.some(t => t.includes("散步"))) pills.push("轻量起步")
+    if (q1.some(t => t.includes("认真认识")) || q1.some(t => t.includes("真实环境"))) pills.push("认真认识")
+    if (q2.some(t => t.includes("工作坊")) || q1.some(t => t.includes("练习表达")) || q1.some(t => t.includes("关系困惑"))) pills.push("想练习")
+    if (q3.some(t => t.includes("人多"))) pills.push("怕人多")
+    if (j3.includes("条件对条件")) pills.push("拒绝条件交换")
+    if (j3.includes("无效社交") || j1.includes("无效社交")) pills.push("拒绝无效社交")
+    if (q3.some(t => t.includes("没人接"))) pills.push("怕没人接住")
+    if (q3.some(t => t.includes("加微信"))) pills.push("怕强目的")
+    const finalPills = pills.length ? pills.slice(0, 4) : ["认真认识", "轻量起步", "拒绝无效社交"]
+    let title
+    if (j2.includes("工作坊")) title = "关系练习型"
+    else if (j2.includes("同频") && !j2.includes("午间")) title = "认真深聊型"
+    else if (j2.includes("散步") || q6.includes("有点累")) title = "轻量见面型"
+    else title = "自然认识型"
+    let insight
+    if (j3.includes("条件对条件") || j3.includes("无效社交")) {
+      insight = "你不想把认识变成条件交换。恰好这里只做一件事：在真实环境里，把彼此看得更立体。"
+    } else if (q6.includes("有点累")) {
+      insight = "今天先不给自己压力，从最轻的一场开始，舒服地出现在人群里就好。"
+    } else {
+      insight = "你愿意认真认识人。这里会优先给你少人数、流程清楚、来的人画像明确的活动。"
+    }
     this.setData({ profileTitle: title, profilePills: finalPills, profileInsight: insight })
   },
 
@@ -881,7 +1019,7 @@ Page({
     }
     const id = `need-${Date.now()}`
     const newNeed = { id, title: content, detail: content, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
-    const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待匹配活动" }, ...this.data.demandHistory]
+    const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动" }, ...this.data.demandHistory]
     this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false })
     this.persistDraft()
     wx.showToast({ title: "需求卡已发布", icon: "success" })
