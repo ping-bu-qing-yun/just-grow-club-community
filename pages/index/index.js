@@ -104,15 +104,16 @@ const qaTiers = {
 }
 
 const entryQuestions = require("./entry-questions.js")
+const relationshipQuestions = require("./relationship-questions.js")
 
 const viewTitles = {
   wxTouch: "微信触达",
   lightQa: "认识彼此",
-  deepQa: "QA 问答",
+  deepQa: "情感与交友",
   basicInfo: "基础资料",
   profile: "我的初回画像",
   auth: "登录恰好",
-  home: "恰好活动",
+  home: "恰好是你",
   activityDetail: "活动详情",
   explore: "发现活动",
   square: "需求广场",
@@ -292,6 +293,36 @@ const activityFeed = [
   }
 ]
 
+const activityPosters = {
+  dinner: "/pages/index/images/posters/poster-dinner.jpg",
+  ai: "/pages/index/images/posters/poster-deep.jpg",
+  walk: "/pages/index/images/posters/poster-walk.jpg",
+  workshop: "/pages/index/images/posters/poster-workshop.jpg",
+  lunch: "/pages/index/images/posters/poster-lunch.jpg"
+}
+
+const activityFee = { dinner: "¥99", ai: "¥89", walk: "免费", workshop: "¥129", lunch: "¥39" }
+
+// 「听你们的」续场去处池：散场后推荐给用户，KIC 步行 10 分钟内。
+// energy: low=有点累 / mid=一般 / high=有能量；style: walk=慢热散步 / deep=深聊 / task=共同任务 / chat=边吃边聊
+// time: night=19:00 后散场 / day=白天散场。perk 为商户权益占位文案，正式上线前需小CC与商户确认。
+const afterPartySpots = [
+  { id: "yakitori", cat: "深夜食堂", name: "大学路炭火烧鸟", walk: "步行 8 分钟", open: "营业至 24:00", vibe: ["烟火气", "适合继续聊"], energy: ["low", "mid"], style: ["chat", "walk"], time: ["night"], line: "坐下就有话聊，慢慢吃就是相处。", perk: "恰好用户：散场饮品 9 折" },
+  { id: "catcoffee", cat: "猫咖", name: "大学路猫咖·夜读角", walk: "步行 6 分钟", open: "营业至 22:30", vibe: ["安静", "低压力"], energy: ["low"], style: ["walk", "deep"], time: ["night"], line: "不想说话也没关系，猫会替你们暖场。" },
+  { id: "cinema", cat: "夜间电影", name: "五角场影院·末场", walk: "步行 12 分钟", open: "末场 22:40", vibe: ["不用硬聊", "散场有话题"], energy: ["low", "mid"], style: ["deep", "chat"], time: ["night"], line: "看完电影，散场路上正好聊刚才那一段。", perk: "恰好用户：双人票 8 折" },
+  { id: "ktv", cat: "KTV", name: "五角场 KTV·小包厢", walk: "步行 10 分钟", open: "营业至 02:00", vibe: ["热闹", "一起释放"], energy: ["high"], style: ["task", "chat"], time: ["night"], line: "一起唱两首，比干聊更容易熟起来。" },
+  { id: "escape", cat: "密室逃脱", name: "密室逃脱·双人线", walk: "步行 9 分钟", open: "预约至 23:00", vibe: ["共同任务", "有点刺激"], energy: ["mid", "high"], style: ["task"], time: ["night"], line: "一起解一道题，比自我介绍更快认识彼此。" },
+  { id: "craftbar", cat: "清吧", name: "精酿清吧·角落位", walk: "步行 7 分钟", open: "营业至 01:00", vibe: ["慢慢聊", "灯光刚好"], energy: ["mid"], style: ["deep", "chat"], time: ["night"], line: "一人一杯，话题自然往深处走。" },
+  { id: "nightrun", cat: "夜跑散步", name: "江湾体育场夜跑道", walk: "步行 5 分钟", open: "开放至 22:00", vibe: ["轻运动", "并肩走"], energy: ["mid", "high"], style: ["walk", "task"], time: ["night"], line: "并肩走几圈，比面对面坐着更松弛。" },
+  { id: "boardgame", cat: "桌游", name: "桌游吧·2 人小桌", walk: "步行 8 分钟", open: "营业至 24:00", vibe: ["有游戏不冷场"], energy: ["mid", "high"], style: ["task", "chat"], time: ["night"], line: "一局小游戏，输赢都能笑一场。" },
+  { id: "bookstore", cat: "深夜书店", name: "24h 书店·深夜共读", walk: "步行 10 分钟", open: "24 小时", vibe: ["安静", "各自有位置"], energy: ["low"], style: ["deep", "walk"], time: ["night"], line: "各自挑一本书，坐同一张桌，想聊再聊。" },
+  { id: "nightmarket", cat: "小吃街", name: "大学路小吃街", walk: "步行 4 分钟", open: "营业至 23:00", vibe: ["边走边吃", "轻松"], energy: ["low", "mid"], style: ["walk", "chat"], time: ["night"], line: "从街头吃到街尾，话题不会断。" },
+  { id: "coffee", cat: "咖啡馆", name: "大学路咖啡馆·续聊", walk: "步行 6 分钟", open: "下午营业", vibe: ["安静", "想接着聊"], energy: ["low", "mid"], style: ["deep", "chat"], time: ["day"], line: "意犹未尽的话，换一家咖啡店继续坐。", perk: "恰好用户：续聊咖啡 8 折" },
+  { id: "handcraft", cat: "手作", name: "手作工作室·双人体验", walk: "步行 11 分钟", open: "下午场 14:00-17:00", vibe: ["一起做点什么"], energy: ["mid", "high"], style: ["task"], time: ["day"], line: "一起做一件小东西，带回家就是纪念。" },
+  { id: "picnic", cat: "草坪野餐", name: "江湾草坪·午间野餐", walk: "步行 5 分钟", open: "白天", vibe: ["阳光", "轻松"], energy: ["low", "mid"], style: ["walk"], time: ["day"], line: "买杯咖啡坐草坪上，晒晒太阳聊聊天。" },
+  { id: "gallery", cat: "看展", name: "大学路美术馆·双人看展", walk: "步行 9 分钟", open: "营业至 18:00", vibe: ["有共同话题", "不着急"], energy: ["low", "mid"], style: ["deep", "walk"], time: ["day"], line: "看展不用一直说话，想到什么说什么。" }
+]
+
 const defaultCommunityNeeds = [
   { id: "reliable", title: "想认识靠谱的人", detail: "不想尴尬交换微信，但想认真认识人。希望有一个流程自然、人数不多、可以先观察再靠近的场景。", stats: "72人共鸣 · 38条评论 · 6人想参加", comments: ["我也希望有一场不急着交换联系方式的活动。", "如果是 6-8 人，我会更愿意参加。"], user: false },
   { id: "heart", title: "30岁后难心动", detail: "不是不想恋爱，是越来越难进入关系。想和同样认真生活的人聊聊这种变化。", stats: "45人共鸣 · 22条评论 · 4人想参加", comments: ["以前会着急，现在更想先认识自己。"], user: false },
@@ -321,11 +352,36 @@ Page({
     entryIndex: 0,
     entryDone: false,
     entryAnswers: { q1: {}, q2: {}, q3: {}, q4: {}, q5: {}, q6: {} },
+    relQuestions: relationshipQuestions,
+    relIndex: 0,
+    relDone: false,
+    relAnswers: { q7: {}, q8: {}, q9: {}, q10: {}, q11: {}, q12: {} },
+    profileDims: [
+      { name: "认识节奏", key: "自然开场", tags: ["看现场氛围", "慢慢来"] },
+      { name: "表达方式", key: "随缘表达", tags: ["看心情", "不勉强"] },
+      { name: "安全感与边界", key: "边界清晰", tags: ["需要空间", "讨厌被催"] },
+      { name: "活动偏好", key: "自然型", tags: ["慢慢来", "看活动"] }
+    ],
+    homeComplete: 42,
+    homeSummary: "",
+    homeTags: [],
+    homeCards: [],
+    posterIndex: 0,
+    needRecommend: defaultCommunityNeeds[0],
+    genderOptions: ["女生", "男生", "先不答"],
+    educationOptions: ["高中及以下", "大专", "本科", "硕士", "博士", "其他"],
     basicInfo: {
-      birth: "1997-08-12",
-      gender: "女",
-      education: "本科",
-      occupation: "品牌策划"
+      name: "",
+      birth: "",
+      gender: "",
+      height: "",
+      education: "",
+      hometown: "",
+      hometownRegion: [],
+      area: "",
+      region: [],
+      occupation: "",
+      scene: ""
     },
     profileDetails: {
       idealType: "情绪稳定、愿意沟通，也有自己的生活节奏",
@@ -392,8 +448,10 @@ Page({
     activityFeed,
     filteredActivityFeed: activityFeed,
     activeActivity: activityFeed[0],
+    matchReason: "",
     activeActivityRegistered: false,
     activityGroupJoined: false,
+    afterPartySpots: [],
     filteredActivities: []
   },
 
@@ -407,6 +465,15 @@ Page({
       q4: rawEntry.q4 && typeof rawEntry.q4 === "object" ? rawEntry.q4 : {},
       q5: rawEntry.q5 && typeof rawEntry.q5 === "object" ? rawEntry.q5 : {},
       q6: rawEntry.q6 && typeof rawEntry.q6 === "object" ? rawEntry.q6 : {}
+    }
+    const rawRel = saved.relAnswers && typeof saved.relAnswers === "object" ? saved.relAnswers : {}
+    const relAnswers = {
+      q7: rawRel.q7 && typeof rawRel.q7 === "object" ? rawRel.q7 : {},
+      q8: rawRel.q8 && typeof rawRel.q8 === "object" ? rawRel.q8 : {},
+      q9: rawRel.q9 && typeof rawRel.q9 === "object" ? rawRel.q9 : {},
+      q10: rawRel.q10 && typeof rawRel.q10 === "object" ? rawRel.q10 : {},
+      q11: rawRel.q11 && typeof rawRel.q11 === "object" ? rawRel.q11 : {},
+      q12: rawRel.q12 && typeof rawRel.q12 === "object" ? rawRel.q12 : {}
     }
     this.introTimer = setTimeout(() => this.setView(options.activity ? "activityDetail" : "welcome", { push: false, resetHistory: true }), 1400)
     recorderManager.onStart(() => {
@@ -455,6 +522,9 @@ Page({
       entryAnswers,
       entryIndex: saved.entryIndex || 0,
       entryDone: Boolean(saved.entryDone),
+      relAnswers,
+      relIndex: saved.relIndex || 0,
+      relDone: Boolean(saved.relDone),
       quickVoiceText: saved.quickVoiceText || "",
       quickVoiceDone: Boolean(saved.quickVoiceDone),
       qaAnswers: saved.qaAnswers || {},
@@ -527,10 +597,59 @@ Page({
     this.setData({
       view,
       viewHistory: history,
+      canGoBack: history.length > 0,
       showTab,
       screenTitle: viewTitles[view] || "",
-      showAppHeader: Boolean(viewTitles[view]) && view !== "welcome" && view !== "intro"
+      showAppHeader: Boolean(viewTitles[view]) && view !== "welcome" && view !== "intro" && view !== "home"
     })
+  },
+
+  enterHome() {
+    this.refreshRecommendations()
+    this.prepareHome()
+    this.setView("home")
+  },
+
+  prepareHome() {
+    const dims = this.data.profileDims || []
+    const feed = this.data.activityFeed || []
+    const typeMap = { dinner: "晚餐局", ai: "深谈局", walk: "散步局", workshop: "工作坊", lunch: "午间小桌" }
+    const now = new Date()
+    const tom = new Date(now.getTime() + 86400000)
+    const dateLabel = (item) => {
+      const parts = (item.date || "").split("/").map(Number)
+      const isToday = parts[0] === now.getMonth() + 1 && parts[1] === now.getDate()
+      const isTom = parts[0] === tom.getMonth() + 1 && parts[1] === tom.getDate()
+      const tag = isToday ? "今天" : isTom ? "明天" : item.weekday || ""
+      return `${item.date} ${tag} ${item.time || ""}`.trim()
+    }
+    const cards = feed.slice(0, 4).map(item => ({
+      id: item.id,
+      poster: activityPosters[item.id] || "",
+      dateLabel: dateLabel(item),
+      title: item.title,
+      location: item.location,
+      type: typeMap[item.id] || "活动"
+    }))
+    const summary = dims.length >= 2 ? dims[0].key + " · " + dims[1].key : (this.data.profileTitle || "认识你一点点")
+    const tags = []
+    if (dims[2]) tags.push(dims[2].key)
+    if (dims[3]) tags.push(dims[3].key)
+    if (this.data.basicInfo.area) tags.push(this.data.basicInfo.area)
+    this.setData({
+      homeCards: cards,
+      homeSummary: summary,
+      homeTags: tags.slice(0, 3),
+      needRecommend: this.data.communityNeeds[0] || defaultCommunityNeeds[0]
+    })
+  },
+
+  tapCat() {
+    wx.showToast({ title: "喵～", icon: "none" })
+  },
+
+  onSwiperChange(e) {
+    this.setData({ posterIndex: e.detail.current })
   },
 
   go(e) {
@@ -541,6 +660,7 @@ Page({
     }
     if (view === "home") {
       this.refreshRecommendations()
+      this.prepareHome()
       this.setView(view, { push: false, resetHistory: true })
       return
     }
@@ -620,10 +740,15 @@ Page({
   },
 
   entryNext() {
+    if (this.data.entryIndex === 0 && !Object.keys(this.data.entryAnswers.q1 || {}).length) {
+      wx.showToast({ title: "先选一个，小CC才知道怎么帮你", icon: "none" })
+      return
+    }
     if (this.data.entryIndex < entryQuestions.length - 1) {
       this.setData({ entryIndex: this.data.entryIndex + 1 })
     } else {
       this.setData({ entryDone: true })
+      if (this.data.relIndex >= relationshipQuestions.length) this.setData({ relIndex: 0 })
       this.setView("deepQa")
     }
     this.persistDraft()
@@ -634,6 +759,92 @@ Page({
       this.setData({ entryIndex: this.data.entryIndex - 1 })
       this.persistDraft()
     }
+  },
+
+  toggleRelOption(e) {
+    const qid = e.currentTarget.dataset.qid
+    const oi = e.currentTarget.dataset.oi
+    const q = relationshipQuestions[this.data.relIndex]
+    if (!q || q.id !== qid) return
+    const map = { ...(this.data.relAnswers[qid] || {}) }
+    if (q.multi) {
+      if (map[oi]) delete map[oi]
+      else map[oi] = true
+      this.setData({ [`relAnswers.${qid}`]: map })
+    } else {
+      const next = {}
+      if (!map[oi]) next[oi] = true
+      this.setData({ [`relAnswers.${qid}`]: next })
+    }
+    this.persistDraft()
+  },
+
+  relNext() {
+    if (this.data.relIndex < relationshipQuestions.length - 1) {
+      this.setData({ relIndex: this.data.relIndex + 1 })
+    } else {
+      this.setData({ relDone: true })
+      this.setView("basicInfo")
+    }
+    this.persistDraft()
+  },
+
+  relPrev() {
+    if (this.data.relIndex > 0) {
+      this.setData({ relIndex: this.data.relIndex - 1 })
+      this.persistDraft()
+    }
+  },
+
+  toggleBasicChip(e) {
+    const field = e.currentTarget.dataset.field
+    const val = e.currentTarget.dataset.val
+    if (!field) return
+    this.setData({ [`basicInfo.${field}`]: val })
+    this.persistDraft()
+  },
+
+  updateBasicDate(e) {
+    this.setData({ "basicInfo.birth": e.detail.value })
+    this.persistDraft()
+  },
+
+  updateBasicRegion(e) {
+    const region = e.detail.value || []
+    const area = region[1] && region[2] ? region[1] + " · " + region[2] : (region.join(" · "))
+    this.setData({ "basicInfo.region": region, "basicInfo.area": area })
+    this.persistDraft()
+  },
+
+  updateBasicSelector(e) {
+    const field = e.currentTarget.dataset.field
+    const options = field === "gender" ? this.data.genderOptions : this.data.educationOptions
+    const val = options[Number(e.detail.value)]
+    if (!val) return
+    this.setData({ [`basicInfo.${field}`]: val })
+    this.persistDraft()
+  },
+
+  updateHometownRegion(e) {
+    const region = e.detail.value || []
+    const hometown = region[0] && region[1] ? region[0] + " · " + region[1] : (region.join(" · "))
+    this.setData({ "basicInfo.hometownRegion": region, "basicInfo.hometown": hometown })
+    this.persistDraft()
+  },
+
+  submitBasicInfo() {
+    const b = this.data.basicInfo
+    const missing = []
+    if (!(b.name || "").trim()) missing.push("昵称")
+    if (!b.birth) missing.push("生日")
+    if (!b.gender) missing.push("性别")
+    if (!b.area) missing.push("现居住地")
+    if (missing.length) {
+      wx.showToast({ title: "还差：" + missing.join("、"), icon: "none" })
+      return
+    }
+    this.generateProfile()
+    this.setView("profile")
   },
 
   updateBasicField(e) {
@@ -893,8 +1104,13 @@ Page({
   openActivity(e) {
     const id = e.currentTarget.dataset.id
     const aliases = { night: "ai", manual: "workshop", life: "walk" }
-    const activeActivity = this.data.activityFeed.find(item => item.id === id || item.id === aliases[id]) || this.data.activityFeed[0]
-    this.setData({ activeActivity, activeActivityRegistered: this.data.registeredActivities.includes(activeActivity.id), activityGroupJoined: false })
+    const found = this.data.activityFeed.find(item => item.id === id || item.id === aliases[id]) || this.data.activityFeed[0]
+    const activeActivity = { ...found, poster: activityPosters[found.id] || "", fee: activityFee[found.id] || "预约" }
+    const people = (found.people || "").split("·")[0].trim()
+    const topic = (found.tags || [])[0] || "自然话题"
+    const matchReason = `这场只有 ${people}，${found.weekday}晚在${found.location}，聊的是${topic}——很适合现在想慢慢认识人的你。`
+    this.setData({ activeActivity, matchReason, activeActivityRegistered: this.data.registeredActivities.includes(activeActivity.id), activityGroupJoined: false })
+    this.refreshAfterParty()
     this.persistDraft()
     this.setView("activityDetail")
   },
@@ -913,6 +1129,9 @@ Page({
       entryAnswers: this.data.entryAnswers,
       entryIndex: this.data.entryIndex,
       entryDone: this.data.entryDone,
+      relAnswers: this.data.relAnswers,
+      relIndex: this.data.relIndex,
+      relDone: this.data.relDone,
       quickVoiceText: this.data.quickVoiceText,
       quickVoiceDone: this.data.quickVoiceDone,
       qaStarted: this.data.qaStarted,
@@ -945,39 +1164,59 @@ Page({
 
   generateProfile() {
     const a = this.data.entryAnswers
-    const texts = (qid) => Object.keys(a[qid] || {}).map(i => entryQuestions.find(q => q.id === qid).options[Number(i)].text)
-    const q1 = texts("q1")
-    const q2 = texts("q2")
-    const q3 = texts("q3")
-    const q6 = texts("q6").join("")
-    const j1 = q1.join("")
-    const j2 = q2.join("")
-    const j3 = q3.join("")
-    const pills = []
-    if (q2.some(t => t.includes("散步"))) pills.push("轻量起步")
-    if (q1.some(t => t.includes("认真认识")) || q1.some(t => t.includes("真实环境"))) pills.push("认真认识")
-    if (q2.some(t => t.includes("工作坊")) || q1.some(t => t.includes("练习表达")) || q1.some(t => t.includes("关系困惑"))) pills.push("想练习")
-    if (q3.some(t => t.includes("人多"))) pills.push("怕人多")
-    if (j3.includes("条件对条件")) pills.push("拒绝条件交换")
-    if (j3.includes("无效社交") || j1.includes("无效社交")) pills.push("拒绝无效社交")
-    if (q3.some(t => t.includes("没人接"))) pills.push("怕没人接住")
-    if (q3.some(t => t.includes("加微信"))) pills.push("怕强目的")
-    const finalPills = pills.length ? pills.slice(0, 4) : ["认真认识", "轻量起步", "拒绝无效社交"]
-    let title
-    if (j2.includes("工作坊")) title = "关系练习型"
-    else if (j2.includes("同频") && !j2.includes("午间")) title = "认真深聊型"
-    else if (j2.includes("散步") || q6.includes("有点累")) title = "轻量见面型"
-    else title = "自然认识型"
+    const r = this.data.relAnswers
+    const basic = this.data.basicInfo
+    const eTexts = (qid) => Object.keys(a[qid] || {}).map(i => entryQuestions.find(q => q.id === qid).options[Number(i)].text)
+    const rTexts = (qid) => Object.keys(r[qid] || {}).map(i => relationshipQuestions.find(q => q.id === qid).options[Number(i)].text)
+    const pick = (arr) => arr[0] || ""
+    const e1 = eTexts("q1")
+    const e2 = eTexts("q2")
+    const e3 = eTexts("q3")
+    const e6 = eTexts("q6").join("")
+    const j1 = e1.join("")
+    const j2 = e2.join("")
+    const j3 = e3.join("")
+    const r7 = pick(rTexts("q7"))
+    const r8 = pick(rTexts("q8"))
+    const r9 = pick(rTexts("q9"))
+    const dim = (name, key, tags) => ({ name, key, tags })
+    const dims = []
+    if (r7.includes("有规则")) dims.push(dim("认识节奏", "偏好有引导", ["先玩游戏再聊", "规则感让我安心"]))
+    else if (r7.includes("共同兴趣")) dims.push(dim("认识节奏", "兴趣开启", ["聊得起来", "不怕没话题"]))
+    else if (r7.includes("慢热")) dims.push(dim("认识节奏", "慢热观察", ["先观察再靠近", "需要时间热起来"]))
+    else if (r7.includes("深一点")) dims.push(dim("认识节奏", "直接深聊", ["不想客套", "愿意上强度"]))
+    else dims.push(dim("认识节奏", "自然开场", ["看现场氛围", "慢慢来"]))
+    if (r8.includes("主动型")) dims.push(dim("表达方式", "主动靠近", ["喜欢就会靠近"]))
+    else if (r8.includes("慢热型")) dims.push(dim("表达方式", "慢热表达", ["熟了之后话很多"]))
+    else if (r8.includes("被动型")) dims.push(dim("表达方式", "被动等待", ["需要对方先给信号"]))
+    else if (r8.includes("状态型")) dims.push(dim("表达方式", "状态驱动", ["感觉对了就主动"]))
+    else dims.push(dim("表达方式", "随缘表达", ["看心情", "不勉强"]))
+    if (r9.includes("说到做到")) dims.push(dim("安全感与边界", "确定性", ["说到做到", "不用我猜"]))
+    else if (r9.includes("个人空间")) dims.push(dim("安全感与边界", "空间感", ["个人空间被尊重"]))
+    else if (r9.includes("情绪稳定")) dims.push(dim("安全感与边界", "情绪安全", ["不冷处理", "稳定回应"]))
+    else if (r9.includes("被肯定")) dims.push(dim("安全感与边界", "被看见", ["被肯定", "被回应"]))
+    else dims.push(dim("安全感与边界", "边界清晰", ["需要空间", "讨厌被催"]))
+    if (j2.includes("工作坊")) dims.push(dim("活动偏好", "练习型", ["关系练习", "有结构"]))
+    else if (j2.includes("同频") && !j2.includes("午间")) dims.push(dim("活动偏好", "深聊型", ["小场深聊", "立体识人"]))
+    else if (j2.includes("散步")) dims.push(dim("活动偏好", "轻量型", ["散步", "低压力"]))
+    else if (j2.includes("午间")) dims.push(dim("活动偏好", "轻触型", ["午间", "附近"]))
+    else if (j2.includes("需求成局")) dims.push(dim("活动偏好", "话题型", ["先有话题"]))
+    else dims.push(dim("活动偏好", "自然型", ["慢慢来", "看活动"]))
     let insight
     if (j3.includes("条件对条件") || j3.includes("无效社交")) {
       insight = "你不想把认识变成条件交换。恰好这里只做一件事：在真实环境里，把彼此看得更立体。"
-    } else if (q6.includes("有点累")) {
+    } else if (e6.includes("有点累")) {
       insight = "今天先不给自己压力，从最轻的一场开始，舒服地出现在人群里就好。"
     } else {
       insight = "你愿意认真认识人。这里会优先给你少人数、流程清楚、来的人画像明确的活动。"
     }
-    this.setData({ profileTitle: title, profilePills: finalPills, profileInsight: insight })
+    this.setData({
+      profileTitle: (basic.name || "小Z") + " · 初印象",
+      profileDims: dims,
+      profileInsight: insight
+    })
   },
+
 
   openDemandDetail(e) {
     const id = e.currentTarget.dataset.id
@@ -1087,6 +1326,71 @@ Page({
     wx.showModal({ title: "活动群聊", content: "活动成行后，小CC会把你加入本场活动群。", showCancel: false, confirmText: "知道了" })
   },
 
+  refreshAfterParty() {
+    this.setData({ afterPartySpots: this.pickAfterPartySpots() })
+  },
+
+  pickAfterPartySpots() {
+    const a = this.data.entryAnswers || {}
+    const q6 = Object.keys(a.q6 || {})
+    let energy = "mid"
+    if (q6.includes("2")) energy = "low"
+    else if (q6.includes("0")) energy = "high"
+
+    const rel = this.data.relAnswers || {}
+    const relTexts = (qid) => Object.keys(rel[qid] || {}).map(i => relationshipQuestions.find(q => q.id === qid).options[Number(i)].text).join("")
+    const r7 = relTexts("q7")
+    const r8 = relTexts("q8")
+    let style = "chat"
+    if (r7.includes("慢热") || r8.includes("慢热") || r8.includes("被动")) style = "walk"
+    else if (r7.includes("有规则") || r7.includes("共同兴趣")) style = "task"
+    else if (r7.includes("深")) style = "deep"
+
+    const act = this.data.activeActivity || {}
+    const lastTime = (act.schedule && act.schedule.length ? act.schedule[act.schedule.length - 1].time : act.time) || ""
+    const hour = parseInt(String(lastTime).split(":")[0], 10)
+    const period = Number.isFinite(hour) && hour >= 19 ? "night" : "day"
+
+    const energyPrefix = energy === "low" ? "你今晚说过想轻松一点，" : energy === "high" ? "你今晚还有能量，" : "现在散场不赶时间，"
+
+    const scored = afterPartySpots
+      .filter(s => s.time.includes(period))
+      .map(s => ({ ...s, score: (s.energy.includes(energy) ? 2 : 0) + (s.style.includes(style) ? 2 : 0) + Math.random() }))
+      .sort((x, y) => y.score - x.score)
+
+    const picked = []
+    const seenCat = {}
+    for (const s of scored) {
+      if (picked.length >= 3) break
+      if (!seenCat[s.cat]) {
+        picked.push(s)
+        seenCat[s.cat] = true
+      }
+    }
+    for (const s of scored) {
+      if (picked.length >= 3) break
+      if (!picked.includes(s)) picked.push(s)
+    }
+
+    return picked.map(s => ({ ...s, why: energyPrefix + s.line }))
+  },
+
+  shareAfterParty() {
+    if (!this.data.activeActivityRegistered) {
+      wx.showToast({ title: "报名后就能发到活动群", icon: "none" })
+      return
+    }
+    const names = this.data.afterPartySpots.map(s => s.name).join("、")
+    this.setData({ activityGroupJoined: true })
+    wx.showModal({
+      title: "三个去处已发到活动群",
+      content: `${names}\n\n谁想一起就接龙，不想去也没关系，小CC不替你们决定。`,
+      showCancel: false,
+      confirmText: "知道了"
+    })
+    this.persistDraft()
+  },
+
   openAccountSettings() {
     this.setView("accountSettings")
   },
@@ -1109,7 +1413,8 @@ Page({
   onShareAppMessage() {
     return {
       title: `${this.data.activeActivity.title}｜恰好俱乐部`,
-      path: "/pages/index/index?activity=" + this.data.activeActivity.id
+      path: "/pages/index/index?activity=" + this.data.activeActivity.id,
+      imageUrl: this.data.activeActivity.poster
     }
   },
 
