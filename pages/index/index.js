@@ -456,7 +456,6 @@ Page({
       { id: "cat", name: "猫", src: "/pages/index/images/posters/cat-stretch.png" }
     ],
     selectedNeedFragMap: {},
-    selectedNeedCover: "",
     needCoverPreview: "",
     needCoverName: "",
     registeredActivities: [],
@@ -1373,7 +1372,7 @@ Page({
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, selectedNeedCover: "", needCoverPreview: "", needCoverName: "" })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "" })
   },
 
   cancelNeedComposer() {
@@ -1395,18 +1394,10 @@ Page({
     this.setData({ selectedNeedFragMap: map })
   },
 
-  selectNeedCover(e) {
-    const cover = this.data.needCovers.find(c => c.id === e.currentTarget.dataset.cover)
-    if (!cover) return
-    this.setData({ selectedNeedCover: cover.id, needCoverPreview: cover.src, needCoverName: cover.name })
-  },
-
   aiGenerateCover() {
     const pool = this.data.needCovers
-    const currentId = this.data.selectedNeedCover
-    const others = pool.filter(c => c.id !== currentId)
-    const next = others.length ? others[Math.floor(Math.random() * others.length)] : pool[0]
-    this.setData({ selectedNeedCover: next.id, needCoverPreview: next.src, needCoverName: next.name })
+    const next = pool[Math.floor(Math.random() * pool.length)]
+    this.setData({ needCoverPreview: next.src, needCoverName: next.name })
     wx.showToast({ title: "恰好帮你挑了一张", icon: "none" })
   },
 
@@ -1418,10 +1409,16 @@ Page({
       success: (res) => {
         const file = res.tempFiles && res.tempFiles[0]
         if (!file) return
-        this.setData({ selectedNeedCover: "", needCoverPreview: file.tempFilePath, needCoverName: "我的照片" })
+        this.setData({ needCoverPreview: file.tempFilePath, needCoverName: "我的照片" })
       },
-      fail: () => {
-        wx.showToast({ title: "没有选择照片", icon: "none" })
+      fail: (err) => {
+        const msg = (err && err.errMsg) || ""
+        if (msg.indexOf("cancel") > -1) return
+        if (msg.indexOf("privacy") > -1) {
+          wx.showModal({ title: "需要相册权限", content: "请在微信公众平台配置「用户隐私保护指引」并勾选相册权限后，才能上传照片。", showCancel: false, confirmText: "知道了" })
+          return
+        }
+        wx.showToast({ title: "上传失败，请重试", icon: "none" })
       }
     })
   },
@@ -1437,7 +1434,7 @@ Page({
     const subtitle = frags.filter(f => f !== "这周能约").slice(0, 2).join(" · ") || "刚刚发布的需求"
     const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: content.slice(0, 18), copy: content, image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
     const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
-    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, selectedNeedCover: "", needCoverPreview: "", needCoverName: "" })
+    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "" })
     this.refreshNeeds()
     this.persistDraft()
     wx.showToast({ title: frags.length ? "已发布，恰好记下了你的碎片" : "需求卡已发布", icon: "success" })

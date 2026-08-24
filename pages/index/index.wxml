@@ -496,12 +496,12 @@
           </scroll-view>
           <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
           <view class="need-frag-label">心动碎片（可选）</view>
-          <view class="need-frag-row">
+          <scroll-view scroll-x class="need-frag-row">
             <button wx:for="{{needFragScene}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
-          </view>
-          <view class="need-frag-row">
+          </scroll-view>
+          <scroll-view scroll-x class="need-frag-row">
             <button wx:for="{{needFragRelation}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
-          </view>
+          </scroll-view>
           <view class="need-frag-label">封面（可选）</view>
           <view class="need-cover-preview">
             <image wx:if="{{needCoverPreview}}" class="need-cover-preview-img" src="{{needCoverPreview}}" mode="aspectFill" />
@@ -510,14 +510,8 @@
           </view>
           <view class="need-cover-actions">
             <button class="need-cover-act" bindtap="aiGenerateCover">{{needCoverPreview ? '换一张' : '让恰好生成'}}</button>
-            <button class="need-cover-act" bindtap="uploadCover">从相册上传</button>
+            <button class="need-cover-act upload" bindtap="uploadCover">＋ 上传照片</button>
           </view>
-          <scroll-view scroll-x class="need-covers">
-            <view wx:for="{{needCovers}}" wx:key="id" class="need-cover {{selectedNeedCover === item.id ? 'on' : ''}}" data-cover="{{item.id}}" bindtap="selectNeedCover">
-              <image src="{{item.src}}" mode="aspectFill" />
-              <text>{{item.name}}</text>
-            </view>
-          </scroll-view>
         </scroll-view>
         <view class="need-sheet-foot">
           <button class="ghost-btn" bindtap="cancelNeedComposer">取消</button>

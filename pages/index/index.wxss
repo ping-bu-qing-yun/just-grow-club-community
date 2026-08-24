@@ -1663,17 +1663,16 @@ button::after {
 }
 
 .need-frag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
+  white-space: nowrap;
   margin-bottom: 12rpx;
 }
 
 .need-frag {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 60rpx;
+  margin-right: 12rpx;
   padding: 0 26rpx;
   border-radius: 99rpx;
   background: #f3f1ef;
@@ -1686,11 +1685,6 @@ button::after {
   background: #e8f4ed;
   color: #21644e;
   border: 1rpx solid rgba(95, 127, 94, .4);
-}
-
-.need-covers {
-  white-space: nowrap;
-  margin-top: 4rpx;
 }
 
 .need-cover-preview {
@@ -1754,38 +1748,9 @@ button::after {
   border: none;
 }
 
-.need-cover {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6rpx;
-  width: 128rpx;
-  box-sizing: border-box;
-  margin-right: 14rpx;
-  padding: 8rpx;
-  border: 2rpx solid transparent;
-  border-radius: 18rpx;
-}
-
-.need-cover image {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 14rpx;
-  object-fit: cover;
-}
-
-.need-cover text {
-  color: #8a867c;
-  font-size: 20rpx;
-  font-weight: 800;
-}
-
-.need-cover.on {
-  border-color: #6b8e6b;
-  background: #f4faf5;
-}
-
-.need-cover.on text {
+.need-cover-act.upload {
+  background: #fff;
+  border: 1rpx solid rgba(95, 127, 94, .4);
   color: #21644e;
 }
 
