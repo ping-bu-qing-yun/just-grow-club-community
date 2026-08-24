@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>恰好俱乐部 · 当前版本预览</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#e9e4da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;display:flex;justify-content:center;min-height:100vh}
+  .shell{width:390px;max-width:100%;background:#fdfcf8;min-height:100vh;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(63,47,38,.2)}
+  .screen{display:none;padding:18px 16px 90px;min-height:100vh}
+  .screen.on{display:block}
+  .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:40px 18px;background:linear-gradient(180deg,#fdfcf8,#e8f4ed)}
+  .welcome .logo{width:180px;height:72px;position:relative;margin-bottom:28px}
+  .welcome .lens{width:46px;height:55px;border:2px solid #6b8e6b;border-radius:50%;position:absolute;top:9px}
+  .welcome .lens::after{content:"";position:absolute;left:8px;top:12px;width:31px;height:2px;background:#6b8e6b;transform:rotate(45deg)}
+  .welcome .lens.left{left:21px}.welcome .lens.right{right:21px}
+  .welcome .bridge{width:47px;height:17px;border-top:2px solid #6b8e6b;border-radius:50% 50% 0 0;position:absolute;top:9px;left:66.5px}
+  .welcome .bridge::after{content:"";position:absolute;left:20px;top:28px;width:10px;height:2px;background:#6b8e6b}
+  .welcome .brand{color:rgba(74,107,74,.85);font-size:14px;font-weight:900;letter-spacing:2px}
+  .welcome .title{font-size:30px;font-weight:900;color:#4a6b4a;margin:6px 0 28px}
+  .welcome .start{width:230px;height:52px;border:0;border-radius:999px;background:linear-gradient(145deg,#6f916c,#587b59);color:#fff;font-size:17px;font-weight:800;letter-spacing:3px;cursor:pointer;box-shadow:0 10px 22px rgba(45,72,52,.25)}
+  .header{position:relative;min-height:88px;padding-top:6px}
+  .title-card{display:inline-grid;gap:2px;min-width:120px;padding:9px 12px;background:linear-gradient(135deg,#fff,#f4faf5 72%,#fff2ed);border:1px solid #dbe9df;border-radius:16px;box-shadow:0 6px 14px rgba(54,72,58,.06)}
+  .title-card span{color:#5f735f;font-size:12px;font-weight:850}
+  .title-card b{font-size:17px;font-weight:850}
+  .user{position:absolute;left:50%;transform:translateX(-50%);top:2px;display:grid;justify-items:center;gap:4px;color:#435947;font-size:12px;font-weight:950}
+  .user img{width:60px;height:60px;border-radius:50%;border:3px solid #fff;box-shadow:0 8px 16px rgba(44,57,43,.16)}
+  .strip{position:relative;min-height:148px;padding:18px 128px 18px 20px;background:radial-gradient(circle at 88% 18%,rgba(95,127,94,.12),transparent 28%),linear-gradient(135deg,#fbfffc,#f2faf5 58%,#fff8f1);border:1px solid rgba(95,127,94,.18);border-radius:18px;box-shadow:0 12px 26px rgba(45,72,52,.12);margin-top:6px}
+  .strip .head{display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:#496758}
+  .strip h2{font-size:20px;font-weight:850;margin-top:8px}
+  .strip .hint{font-size:11px;color:#8a867c;margin-top:6px;line-height:1.6}
+  .strip .tags{display:flex;gap:5px;margin-top:10px}
+  .strip .tags span{font-size:10px;color:#416054;background:#eff5f1;padding:4px 9px;border-radius:99px;font-weight:700}
+  .strip .cat{position:absolute;bottom:10px;right:8px;width:100px;height:72px;object-fit:contain}
+  .section{margin-top:16px}
+  .eyebrow{color:#d97757;font-size:9px;font-weight:850;letter-spacing:1px}
+  .section h3{font-size:22px;font-weight:850;margin-top:4px}
+  .carousel{position:relative;margin-top:10px;height:260px;overflow:hidden}
+  .carousel .track{display:flex;height:100%;transition:transform .45s ease}
+  .slide{flex:0 0 100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  .slide img{height:220px;border-radius:14px;box-shadow:0 12px 26px rgba(63,47,38,.18);transition:transform .45s ease,opacity .45s ease}
+  .slide .cap{font-size:14px;font-weight:850}
+  .slide .cap small{color:#d97757;font-weight:800;margin-left:8px}
+  .voice{margin-top:12px;background:#fff;border:1px solid rgba(95,127,94,.18);border-radius:16px;padding:16px;box-shadow:0 12px 26px rgba(45,72,52,.12)}
+  .voice .label{font-size:11px;font-weight:850;color:#d97757;letter-spacing:1px}
+  .voice .q{font-size:12px;color:#8a867c;margin-top:4px;line-height:1.5}
+  .voice .a{font-size:15px;font-weight:850;margin-top:4px}
+  .voice .echo{font-size:11.5px;color:#8a867c;margin:10px 0 12px}
+  .voice .btns{display:flex;gap:8px}
+  .voice .btns button{flex:1;height:40px;border-radius:99px;font-size:13px;font-weight:800;cursor:pointer}
+  .voice .btns .main{background:linear-gradient(145deg,#6f916c,#587b59);color:#fff;border:0}
+  .voice .btns .ghost{background:#fff;color:#416054;border:1px solid rgba(95,127,94,.24)}
+  .hero{background:linear-gradient(145deg,#314a43,#87a485);border-radius:22px;padding:30px 26px;color:#fff}
+  .hero .eyebrow{color:rgba(255,255,255,.85);font-size:11px;font-weight:800;letter-spacing:2px}
+  .hero h1{font-size:28px;font-weight:900;margin-top:8px}
+  .hero p{font-size:13px;opacity:.9;margin-top:8px;line-height:1.7}
+  .mode{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#edf2ed;border-radius:14px;padding:6px;margin:16px 0}
+  .mode button{border:0;background:none;border-radius:10px;height:64px;color:#667068;font-weight:800;cursor:pointer}
+  .mode button b{display:block;font-size:13px}
+  .mode button small{font-size:9px;font-weight:700}
+  .mode button.on{background:#fff;color:#42674f;box-shadow:0 5px 12px rgba(53,69,55,.12)}
+  .subhead{display:flex;justify-content:space-between;align-items:flex-end;margin:16px 0 10px}
+  .subhead b{font-size:18px;font-weight:850}
+  .subhead small{display:block;color:#8a867c;font-size:10px;margin-top:2px}
+  .filter{display:flex;gap:6px}
+  .filter button{border:0;background:#f3f1ef;color:#8a867c;border-radius:99px;padding:7px 14px;font-size:11px;cursor:pointer}
+  .filter button.on{background:#2f2a24;color:#fff}
+  .hlist{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  .need-card{flex:0 0 225px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 22px rgba(63,47,38,.10)}
+  .need-card .media{position:relative;height:110px}
+  .need-card .media img{width:100%;height:100%;object-fit:cover}
+  .need-card .media span{position:absolute;left:10px;bottom:8px;color:#fff;font-size:11px;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .need-card .body{padding:12px}
+  .need-card .body .auth{color:#8a867c;font-size:10px}
+  .need-card .body h4{font-size:14px;font-weight:850;margin:6px 0;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:38px}
+  .need-card .body p{color:#8a867c;font-size:11px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;height:36px}
+  .need-card .body .acts{display:flex;justify-content:space-between;border-top:1px solid #ece7dc;margin-top:10px;padding-top:9px;font-size:10px;color:#8a867c}
+  .life{display:grid;gap:14px}
+  .life .post{background:#fff;border-radius:16px;padding:14px;box-shadow:0 10px 22px rgba(63,47,38,.10)}
+  .life .post .head{display:flex;justify-content:space-between;font-size:12px;font-weight:850}
+  .life .post .head small{color:#8a867c;font-weight:400}
+  .life .post .kind{display:inline-block;font-size:9px;color:#d97757;background:#fff1ef;border-radius:99px;padding:3px 8px;margin-top:8px}
+  .life .post p{font-size:13px;line-height:1.7;margin:10px 0}
+  .life .post img{width:100%;height:120px;object-fit:cover;border-radius:10px}
+  .life .post .foot{display:flex;gap:20px;font-size:11px;color:#8a867c;margin-top:10px}
+  .explore-search{display:flex;gap:8px;margin-bottom:12px}
+  .explore-search input{flex:1;height:42px;border:1px solid #e5ddcc;border-radius:99px;padding:0 16px;font-size:13px;outline:none}
+  .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+  .filters button{flex:none;border:0;background:#edf2ed;color:#667068;border-radius:99px;padding:8px 16px;font-size:12px;cursor:pointer}
+  .filters button.on{background:#2f2a24;color:#fff}
+  .elist{display:grid;gap:14px;margin-top:12px}
+  .ecard{display:flex;gap:12px;background:#fff;border-radius:16px;padding:10px;box-shadow:0 10px 22px rgba(63,47,38,.08);cursor:pointer}
+  .ecard img{width:96px;height:104px;object-fit:cover;border-radius:10px}
+  .ecard .info{flex:1;display:flex;flex-direction:column;padding:4px 2px}
+  .ecard .info .date{color:#d97757;font-size:10px;font-weight:800}
+  .ecard .info h4{font-size:15px;font-weight:850;margin-top:6px}
+  .ecard .info .loc{color:#8a867c;font-size:11px;margin-top:6px}
+  .ecard .info .tags{display:flex;gap:5px;margin-top:auto}
+  .ecard .info .tags span{font-size:9px;color:#416054;background:#eff5f1;padding:3px 8px;border-radius:99px}
+  .mine .cover{position:absolute;top:0;left:0;right:0;height:150px;background:linear-gradient(145deg,#314a43,#87a485);border-radius:0 0 26px 26px}
+  .mine .identity{position:relative;display:flex;align-items:center;gap:14px;padding:44px 6px 16px}
+  .mine .avatar{width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.8);box-shadow:0 10px 22px rgba(44,57,43,.2)}
+  .mine .name{font-size:20px;font-weight:900;color:#fff}
+  .mine .type{font-size:12px;color:rgba(255,255,255,.85);margin-top:4px}
+  .progress{background:#fff;border-radius:16px;padding:16px;box-shadow:0 10px 22px rgba(63,47,38,.08)}
+  .progress .head{display:flex;justify-content:space-between;font-size:13px;font-weight:850}
+  .progress .track{height:8px;background:#f0ece1;border-radius:99px;margin-top:12px;overflow:hidden}
+  .progress .track i{display:block;height:100%;width:42%;background:linear-gradient(90deg,#6f916c,#587b59)}
+  .progress p{font-size:11px;color:#8a867c;margin-top:10px}
+  .stats{display:flex;background:#fff;border-radius:16px;padding:16px 0;box-shadow:0 10px 22px rgba(63,47,38,.08);margin-top:14px}
+  .stats div{flex:1;text-align:center}
+  .stats b{display:block;font-size:20px;font-weight:900}
+  .stats span{font-size:10px;color:#8a867c}
+  .records{background:#fff;border-radius:16px;padding:4px 16px;box-shadow:0 10px 22px rgba(63,47,38,.08);margin-top:14px}
+  .records .row{display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1px solid #f0e8da;font-size:13px;font-weight:700}
+  .records .row:first-child{border-top:0}
+  .records .row small{color:#8a867c;font-weight:400;margin-left:auto}
+  .tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:390px;max-width:100%;display:flex;background:rgba(255,253,251,.95);border-top:1px solid rgba(95,127,94,.12);padding:9px 4px 14px;z-index:10}
+  .tabbar button{flex:1;border:0;background:none;font-size:12px;color:#8a867c;font-weight:700;cursor:pointer}
+  .tabbar button.on{color:#4d704f}
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div id="welcome" class="welcome">
+      <div class="logo"><div class="lens left"></div><div class="bridge"></div><div class="lens right"></div></div>
+      <div class="brand">让恰好的关系</div>
+      <div class="title">从见面开始</div>
+      <button class="start" onclick="enter()">开始认识彼此</button>
+    </div>
+
+    <div id="app" style="display:none">
+      <div class="screen on" id="tab-home">
+        <div class="header">
+          <div class="title-card"><span>恰好俱乐部</span><b>恰好是你</b></div>
+          <div class="user"><img src="./pages/index/images/portrait-user.jpg" alt="" /><span>小鱼</span></div>
+        </div>
+        <div class="strip">
+          <div class="head"><span>刚刚懂你一点</span><b>42%</b></div>
+          <h2>慢热观察 · 边界清晰</h2>
+          <div class="hint">先看清自己的社交需求，再挑一场舒服的见面。</div>
+          <div class="tags"><span>少人数</span><span>自然话题</span><span>上海市 · 杨浦区</span></div>
+          <img class="cat" src="./pages/index/images/posters/cat-stretch.png" alt="小猫" />
+        </div>
+        <div class="section">
+          <div class="eyebrow">FOR YOU</div><h3>给你的见面</h3>
+          <div class="carousel"><div class="track" id="track"></div></div>
+        </div>
+        <div class="voice">
+          <div class="label">你的声音</div>
+          <div class="q">小CC问你："你上一次觉得「要是有人一起就好了」，是在哪里？"</div>
+          <div class="a">你回答：下班路上，希望有人一起走</div>
+          <div class="echo">还有 6 人和你一样，小CC正在为你找。</div>
+          <div class="btns"><button class="ghost">补充一下</button><button class="main">去需求广场看看</button></div>
+        </div>
+      </div>
+
+      <div class="screen" id="tab-explore">
+        <div class="hero"><div class="eyebrow">EXPLORE</div><h1>发现其他活动</h1><p>按出门阻力和见面方式，挑一场刚刚好的局。</p></div>
+        <div class="explore-search" style="margin-top:16px"><input placeholder="搜索活动、地点或场景" /></div>
+        <div class="filters" id="ef"></div>
+        <div class="filters" id="df" style="margin-top:6px"></div>
+        <div class="elist" id="elist"></div>
+      </div>
+
+      <div class="screen" id="tab-need">
+        <div class="hero"><div class="eyebrow">需求与生活</div><h1>先被看见，再慢慢靠近</h1><p>需求，是你想遇见谁；生活，是你愿意先展示什么。</p></div>
+        <div class="mode"><button class="on" onclick="needMode('needs')"><b>需求</b><small>说出你的关系所想</small></button><button onclick="needMode('life')"><b>生活</b><small>像朋友圈一样分享</small></button></div>
+        <div id="needBody"></div>
+      </div>
+
+      <div class="screen mine" id="tab-mine">
+        <div class="cover"></div>
+        <div class="identity">
+          <img class="avatar" src="./pages/index/images/portrait-user.jpg" alt="" />
+          <div><div class="name">小鱼</div><div class="type">慢热观察 · 边界清晰</div></div>
+        </div>
+        <div class="progress">
+          <div class="head"><span>画像完善度</span><span>42%</span></div>
+          <div class="track"><i></i></div>
+          <p>每次回答和活动反馈，都会让推荐更贴合你。</p>
+        </div>
+        <div class="stats"><div><b>0</b><span>参与活动</span></div><div><b>1</b><span>公开需求</span></div><div><b>0</b><span>需求收藏</span></div></div>
+        <div class="records">
+          <div class="row">我的画像<small>持续更新</small></div>
+          <div class="row">参加过活动<small>0 场</small></div>
+          <div class="row">活动收藏<small>0 个</small></div>
+          <div class="row">我的需求<small>1 张需求卡</small></div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <button class="on" onclick="tab('home')">专属</button>
+        <button onclick="tab('explore')">发现</button>
+        <button onclick="tab('need')">需求</button>
+        <button onclick="tab('mine')">我的</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  var posters = [
+    { src: "./pages/index/images/posters/poster-dinner.jpg", t: "周五轻聊天晚餐局", d: "8/14 明天 19:30" },
+    { src: "./pages/index/images/posters/poster-walk.jpg", t: "我们向月亮走去 · 散步", d: "8/15 明天 19:00" },
+    { src: "./pages/index/images/posters/poster-deep.jpg", t: "深度对谈夜局", d: "8/14 明天 20:00" },
+    { src: "./pages/index/images/posters/poster-workshop.jpg", t: "关系说明书工作坊", d: "8/15 明天 14:00" },
+    { src: "./pages/index/images/posters/poster-lunch.jpg", t: "午间同频小桌", d: "8/12 12:30" }
+  ]
+  var needs = [
+    { img: "./pages/index/images/posters/need-d1.jpg", sub: "正在寻找低压力的认识方式", a: "林 · 2小时前", t: "不想尴尬交换微信，但想认真认识人", c: "如果有一个中间场域，我会更愿意出来。", res: 72, com: 38 },
+    { img: "./pages/index/images/posters/need-d2.jpg", sub: "想重新感受到关系里的松弛", a: "Mei · 昨天", t: "不是不想恋爱，是越来越难进入关系", c: "希望有一场聊「心动变难」的局。", res: 45, com: 22 },
+    { img: "./pages/index/images/posters/need-d3.jpg", sub: "想找到能认真聊天的同频朋友", a: "阿南 · 3天前", t: "想找能聊价值观的人，而不是只聊工作", c: "6个人的小型夜谈，可能更适合认真认识。", res: 28, com: 8 },
+    { img: "./pages/index/images/posters/need-d4.jpg", sub: "住同一片，却从没聊过天", a: "小满 · 6小时前", t: "周末想找同小区附近的人，一起散步遛狗", c: "住得近，却从没好好说过话。", res: 33, com: 12 },
+    { img: "./pages/index/images/posters/need-d5.jpg", sub: "怕尴尬、想慢慢来", a: "圆圆 · 昨天", t: "第一次见面能不能不交换微信", c: "先认识，不急着留联系方式。", res: 51, com: 20 },
+    { img: "./pages/index/images/posters/need-d6.jpg", sub: "喜欢看展、慢节奏", a: "阿May · 今天", t: "想找人一起看展，然后随便聊聊", c: "看完展不用硬聊，舒服就好。", res: 17, com: 5 }
+  ]
+  var life = [
+    { a: "小满", m: "今天 · 杨浦", k: "生活分享", t: "最近想找杨浦附近的朋友，周末一起散步或喝杯咖啡。先轻松认识，不急着定义关系。", img: "./pages/index/images/posters/poster-walk.jpg", tag: "#周末的一百种过法", res: 12, com: 3 },
+    { a: "Mei", m: "昨天 · 关系想法", k: "关系话题", t: "你觉得舒服的关系，是从心动开始，还是从相处不费力开始？", img: "./pages/index/images/posters/poster-deep.jpg", tag: "#关系里的松弛感", res: 24, com: 12 }
+  ]
+  var explores = posters.map(function (p) { return { img: p.src, t: p.t, d: p.d, loc: "大学路 · KIC", tags: ["低压力", "少人数"] } })
+  var idx = 0, timer
+
+  function enter() {
+    document.getElementById("welcome").style.display = "none"
+    document.getElementById("app").style.display = "block"
+    startCarousel(); renderNeed(); renderExplore()
+  }
+  function tab(name) {
+    document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("on") })
+    document.getElementById("tab-" + name).classList.add("on")
+    document.querySelectorAll(".tabbar button").forEach(function (b, i) { b.classList.toggle("on", ["home","explore","need","mine"][i] === name) })
+  }
+  function startCarousel() {
+    var track = document.getElementById("track")
+    track.innerHTML = posters.map(function (p) {
+      return '<div class="slide"><img src="' + p.src + '" alt="" /><div class="cap">' + p.t + '<small>' + p.d + "</small></div></div>"
+    }).join("")
+    clearInterval(timer)
+    timer = setInterval(function () { idx = (idx + 1) % posters.length; track.style.transform = "translateX(-" + idx * 100 + "%)" }, 4000)
+  }
+  function needMode(m) {
+    document.querySelectorAll("#tab-need .mode button").forEach(function (b, i) { b.classList.toggle("on", ["needs","life"][i] === m) })
+    renderNeed(m)
+  }
+  function renderNeed(m) {
+    m = m || "needs"
+    var body = document.getElementById("needBody")
+    if (m === "needs") {
+      body.innerHTML = '<div class="subhead"><div><b>大家正在寻找</b><small>看看谁和你想的一样</small></div><div class="filter"><button class="on">全部需求</button><button>和你相似</button></div></div>' +
+        '<div class="hlist">' + needs.map(function (n) {
+          return '<div class="need-card"><div class="media"><img src="' + n.img + '" alt="" /><span>' + n.sub + '</span></div><div class="body"><div class="auth">' + n.a + '</div><h4>' + n.t + '</h4><p>' + n.c + '</p><div class="acts"><span>我也有 ' + n.res + '</span><span>评论 ' + n.com + '</span><span>收藏</span></div></div></div>'
+        }).join("") + "</div>"
+    } else {
+      body.innerHTML = '<div class="subhead"><div><b>生活动态</b><small>先看见彼此</small></div></div>' +
+        '<div class="life">' + life.map(function (l) {
+          return '<div class="post"><div class="head">' + l.a + "<small>" + l.m + "</small></div><span class=\"kind\">" + l.k + '</span><p>' + l.t + '</p><img src="' + l.img + '" alt="" /><div class="foot"><span>共鸣 ' + l.res + '</span><span>评论 ' + l.com + '</span></div></div>'
+        }).join("") + "</div>"
+    }
+  }
+  function renderExplore() {
+    var ef = document.getElementById("ef")
+    ef.innerHTML = ["全部","低压力","深聊","散步","工作坊","午间"].map(function (f, i) { return '<button class="' + (i === 0 ? "on" : "") + '">' + f + "</button>" }).join("")
+    var df = document.getElementById("df")
+    df.innerHTML = ["全部距离","3km内","5km内","同城可达"].map(function (f) { return "<button>" + f + "</button>" }).join("")
+    document.getElementById("elist").innerHTML = explores.map(function (e) {
+      return '<div class="ecard"><img src="' + e.img + '" alt="" /><div class="info"><div class="date">' + e.d + '</div><h4>' + e.t + '</h4><div class="loc">' + e.loc + '</div><div class="tags">' + e.tags.map(function (t) { return "<span>" + t + "</span>" }).join("") + "</div></div></div>"
+    }).join("")
+  }
+</script>
+</body>
+</html>
