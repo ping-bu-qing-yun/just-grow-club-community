@@ -3558,6 +3558,10 @@ button::after {
   border: none;
 }
 
+.home-end-space {
+  height: 160rpx;
+}
+
 .needs-hero {
   color: #fff;
   background: linear-gradient(145deg, #314a43, #87a485);

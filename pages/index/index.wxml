@@ -316,6 +316,7 @@
         <button class="voice-btn main" bindtap="go" data-view="square">去需求广场看看</button>
       </view>
     </view>
+    <view class="home-end-space"></view>
   </scroll-view>
 
 
