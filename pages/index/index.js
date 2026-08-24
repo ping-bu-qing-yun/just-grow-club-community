@@ -122,7 +122,7 @@ const viewTitles = {
   partner: "主理人合作"
 }
 
-const tabViews = ["home", "square", "mine"]
+const tabViews = ["home", "explore", "square", "mine"]
 
 const baseCards = [
   {
@@ -323,11 +323,27 @@ const afterPartySpots = [
   { id: "gallery", cat: "看展", name: "大学路美术馆·双人看展", walk: "步行 9 分钟", open: "营业至 18:00", vibe: ["有共同话题", "不着急"], energy: ["low", "mid"], style: ["deep", "walk"], time: ["day"], line: "看展不用一直说话，想到什么说什么。" }
 ]
 
+const needCommentsPool = [
+  "我也在找这种不需要硬破冰的认识方式。",
+  "如果人数少一点、地点近一点，我会很愿意参加。",
+  "这个想法很具体，期待后续的活动回应。",
+  "先从轻松聊天开始，感觉会更自然。",
+  "谢谢分享，刚好说中了我最近的感受。",
+  "已经收藏，想继续关注大家的建议。"
+]
+
 const defaultCommunityNeeds = [
-  { id: "reliable", title: "想认识靠谱的人", detail: "不想尴尬交换微信，但想认真认识人。希望有一个流程自然、人数不多、可以先观察再靠近的场景。", stats: "72人共鸣 · 38条评论 · 6人想参加", comments: ["我也希望有一场不急着交换联系方式的活动。", "如果是 6-8 人，我会更愿意参加。"], user: false },
-  { id: "heart", title: "30岁后难心动", detail: "不是不想恋爱，是越来越难进入关系。想和同样认真生活的人聊聊这种变化。", stats: "45人共鸣 · 22条评论 · 4人想参加", comments: ["以前会着急，现在更想先认识自己。"], user: false },
-  { id: "talk", title: "想找能聊价值观的人", detail: "想找能聊价值观的人，而不是只聊工作。希望活动有一点结构，但不要像答题或面试。", stats: "28人共鸣 · 8人想参加 · 2位主理人关注", comments: ["有结构但不端着，我会愿意参加。"], user: false },
-  { id: "host", title: "主理人响应", detail: "如果你有适合这些需求的空间、主题或活动经验，可以从真实需求出发发起一场活动。", stats: "3个需求待响应", comments: ["我有一个适合小组交流的空间。"], user: false }
+  { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: needCommentsPool.slice(0, 3), user: false },
+  { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: needCommentsPool.slice(2, 5), user: false },
+  { id: "d3", author: "阿南 · 3天前", subtitle: "想找到能认真聊天的同频朋友", tags: ["deep talk", "价值观"], title: "想找能聊价值观的人，而不是只聊工作", copy: "6个人的小型夜谈，可能比一场大活动更适合认真认识。", image: "/pages/index/images/posters/need-d3.jpg", resonance: 28, commentsCount: 8, response: "深度对谈预活动收集中", similar: false, stats: "28人共鸣 · 8条评论", comments: needCommentsPool.slice(1, 4), user: false },
+  { id: "d4", author: "小满 · 6小时前", subtitle: "住同一片，却从没聊过天", tags: ["附近", "周末", "散步"], title: "周末想找同小区附近的人，一起散步遛狗", copy: "住得近，却从没好好说过话。想先从散步开始认识。", image: "/pages/index/images/posters/need-d4.jpg", resonance: 33, commentsCount: 12, response: "散步局已有3人感兴趣", similar: true, stats: "33人共鸣 · 12条评论", comments: needCommentsPool.slice(3, 6), user: false },
+  { id: "d5", author: "圆圆 · 昨天", subtitle: "怕尴尬、想慢慢来", tags: ["怕尴尬", "少人数"], title: "第一次见面能不能不交换微信", copy: "先认识，不急着留联系方式，舒服了再交换。", image: "/pages/index/images/posters/need-d5.jpg", resonance: 51, commentsCount: 20, response: "低压力小桌局回应中", similar: true, stats: "51人共鸣 · 20条评论", comments: needCommentsPool.slice(0, 3), user: false },
+  { id: "d6", author: "阿May · 今天", subtitle: "喜欢看展、慢节奏", tags: ["看展", "文艺", "轻社交"], title: "想找人一起看展，然后随便聊聊", copy: "看完展不用硬聊，舒服就好。", image: "/pages/index/images/posters/need-d6.jpg", resonance: 17, commentsCount: 5, response: "看展局已有2人报名", similar: false, stats: "17人共鸣 · 5条评论", comments: needCommentsPool.slice(2, 5), user: false }
+]
+
+const defaultLifePosts = [
+  { id: "life-1", author: "小满", meta: "今天 · 杨浦", kind: "生活分享", text: "最近想找杨浦附近的朋友，周末一起散步或喝杯咖啡。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/poster-walk.jpg", tag: "#周末的一百种过法", comments: 3, resonance: 12 },
+  { id: "life-2", author: "Mei", meta: "昨天 · 关系想法", kind: "关系话题", text: "你觉得舒服的关系，是从心动开始，还是从相处不费力开始？", image: "/pages/index/images/posters/poster-deep.jpg", tag: "#关系里的松弛感", comments: 12, resonance: 24 }
 ]
 
 const recorderManager = wx.getRecorderManager()
@@ -367,7 +383,14 @@ Page({
     homeTags: [],
     homeCards: [],
     posterIndex: 0,
-    needRecommend: defaultCommunityNeeds[0],
+    homeQuestion: "你上一次觉得“要是有人一起就好了”，是在哪里？",
+    homeQuestionOpts: ["下班路上", "一个人吃饭时", "看到好看的晚霞时", "想去的地方没人陪时"],
+    myNeedSel: "",
+    myNeedOther: "",
+    myNeed: "",
+    myNeedQuestion: "",
+    myNeedId: "",
+    needAsked: false,
     genderOptions: ["女生", "男生", "先不答"],
     educationOptions: ["高中及以下", "大专", "本科", "硕士", "博士", "其他"],
     basicInfo: {
@@ -433,6 +456,12 @@ Page({
     qaStarted: false,
     communityNeeds: defaultCommunityNeeds,
     demandComments: defaultCommunityNeeds[0].comments,
+    needsMode: "needs",
+    needFilter: "all",
+    displayedNeeds: defaultCommunityNeeds,
+    lifePosts: defaultLifePosts,
+    resonatedNeedIds: {},
+    savedNeedIds: {},
     demandHistory: [
       { id: "history-1", title: "想认识靠谱的人", date: "2026年7月提出", status: "待探索", activity: "周五轻聊天晚餐局" },
       { id: "history-2", title: "想找能聊价值观的人", date: "2026年6月提出", status: "已解决", activity: "深度对谈夜局" }
@@ -447,6 +476,13 @@ Page({
     ],
     activityFeed,
     filteredActivityFeed: activityFeed,
+    exploreSearch: "",
+    exploreFilter: "all",
+    exploreDist: "all",
+    exploreList: [],
+    myNeedCount: 0,
+    savedNeedCount: 0,
+    savedActivityCount: 0,
     activeActivity: activityFeed[0],
     matchReason: "",
     activeActivityRegistered: false,
@@ -525,6 +561,14 @@ Page({
       relAnswers,
       relIndex: saved.relIndex || 0,
       relDone: Boolean(saved.relDone),
+      myNeedSel: saved.myNeedSel || "",
+      myNeedOther: saved.myNeedOther || "",
+      myNeed: saved.myNeed || "",
+      myNeedQuestion: saved.myNeedQuestion || "",
+      myNeedId: saved.myNeedId || "",
+      needAsked: Boolean(saved.needAsked),
+      resonatedNeedIds: saved.resonatedNeedIds || {},
+      savedNeedIds: saved.savedNeedIds || {},
       quickVoiceText: saved.quickVoiceText || "",
       quickVoiceDone: Boolean(saved.quickVoiceDone),
       qaAnswers: saved.qaAnswers || {},
@@ -559,6 +603,7 @@ Page({
       filter: saved.filter || "all",
       filteredActivityFeed: this.filterActivities(saved.filter || "all")
     })
+    this.refreshNeeds()
     if (options.activity) {
       this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
     }
@@ -600,7 +645,7 @@ Page({
       canGoBack: history.length > 0,
       showTab,
       screenTitle: viewTitles[view] || "",
-      showAppHeader: Boolean(viewTitles[view]) && view !== "welcome" && view !== "intro" && view !== "home"
+      showAppHeader: Boolean(viewTitles[view]) && !["welcome", "intro", "home", "explore", "square", "mine"].includes(view)
     })
   },
 
@@ -639,8 +684,7 @@ Page({
     this.setData({
       homeCards: cards,
       homeSummary: summary,
-      homeTags: tags.slice(0, 3),
-      needRecommend: this.data.communityNeeds[0] || defaultCommunityNeeds[0]
+      homeTags: tags.slice(0, 3)
     })
   },
 
@@ -650,6 +694,74 @@ Page({
 
   onSwiperChange(e) {
     this.setData({ posterIndex: e.detail.current })
+  },
+
+  toggleNeedOption(e) {
+    this.setData({ myNeedSel: e.currentTarget.dataset.val })
+  },
+
+  updateNeedOther(e) {
+    this.setData({ myNeedOther: e.detail.value })
+  },
+
+  submitHomeNeed() {
+    const sel = this.data.myNeedSel
+    const other = (this.data.myNeedOther || "").trim()
+    const content = sel && other ? sel + "，" + other : sel || other
+    if (!content) {
+      wx.showToast({ title: "先选一个，或写下来", icon: "none" })
+      return
+    }
+    const q = this.data.homeQuestion
+    let communityNeeds = [...this.data.communityNeeds]
+    if (this.data.myNeedId) {
+      communityNeeds = communityNeeds.map(n => n.id === this.data.myNeedId ? { ...n, question: q, answer: content, title: content.slice(0, 18), copy: `小CC问：${q}`, stats: "刚刚发布 · 等待更多人回应" } : n)
+    } else {
+      const id = `need-home-${Date.now()}`
+      communityNeeds = [{ id, author: "我 · 刚刚", subtitle: "来自小CC的提问", tags: [], question: q, answer: content, title: content.slice(0, 18), copy: `小CC问：${q}`, image: "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: true, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }, ...communityNeeds]
+      this.setData({ myNeedId: id })
+    }
+    this.setData({ myNeed: content, myNeedQuestion: q, needAsked: true, communityNeeds })
+    this.refreshNeeds()
+    this.persistDraft()
+    wx.showToast({ title: "收到，小CC记下了", icon: "success" })
+  },
+
+  editMyNeed() {
+    this.setData({ needAsked: false })
+  },
+
+  switchNeedMode(e) {
+    this.setData({ needsMode: e.currentTarget.dataset.mode })
+  },
+
+  switchNeedFilter(e) {
+    this.setData({ needFilter: e.currentTarget.dataset.filter })
+    this.refreshNeeds()
+  },
+
+  refreshNeeds() {
+    const filter = this.data.needFilter
+    const list = this.data.communityNeeds.filter(n => filter !== "similar" || n.similar || n.user)
+    this.setData({ displayedNeeds: list })
+  },
+
+  toggleNeedResonance(e) {
+    const id = e.currentTarget.dataset.id
+    const map = { ...this.data.resonatedNeedIds }
+    if (map[id]) delete map[id]
+    else map[id] = true
+    this.setData({ resonatedNeedIds: map })
+    this.persistDraft()
+  },
+
+  toggleNeedSave(e) {
+    const id = e.currentTarget.dataset.id
+    const map = { ...this.data.savedNeedIds }
+    if (map[id]) delete map[id]
+    else map[id] = true
+    this.setData({ savedNeedIds: map })
+    this.persistDraft()
   },
 
   go(e) {
@@ -664,12 +776,22 @@ Page({
       this.setView(view, { push: false, resetHistory: true })
       return
     }
+    if (view === "explore") this.computeExplore()
+    if (view === "mine") this.refreshMine()
     if (view === "profile") this.generateProfile()
     if (this.isTab(view)) {
       this.setView(view, { push: false, resetHistory: true })
       return
     }
     this.setView(view)
+  },
+
+  editProfile() {
+    this.setView("basicInfo")
+  },
+
+  mineToast(e) {
+    wx.showToast({ title: e.currentTarget.dataset.text || "功能开发中，先看看这里吧", icon: "none" })
   },
 
   switchAuthMode(e) {
@@ -1132,6 +1254,14 @@ Page({
       relAnswers: this.data.relAnswers,
       relIndex: this.data.relIndex,
       relDone: this.data.relDone,
+      myNeedSel: this.data.myNeedSel,
+      myNeedOther: this.data.myNeedOther,
+      myNeed: this.data.myNeed,
+      myNeedQuestion: this.data.myNeedQuestion,
+      myNeedId: this.data.myNeedId,
+      needAsked: this.data.needAsked,
+      resonatedNeedIds: this.data.resonatedNeedIds,
+      savedNeedIds: this.data.savedNeedIds,
       quickVoiceText: this.data.quickVoiceText,
       quickVoiceDone: this.data.quickVoiceDone,
       qaStarted: this.data.qaStarted,
@@ -1220,7 +1350,14 @@ Page({
 
   openDemandDetail(e) {
     const id = e.currentTarget.dataset.id
-    const activeDemand = this.data.communityNeeds.find(item => item.id === id) || this.data.communityNeeds[0]
+    const found = this.data.communityNeeds.find(item => item.id === id) || this.data.communityNeeds[0]
+    const activeDemand = {
+      ...found,
+      title: found.title,
+      detail: found.copy || found.detail,
+      stats: found.stats || `${found.resonance || 0}人共鸣 · ${found.commentsCount || 0}条评论`,
+      response: found.response || ""
+    }
     this.setData({ activeDemand, showDemandDetail: true, demandFlipped: true, demandVoiceText: "", demandComment: "" })
   },
 
@@ -1257,9 +1394,10 @@ Page({
       return
     }
     const id = `need-${Date.now()}`
-    const newNeed = { id, title: content, detail: content, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
+    const newNeed = { id, author: "我 · 刚刚", subtitle: "刚刚发布的需求", tags: [], title: content.slice(0, 18), copy: content, image: "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
     const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动" }, ...this.data.demandHistory]
     this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false })
+    this.refreshNeeds()
     this.persistDraft()
     wx.showToast({ title: "需求卡已发布", icon: "success" })
   },
@@ -1489,6 +1627,51 @@ Page({
       : this.data.activities.filter(item => item.type === filter)
     this.setData({ filter, filteredActivities, filteredActivityFeed: this.filterActivities(filter) })
     this.persistDraft()
+  },
+
+  computeExplore() {
+    const feed = this.data.activityFeed || []
+    const distMap = { dinner: 1.8, ai: 2.6, walk: 4.2, workshop: 2.9, lunch: 3.4 }
+    const search = (this.data.exploreSearch || "").trim()
+    const list = feed.filter(item => {
+      const themeOk = this.data.exploreFilter === "all" || item.type === this.data.exploreFilter
+      const dist = distMap[item.id] || 8
+      const distOk = this.data.exploreDist === "all" ||
+        (this.data.exploreDist === "near" && dist <= 3) ||
+        (this.data.exploreDist === "middle" && dist <= 5)
+      const hay = `${item.title}${(item.tags || []).join("")}${item.location}${item.subtitle}`
+      const searchOk = !search || hay.includes(search)
+      return themeOk && distOk && searchOk
+    }).map(item => ({ ...item, poster: activityPosters[item.id] || "" }))
+    this.setData({ exploreList: list })
+  },
+
+  refreshMine() {
+    this.setData({
+      myNeedCount: this.data.communityNeeds.filter(n => n.user).length,
+      savedNeedCount: Object.keys(this.data.savedNeedIds || {}).length,
+      savedActivityCount: this.data.registeredActivities.length
+    })
+  },
+
+  updateExploreSearch(e) {
+    this.setData({ exploreSearch: e.detail.value })
+    this.computeExplore()
+  },
+
+  setExploreFilter(e) {
+    this.setData({ exploreFilter: e.currentTarget.dataset.filter })
+    this.computeExplore()
+  },
+
+  setExploreDist(e) {
+    this.setData({ exploreDist: e.currentTarget.dataset.filter })
+    this.computeExplore()
+  },
+
+  clearExploreFilter() {
+    this.setData({ exploreSearch: "", exploreFilter: "all", exploreDist: "all" })
+    this.computeExplore()
   },
 
   toast(e) {

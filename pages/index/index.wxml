@@ -286,13 +286,34 @@
       </swiper>
     </view>
 
-    <view class="need-recommend" data-id="{{needRecommend.id}}" bindtap="openDemandDetail">
-      <view class="need-cover"><text>需求卡</text></view>
-      <view class="need-overlay">
-        <text class="need-echo">需求卡 · {{needRecommend.resonance}}人共鸣</text>
-        <text class="need-title">{{needRecommend.title}}</text>
-        <text class="need-copy">{{needRecommend.detail}}</text>
-        <text class="need-go">去看看 ›</text>
+    <view wx:if="{{!needAsked}}" class="need-ask">
+      <view class="need-ask-head">
+        <image class="need-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
+        <view>
+          <view class="need-ask-name">{{basicInfo.name || '你'}}，问你一个真实的</view>
+          <view class="need-ask-q">{{homeQuestion}}</view>
+        </view>
+      </view>
+      <view class="need-opts">
+        <button wx:for="{{homeQuestionOpts}}" wx:key="*this" class="need-opt {{myNeedSel === item ? 'active' : ''}}" data-val="{{item}}" bindtap="toggleNeedOption">{{item}}</button>
+      </view>
+      <input class="need-other" value="{{myNeedOther}}" data-field="myNeedOther" bindinput="updateNeedOther" placeholder="其他，写下来（比如：周末下午，有人一起逛公园）" />
+      <button class="primary-btn wide" bindtap="submitHomeNeed">告诉小CC</button>
+    </view>
+
+    <view wx:else class="need-recommend voice">
+      <view class="voice-top">
+        <image class="voice-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
+        <view>
+          <view class="voice-label">你的声音</view>
+          <view class="voice-q">小CC问你："{{myNeedQuestion}}"</view>
+          <view class="voice-a">你回答：{{myNeed}}</view>
+        </view>
+      </view>
+      <view class="voice-echo">还有 6 人和你一样，小CC正在为你找。</view>
+      <view class="voice-actions">
+        <button class="voice-btn ghost" bindtap="editMyNeed">补充一下</button>
+        <button class="voice-btn main" bindtap="go" data-view="square">去需求广场看看</button>
       </view>
     </view>
   </scroll-view>
@@ -378,34 +399,111 @@
     </view>
   </view>
 
-  <scroll-view wx:elif="{{view === 'explore'}}" scroll-y class="screen with-tab">
-    <view class="section-title">其他活动 <text>按出门阻力筛选</text></view>
-    <scroll-view scroll-x class="filter-row">
-      <button class="filter {{filter === 'all' ? 'active' : ''}}" data-filter="all" bindtap="setFilter">全部</button>
-      <button class="filter {{filter === 'low' ? 'active' : ''}}" data-filter="low" bindtap="setFilter">低压力</button>
-      <button class="filter {{filter === 'deep' ? 'active' : ''}}" data-filter="deep" bindtap="setFilter">deep talk</button>
-      <button class="filter {{filter === 'walk' ? 'active' : ''}}" data-filter="walk" bindtap="setFilter">散步</button>
-      <button class="filter {{filter === 'workshop' ? 'active' : ''}}" data-filter="workshop" bindtap="setFilter">工作坊</button>
+    <scroll-view wx:elif="{{view === 'explore'}}" scroll-y class="screen with-tab explore-page">
+    <view class="explore-hero">
+      <view class="explore-hero-title">发现其他活动</view>
+      <view class="explore-hero-desc">按出门阻力和见面方式，挑一场刚刚好的局。</view>
+    </view>
+    <view class="explore-search">
+      <input class="explore-input" value="{{exploreSearch}}" bindinput="updateExploreSearch" placeholder="搜索活动、地点或场景" />
+    </view>
+    <scroll-view scroll-x class="explore-filters">
+      <button class="{{exploreFilter === 'all' ? 'is-active' : ''}}" data-filter="all" bindtap="setExploreFilter">全部</button>
+      <button class="{{exploreFilter === 'low' ? 'is-active' : ''}}" data-filter="low" bindtap="setExploreFilter">低压力</button>
+      <button class="{{exploreFilter === 'deep' ? 'is-active' : ''}}" data-filter="deep" bindtap="setExploreFilter">深聊</button>
+      <button class="{{exploreFilter === 'walk' ? 'is-active' : ''}}" data-filter="walk" bindtap="setExploreFilter">散步</button>
+      <button class="{{exploreFilter === 'workshop' ? 'is-active' : ''}}" data-filter="workshop" bindtap="setExploreFilter">工作坊</button>
+      <button class="{{exploreFilter === 'lunch' ? 'is-active' : ''}}" data-filter="lunch" bindtap="setExploreFilter">午间</button>
     </scroll-view>
-    <view class="activity-list">
-      <button wx:for="{{filteredActivityFeed}}" wx:key="id" class="activity-item" data-id="{{item.id}}" bindtap="openActivity">
-        <view class="activity-thumb {{item.coverClass}}">{{item.coverText}}</view>
-        <view>
-          <view class="row-title">{{item.title}}</view>
-          <view class="row-desc">{{item.subtitle}} · {{item.date}} {{item.time}}</view>
+    <scroll-view scroll-x class="explore-filters distance">
+      <button class="{{exploreDist === 'all' ? 'is-active' : ''}}" data-filter="all" bindtap="setExploreDist">全部距离</button>
+      <button class="{{exploreDist === 'near' ? 'is-active' : ''}}" data-filter="near" bindtap="setExploreDist">3km内</button>
+      <button class="{{exploreDist === 'middle' ? 'is-active' : ''}}" data-filter="middle" bindtap="setExploreDist">5km内</button>
+      <button class="{{exploreDist === 'sameCity' ? 'is-active' : ''}}" data-filter="sameCity" bindtap="setExploreDist">同城可达</button>
+    </scroll-view>
+    <view class="explore-list">
+      <view wx:for="{{exploreList}}" wx:key="id" class="explore-card" data-id="{{item.id}}" bindtap="openActivity">
+        <image class="explore-poster" src="{{item.poster}}" mode="aspectFill" />
+        <view class="explore-info">
+          <text class="explore-date">{{item.date}} {{item.weekday}} {{item.time}}</text>
+          <text class="explore-title">{{item.title}}</text>
+          <text class="explore-loc">{{item.location}} · {{item.people}}</text>
+          <view class="explore-tags">
+            <text wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+          </view>
         </view>
-      </button>
+      </view>
+    </view>
+    <view wx:if="{{!exploreList.length}}" class="explore-empty">
+      <view class="explore-empty-title">没有找到合适活动</view>
+      <button class="explore-clear" bindtap="clearExploreFilter">清除筛选</button>
     </view>
   </scroll-view>
 
-  <scroll-view wx:elif="{{view === 'square'}}" scroll-y class="screen with-tab">
-    <view class="square-hero">
-      <view class="square-title">需求广场 · 今日话题榜</view>
-      <view class="square-stats"><text>1,286</text> 位青年已经入住 · 今日 <text>238</text> 人参与话题</view>
+    <scroll-view wx:elif="{{view === 'square'}}" scroll-y class="screen with-tab needs-page">
+    <view class="needs-hero">
+      <text>需求与生活</text>
+      <view class="needs-hero-title">先被看见，再慢慢靠近</view>
+      <view class="needs-hero-desc">需求，是你想遇见谁；生活，是你愿意先展示什么。都会被同频的人接住。</view>
     </view>
-    <view class="need-grid">
-      <button wx:for="{{communityNeeds}}" wx:key="id" class="need-card {{item.user ? 'user-need-card' : ''}}" data-id="{{item.id}}" bindtap="openDemandDetail"><view class="need-cover"><text>{{item.user ? '我刚刚发布' : '大家正在说'}}</text><text>{{item.title}}</text></view><view class="need-body"><view>{{item.detail}}</view><text>{{item.stats}}</text></view></button>
+    <view class="needs-mode">
+      <button class="{{needsMode === 'needs' ? 'is-active' : ''}}" data-mode="needs" bindtap="switchNeedMode"><b>需求</b><text>说出你的关系所想</text></button>
+      <button class="{{needsMode === 'life' ? 'is-active' : ''}}" data-mode="life" bindtap="switchNeedMode"><b>生活</b><text>像朋友圈一样分享</text></button>
     </view>
+
+    <block wx:if="{{needsMode === 'needs'}}">
+      <view class="needs-subhead">
+        <view>
+          <view class="needs-subhead-title">大家正在寻找</view>
+          <view class="needs-subhead-desc">看看谁和你想的一样</view>
+        </view>
+      </view>
+      <view class="needs-filter">
+        <button class="{{needFilter === 'all' ? 'is-active' : ''}}" data-filter="all" bindtap="switchNeedFilter">全部需求</button>
+        <button class="{{needFilter === 'similar' ? 'is-active' : ''}}" data-filter="similar" bindtap="switchNeedFilter">和你相似</button>
+      </view>
+      <scroll-view scroll-x class="needs-hlist">
+        <view wx:for="{{displayedNeeds}}" wx:key="id" class="need-card-large">
+          <view class="need-card-media" data-id="{{item.id}}" bindtap="openDemandDetail">
+            <image wx:if="{{item.image}}" class="need-media-img" src="{{item.image}}" mode="aspectFill" />
+            <text class="need-media-sub">{{item.subtitle}}</text>
+          </view>
+          <view class="need-card-content">
+            <text class="need-author">{{item.author}}</text>
+            <view class="need-card-title" data-id="{{item.id}}" bindtap="openDemandDetail"><text>{{item.title}}</text></view>
+            <text class="need-copy">{{item.copy}}</text>
+            <view class="club-tags">
+              <text wx:for="{{item.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
+            </view>
+            <view class="need-card-actions">
+              <button class="{{resonatedNeedIds[item.id] ? 'is-active' : ''}}" data-id="{{item.id}}" bindtap="toggleNeedResonance">{{resonatedNeedIds[item.id] ? '已共鸣' : '我也有'}} {{item.resonance + (resonatedNeedIds[item.id] ? 1 : 0)}}</button>
+              <button data-id="{{item.id}}" bindtap="openDemandDetail">评论 {{item.commentsCount}}</button>
+              <button class="{{savedNeedIds[item.id] ? 'is-active' : ''}}" data-id="{{item.id}}" bindtap="toggleNeedSave">{{savedNeedIds[item.id] ? '已收藏' : '收藏'}}</button>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+    </block>
+
+    <block wx:else>
+      <view class="needs-subhead">
+        <view>
+          <view class="needs-subhead-title">生活动态</view>
+          <view class="needs-subhead-desc">先看见彼此</view>
+        </view>
+      </view>
+      <view class="life-feed">
+        <view wx:for="{{lifePosts}}" wx:key="id" class="life-post">
+          <view class="life-post-head"><text class="life-author">{{item.author}}</text><text class="life-meta">{{item.meta}}</text></view>
+          <text class="life-kind">{{item.kind}}</text>
+          <text class="life-text">{{item.text}}</text>
+          <image wx:if="{{item.image}}" class="life-img" src="{{item.image}}" mode="aspectFill" />
+          <text class="life-tag">{{item.tag}}</text>
+          <view class="life-foot"><text>共鸣 {{item.resonance}}</text><text>评论 {{item.comments}}</text></view>
+        </view>
+      </view>
+    </block>
+
     <button class="need-add-button" bindtap="openNeedComposer"><text class="need-add-plus">+</text><text>发布我的需求卡</text></button>
     <view wx:if="{{showNeedComposer}}" class="need-composer card">
       <view class="card-title">写下你最近的需求</view>
@@ -415,90 +513,38 @@
     </view>
   </scroll-view>
 
-  <scroll-view wx:elif="{{view === 'mine'}}" scroll-y class="screen with-tab">
-    <view class="mine-switch">
-      <button class="{{mineTab === 'profile' ? 'active' : ''}}" data-tab="profile" bindtap="setMineTab">我的画像</button>
-      <button class="{{mineTab === 'journey' ? 'active' : ''}}" data-tab="journey" bindtap="setMineTab">需求历程</button>
-    </view>
-    <block wx:if="{{mineTab === 'profile'}}">
-      <view class="profile-mini mine-profile-hero">
-        <view class="profile-mini-cover">
-          <view class="profile-mini-avatar">
-            <image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" class="avatar-image" />
-            <text wx:else>Z</text>
-          </view>
-          <view>
-            <view class="profile-name">{{profileTitle}}</view>
-            <view class="profile-sub">小Z · 画像持续更新中</view>
-          </view>
-        </view>
-        <view class="profile-mini-body"><view class="insight-card">你的画像不是结论，而是随着每次真实见面慢慢更新的记录。</view></view>
+    <scroll-view wx:elif="{{view === 'mine'}}" scroll-y class="screen with-tab club-profile">
+    <view class="profile-cover"></view>
+    <view class="profile-identity">
+      <image class="profile-avatar" wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" />
+      <image class="profile-avatar" wx:else src="/pages/index/images/portrait-user.jpg" mode="aspectFill" />
+      <view class="profile-idtext">
+        <view class="profile-name">{{basicInfo.name || '小恰'}}</view>
+        <view class="profile-type">{{homeSummary || '低压力线下重启型'}}</view>
       </view>
-      <view class="profile-section-title">关系需求</view>
-      <view class="profile-detail-grid">
-        <view class="profile-detail-cell"><text>我想认识</text><view>{{profileDetails.relationshipNeed}}</view></view>
-        <view class="profile-detail-cell"><text>我期待的关系</text><view>{{profileDetails.idealType}}</view></view>
-      </view>
-      <view class="profile-section-title">生活需求</view>
-      <view class="profile-detail-card"><text>我的生活节奏</text><view>{{profileDetails.lifeRhythm}}</view></view>
-      <view class="profile-section-title profile-edit-title"><text>补充我的画像</text><text>更生活化的公开资料</text></view>
-      <view class="profile-edit-card">
-        <view class="profile-edit-field"><text>理想型 / 我愿意靠近的人</text><textarea value="{{profileDetails.idealType}}" data-field="idealType" bindinput="updateProfileDetail" maxlength="120" /></view>
-        <view class="profile-edit-field"><text>关系经历 / 我现在怎么看关系</text><textarea value="{{profileDetails.relationshipExperience}}" data-field="relationshipExperience" bindinput="updateProfileDetail" maxlength="180" /></view>
-        <view class="profile-edit-field"><text>生活节奏 / 我平时如何生活</text><textarea value="{{profileDetails.lifeRhythm}}" data-field="lifeRhythm" bindinput="updateProfileDetail" maxlength="120" /></view>
-        <button class="primary-btn wide" bindtap="saveProfileDetails">更新我的画像</button>
-      </view>
-      <button class="ghost-btn wide" bindtap="go" data-view="basicInfo">编辑基础资料</button>
-      <button class="account-entry" bindtap="openAccountSettings"><text>账号与隐私</text><text>已登录 · {{accountName}} ›</text></button>
-    </block>
-    <block wx:elif="{{mineTab === 'journey'}}">
-      <view class="journey-intro"><view>我的需求历程</view><text>记录你的期待，看见改变的过程</text></view>
-      <view class="history-list">
-        <view wx:for="{{demandHistory}}" wx:if="{{!item.hidden}}" wx:key="id" class="history-card">
-          <view class="history-top"><text class="history-status {{item.status === '已解决' ? 'resolved' : ''}}">{{item.status}}</text><text>{{item.date}}</text></view>
-          <view class="history-title-text">{{item.title}}</view>
-          <view class="history-activity">对应活动：{{item.activity}}</view>
-          <view class="history-actions">
-            <button class="tiny-btn primary" wx:if="{{item.status !== '已解决'}}" data-index="{{index}}" bindtap="markDemandResolved">标记有改善</button>
-            <button class="tiny-btn" data-id="dinner" bindtap="openActivity">回顾活动</button>
-            <button class="tiny-btn" data-index="{{index}}" bindtap="hideDemand">隐藏</button>
-          </view>
-        </view>
-      </view>
-    </block>
-  </scroll-view>
-
-  <scroll-view wx:elif="{{view === 'accountSettings'}}" scroll-y class="screen">
-    <view class="settings-hero">
-      <view class="auth-avatar">Z</view>
-      <view><view class="settings-name">{{accountName}}</view><text>恰好体验账号</text></view>
+      <button class="profile-edit" bindtap="editProfile">编辑</button>
     </view>
-    <view class="settings-list">
-      <view class="settings-row"><text>登录方式</text><text>微信快捷登录</text></view>
-      <view class="settings-row"><text>资料保存</text><text>仅保存在当前体验设备</text></view>
-      <view class="settings-row"><text>隐私约定</text><text>真实、尊重、不打扰</text></view>
+    <view class="trust-strip"><text>已实名</text><text>信用良好</text></view>
+    <view class="portrait-progress">
+      <view class="pp-head"><text>画像完善度</text><text>{{homeComplete}}%</text></view>
+      <view class="pp-track"><view class="pp-fill" style="width: {{homeComplete}}%"></view></view>
+      <view class="pp-hint">每次回答和活动反馈，都会让推荐更贴合你。</view>
     </view>
-    <button class="logout-btn" bindtap="logoutUser">退出当前账号</button>
-    <view class="settings-note">退出不会删除你在测试阶段填写的回答和需求草稿。</view>
-  </scroll-view>
-
-  <scroll-view wx:elif="{{view === 'partner'}}" scroll-y class="screen">
-    <view class="partner-hero">
-      <view>主理人 / 资源响应</view>
-      <text>不是凭空发活动，而是看见真实用户需求后，发起一场更容易成局的线下相遇。</text>
+    <view class="profile-promos">
+      <button bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
+      <button class="orange" bindtap="go" data-view="square"><text class="promo-title">需求收藏</text><text class="promo-sub">查看收藏的需求</text></button>
     </view>
-    <view class="demand-response">
-      <view>想认识靠谱的人，但不想尴尬交换微信</view>
-      <text>72人共鸣 · 38条评论 · 适合少人数饭局/轻聊天。</text>
+    <view class="profile-stats">
+      <view><text class="stat-num">{{registeredActivities.length}}</text><text class="stat-label">参与活动</text></view>
+      <view><text class="stat-num">{{demandHistory.length}}</text><text class="stat-label">公开需求</text></view>
+      <view><text class="stat-num">{{savedNeedCount}}</text><text class="stat-label">需求收藏</text></view>
     </view>
-    <view wx:if="{{hostSubmitted}}" class="card host-success">
-      <view class="card-title">活动草稿已提交</view>
-      <view class="card-text">小CC审核通过后，活动会带着相关需求标签出现在活动广场。</view>
-    </view>
-    <view wx:else class="host-form">
-      <input class="host-input" value="{{hostForm.title}}" data-field="title" bindinput="updateHostField" placeholder="活动主题，例如：周五轻聊天晚餐局" />
-      <textarea class="host-textarea" value="{{hostForm.description}}" data-field="description" bindinput="updateHostField" maxlength="300" placeholder="这场活动想回应哪一个真实需求？会怎么进行？" />
-      <button class="primary-btn wide" bindtap="submitHostActivity">提交给小CC审核</button>
+    <view class="club-profile-section">
+      <view class="section-title">我的记录</view>
+      <button bindtap="go" data-view="profile"><text>我的画像</text><text>根据回答和活动反馈持续更新</text><text class="row-arrow">›</text></button>
+      <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
+      <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
+      <button bindtap="go" data-view="square"><text>我的需求</text><text>{{myNeedCount}} 张需求卡</text><text class="row-arrow">›</text></button>
     </view>
   </scroll-view>
 
@@ -508,14 +554,15 @@
       <view class="sheet-topline"><text>需求卡</text><button class="sheet-close" bindtap="closeDemandDetail">关闭</button></view>
       <view class="demand-card-stage {{demandFlipped ? 'is-flipped' : ''}}" bindtap="flipDemand">
         <view class="demand-face demand-front">
-          <view class="demand-face-label">大家正在说</view>
+          <view class="demand-face-label">{{activeDemand.question ? '来自小CC的提问' : '大家正在说'}}</view>
           <view class="demand-face-title">{{activeDemand.title}}</view>
           <view class="demand-face-hint">点击翻开，看完整需求</view>
         </view>
         <view class="demand-face demand-back">
           <view class="demand-face-label">完整需求</view>
           <view class="demand-face-title">{{activeDemand.title}}</view>
-          <view class="demand-face-detail">{{activeDemand.detail}}</view>
+          <view wx:if="{{activeDemand.question}}" class="demand-face-question">小CC问：{{activeDemand.question}}</view>
+          <view class="demand-face-detail">{{activeDemand.answer || activeDemand.detail}}</view>
           <view class="demand-face-stats">{{activeDemand.stats}}</view>
         </view>
       </view>
@@ -542,6 +589,7 @@
 
   <view wx:if="{{showTab}}" class="tab-bar">
     <button class="tab-item {{view === 'home' ? 'active' : ''}}" bindtap="go" data-view="home">专属</button>
+    <button class="tab-item {{view === 'explore' ? 'active' : ''}}" bindtap="go" data-view="explore">发现</button>
     <button class="tab-item {{view === 'square' ? 'active' : ''}}" bindtap="go" data-view="square">需求</button>
     <button class="tab-item {{view === 'mine' ? 'active' : ''}}" bindtap="go" data-view="mine">我的</button>
   </view>
