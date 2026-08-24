@@ -442,16 +442,12 @@
 
     <scroll-view wx:elif="{{view === 'square'}}" scroll-y class="screen with-tab needs-page">
     <view class="needs-hero">
-      <text>需求与生活</text>
+      <text>需求广场</text>
       <view class="needs-hero-title">先被看见，再慢慢靠近</view>
-      <view class="needs-hero-desc">需求，是你想遇见谁；生活，是你愿意先展示什么。都会被同频的人接住。</view>
-    </view>
-    <view class="needs-mode">
-      <button class="{{needsMode === 'needs' ? 'is-active' : ''}}" data-mode="needs" bindtap="switchNeedMode"><b>需求</b><text>说出你的关系所想</text></button>
-      <button class="{{needsMode === 'life' ? 'is-active' : ''}}" data-mode="life" bindtap="switchNeedMode"><b>生活</b><text>像朋友圈一样分享</text></button>
+      <view class="needs-hero-desc">需求，是你想遇见谁。说出你的关系所想，被同频的人接住。</view>
     </view>
 
-    <block wx:if="{{needsMode === 'needs'}}">
+    <block>
       <view class="needs-subhead">
         <view>
           <view class="needs-subhead-title">大家正在寻找</view>
@@ -483,25 +479,6 @@
           </view>
         </view>
       </scroll-view>
-    </block>
-
-    <block wx:else>
-      <view class="needs-subhead">
-        <view>
-          <view class="needs-subhead-title">生活动态</view>
-          <view class="needs-subhead-desc">先看见彼此</view>
-        </view>
-      </view>
-      <view class="life-feed">
-        <view wx:for="{{lifePosts}}" wx:key="id" class="life-post">
-          <view class="life-post-head"><text class="life-author">{{item.author}}</text><text class="life-meta">{{item.meta}}</text></view>
-          <text class="life-kind">{{item.kind}}</text>
-          <text class="life-text">{{item.text}}</text>
-          <image wx:if="{{item.image}}" class="life-img" src="{{item.image}}" mode="aspectFill" />
-          <text class="life-tag">{{item.tag}}</text>
-          <view class="life-foot"><text>共鸣 {{item.resonance}}</text><text>评论 {{item.comments}}</text></view>
-        </view>
-      </view>
     </block>
 
     <button class="need-add-button" bindtap="openNeedComposer"><text class="need-add-plus">+</text><text>发布我的需求卡</text></button>

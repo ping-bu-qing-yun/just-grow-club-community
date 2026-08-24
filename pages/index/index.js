@@ -341,11 +341,6 @@ const defaultCommunityNeeds = [
   { id: "d6", author: "阿May · 今天", subtitle: "喜欢看展、慢节奏", tags: ["看展", "文艺", "轻社交"], title: "想找人一起看展，然后随便聊聊", copy: "看完展不用硬聊，舒服就好。", image: "/pages/index/images/posters/need-d6.jpg", resonance: 17, commentsCount: 5, response: "看展局已有2人报名", similar: false, stats: "17人共鸣 · 5条评论", comments: needCommentsPool.slice(2, 5), user: false }
 ]
 
-const defaultLifePosts = [
-  { id: "life-1", author: "小满", meta: "今天 · 杨浦", kind: "生活分享", text: "最近想找杨浦附近的朋友，周末一起散步或喝杯咖啡。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/poster-walk.jpg", tag: "#周末的一百种过法", comments: 3, resonance: 12 },
-  { id: "life-2", author: "Mei", meta: "昨天 · 关系想法", kind: "关系话题", text: "你觉得舒服的关系，是从心动开始，还是从相处不费力开始？", image: "/pages/index/images/posters/poster-deep.jpg", tag: "#关系里的松弛感", comments: 12, resonance: 24 }
-]
-
 const recorderManager = wx.getRecorderManager()
 let recordTimer = null
 let innerAudioContext = null
@@ -456,10 +451,8 @@ Page({
     qaStarted: false,
     communityNeeds: defaultCommunityNeeds,
     demandComments: defaultCommunityNeeds[0].comments,
-    needsMode: "needs",
     needFilter: "all",
     displayedNeeds: defaultCommunityNeeds,
-    lifePosts: defaultLifePosts,
     resonatedNeedIds: {},
     savedNeedIds: {},
     demandHistory: [
@@ -729,10 +722,6 @@ Page({
 
   editMyNeed() {
     this.setData({ needAsked: false })
-  },
-
-  switchNeedMode(e) {
-    this.setData({ needsMode: e.currentTarget.dataset.mode })
   },
 
   switchNeedFilter(e) {
