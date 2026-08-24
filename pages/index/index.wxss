@@ -1004,6 +1004,9 @@ button::after {
   color: #737e76;
   font-size: 22rpx;
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tiny-btn.primary {
@@ -2262,6 +2265,9 @@ button::after {
   color: #737e76;
   font-size: 22rpx;
   font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-switch button.active {
@@ -3170,6 +3176,9 @@ button::after {
   border-radius: 99rpx;
   line-height: 1;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .share-chip::after,
@@ -3373,6 +3382,9 @@ button::after {
   font-size: 30rpx;
   font-weight: 800;
   letter-spacing: 1rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bar-btn.main {
@@ -3442,6 +3454,9 @@ button::after {
   border-radius: 99rpx;
   padding: 14rpx 26rpx;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .need-opt.active {
@@ -3628,6 +3643,9 @@ button::after {
   border-radius: 99rpx;
   padding: 0 24rpx;
   font-size: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .needs-filter button.is-active {
@@ -3802,6 +3820,7 @@ button::after {
 .explore-filters button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 64rpx;
   color: #667068;
   background: #edf2ed;
@@ -3908,6 +3927,9 @@ button::after {
   background: #fff;
   color: #416054;
   font-size: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .club-profile {
@@ -3965,6 +3987,9 @@ button::after {
   font-size: 22rpx;
   border-radius: 99rpx;
   padding: 10rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .trust-strip {
