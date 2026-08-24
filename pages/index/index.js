@@ -458,6 +458,7 @@ Page({
     selectedNeedFragMap: {},
     needCoverPreview: "",
     needCoverName: "",
+    needKeyboardHeight: 0,
     registeredActivities: [],
     hostForm: { title: "", description: "" },
     hostSubmitted: false,
@@ -1372,11 +1373,15 @@ Page({
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "" })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", needKeyboardHeight: 0 })
   },
 
   cancelNeedComposer() {
-    this.setData({ showNeedComposer: false })
+    this.setData({ showNeedComposer: false, needKeyboardHeight: 0 })
+  },
+
+  onNeedKeyboardChange(e) {
+    this.setData({ needKeyboardHeight: (e.detail && e.detail.height) || 0 })
   },
 
   tapNeedOpener(e) {

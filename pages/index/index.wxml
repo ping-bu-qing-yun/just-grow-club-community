@@ -483,7 +483,7 @@
     </block>
 
     <button class="need-fab" bindtap="openNeedComposer"><text class="need-fab-plus">+</text></button>
-    <view wx:if="{{showNeedComposer}}" class="need-composer-mask" bindtap="cancelNeedComposer">
+    <view wx:if="{{showNeedComposer}}" class="need-composer-mask" style="padding-bottom: {{needKeyboardHeight}}px" bindtap="cancelNeedComposer">
       <view class="need-composer-sheet" catchtap="noop">
         <view class="need-sheet-head">
           <text>发布你的需求卡</text>
@@ -494,7 +494,7 @@
           <scroll-view scroll-x class="need-openers">
             <button wx:for="{{needOpeners}}" wx:key="*this" class="need-opener" data-opener="{{item}}" bindtap="tapNeedOpener">{{item}}</button>
           </scroll-view>
-          <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
+          <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
           <view class="need-frag-label">心动碎片（可选）</view>
           <scroll-view scroll-x class="need-frag-row">
             <button wx:for="{{needFragScene}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
