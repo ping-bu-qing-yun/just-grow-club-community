@@ -1053,11 +1053,6 @@ Page({
     this.requestRecord()
   },
 
-  startRecordDemand() {
-    this.setData({ recordTarget: "demand" })
-    this.requestRecord()
-  },
-
   requestRecord() {
     if (this.data.recording) return
     wx.getSetting({
@@ -1128,11 +1123,6 @@ Page({
 
   updateQuickVoice(e) {
     this.setData({ quickVoiceText: e.detail.value })
-    this.persistDraft()
-  },
-
-  updateDemandVoice(e) {
-    this.setData({ demandVoiceText: e.detail.value })
     this.persistDraft()
   },
 
@@ -1464,19 +1454,6 @@ Page({
     this.setData({ demandComments: comments, communityNeeds, activeDemand: { ...this.data.activeDemand, comments }, demandComment: "" })
     this.persistDraft()
     wx.showToast({ title: "已发布评论", icon: "success" })
-  },
-
-  submitDemandVoice() {
-    const text = this.data.demandVoiceText.trim()
-    if (!text) {
-      wx.showToast({ title: "先说一句你的想法", icon: "none" })
-      return
-    }
-    const comments = [text, ...(this.data.activeDemand.comments || [])]
-    const communityNeeds = this.data.communityNeeds.map(item => item.id === this.data.activeDemand.id ? { ...item, comments } : item)
-    this.setData({ demandComments: comments, communityNeeds, activeDemand: { ...this.data.activeDemand, comments }, demandVoiceText: "" })
-    this.persistDraft()
-    wx.showToast({ title: "语音回答已收录", icon: "success" })
   },
 
   markDemandResolved(e) {

@@ -589,12 +589,6 @@
         <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" maxlength="300" placeholder="写下一句你的想法" />
         <view class="sheet-actions">
           <button class="tiny-btn primary" bindtap="addDemandComment">发布评论</button>
-          <button class="tiny-btn" catchtouchstart="startRecordDemand" catchtouchend="stopRecordQa" catchtouchcancel="cancelRecordQa">{{recording && recordTarget === 'demand' ? '松开发送' : '按住语音回答'}}</button>
-        </view>
-        <view wx:if="{{demandVoiceText}}" class="demand-voice-review">
-          <view class="voice-review-label">语音文字预览，可修改</view>
-          <textarea value="{{demandVoiceText}}" bindinput="updateDemandVoice" maxlength="300" />
-          <button class="tiny-btn primary" bindtap="submitDemandVoice">确认收录</button>
         </view>
       </view>
       <button wx:if="{{activeDemand.id === 'host'}}" class="primary-btn wide" bindtap="go" data-view="partner">我来发起活动</button>
