@@ -6,7 +6,11 @@
 
 ## 🔗 在线体验
 
-🌐 **最新外部链接（注册体验版，从欢迎页开始）：**
+🌐 **最新版本（推荐体验）：**
+
+https://ping-bu-qing-yun.github.io/just-grow-club-community/preview.html
+
+🕰️ **旧版演示（历史提交版，供对比）：**
 
 https://ping-bu-qing-yun.github.io/just-grow-club-community/?reset=registration&v=20260810-final
 
