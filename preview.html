@@ -106,6 +106,45 @@
   .tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:390px;max-width:100%;display:flex;background:rgba(255,253,251,.95);border-top:1px solid rgba(95,127,94,.12);padding:9px 4px 14px;z-index:10}
   .tabbar button{flex:1;border:0;background:none;font-size:12px;color:#8a867c;font-weight:700;cursor:pointer}
   .tabbar button.on{color:#4d704f}
+  .detail-topbar{position:relative;display:flex;align-items:center;justify-content:center;height:48px;margin-bottom:12px}
+  .detail-topbar .back{position:absolute;left:0;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:#f3f1ef;color:#416054;font-size:20px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .detail-topbar b{font-size:16px;font-weight:850;color:#2f2a24}
+  .detail-poster{width:100%;max-height:360px;object-fit:contain;background:#f4f1ea;border-radius:18px;box-shadow:0 12px 26px rgba(63,47,38,.14)}
+  .info-card{background:#fff;border-radius:18px;padding:18px;margin-top:12px;box-shadow:0 10px 22px rgba(63,47,38,.08)}
+  .info-card h1{font-size:22px;font-weight:900;color:#2f2a24;line-height:1.3}
+  .info-card .sub{font-size:12px;color:#d97757;font-weight:800;margin-top:6px}
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+  .fact{border-top:1px solid #f0e8da;padding-top:10px}
+  .fact span{display:block;font-size:10px;color:#8a867c}
+  .fact b{display:block;font-size:14px;color:#2f2a24;margin-top:3px;line-height:1.4}
+  .block{background:#fff;border-radius:18px;padding:16px 18px;margin-top:12px;box-shadow:0 10px 22px rgba(63,47,38,.08)}
+  .block .bt{font-size:14px;font-weight:850;color:#2f2a24;margin-bottom:8px}
+  .block p{font-size:12.5px;color:#55504a;line-height:1.75}
+  .block .note{font-size:11px;color:#8a867c;margin-top:6px}
+  .block.cc{border:1px solid rgba(95,127,94,.2)}
+  .block.cc .bt{color:#416054}
+  .schedule{margin-top:4px}
+  .step{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #f7f2e8}
+  .step:last-child{border-bottom:0}
+  .step i{width:8px;height:8px;border-radius:50%;background:#6f916c;margin-top:6px;flex:none}
+  .step time{font-size:11px;color:#d97757;font-weight:800;width:48px;flex:none}
+  .step p{font-size:12.5px;color:#55504a;line-height:1.6}
+  .detail-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:390px;max-width:100%;display:flex;gap:10px;background:rgba(255,253,251,.97);border-top:1px solid rgba(95,127,94,.12);padding:12px 16px 16px;z-index:11}
+  .detail-bar .main{flex:1.6;border:0;border-radius:99px;height:46px;background:linear-gradient(145deg,#6f916c,#587b59);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+  .detail-bar .main.done{background:#aebfb0;cursor:default}
+  .detail-bar .ghost{flex:1;border:1px solid rgba(95,127,94,.3);background:#fff;border-radius:99px;height:46px;color:#416054;font-size:14px;font-weight:800;cursor:pointer}
+  .demand-mask{position:fixed;left:50%;top:0;transform:translateX(-50%);width:390px;max-width:100%;height:100%;background:rgba(35,31,26,.45);z-index:20;display:none;align-items:flex-end}
+  .demand-mask.on{display:flex}
+  .demand-sheet{width:100%;background:#fdfcf8;border-radius:24px 24px 0 0;padding:22px 20px 34px;max-height:78%;overflow:auto}
+  .demand-head{display:flex;justify-content:space-between;align-items:center}
+  .demand-head b{font-size:12px;color:#8a867c}
+  .demand-head button{border:0;background:#f3f1ef;color:#416054;border-radius:99px;padding:7px 14px;font-size:12px;cursor:pointer}
+  .demand-sheet h3{font-size:20px;font-weight:900;color:#2f2a24;margin-top:14px;line-height:1.4}
+  .demand-sheet .copy{font-size:14px;color:#55504a;line-height:1.8;margin-top:10px}
+  .demand-acts{display:flex;gap:10px;margin-top:22px}
+  .demand-acts button{flex:1;height:44px;border-radius:99px;border:0;background:linear-gradient(145deg,#6f916c,#587b59);color:#fff;font-size:14px;font-weight:800;cursor:pointer}
+  .demand-acts button.ghost{background:#fff;border:1px solid rgba(95,127,94,.3);color:#416054}
+  .toast{position:fixed;left:50%;top:38%;transform:translateX(-50%);background:rgba(47,42,36,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:99px;z-index:30;display:none;max-width:80%;text-align:center}
 </style>
 </head>
 <body>
@@ -176,6 +215,14 @@
         </div>
       </div>
 
+      <div class="screen" id="tab-detail">
+        <div class="detail-topbar">
+          <button class="back" onclick="closeActivity()">‹</button>
+          <b>活动详情</b>
+        </div>
+        <div id="detailBody"></div>
+      </div>
+
       <div class="tabbar">
         <button class="on" onclick="tab('home')">专属</button>
         <button onclick="tab('explore')">发现</button>
@@ -185,13 +232,32 @@
     </div>
   </div>
 
+  <div class="demand-mask" id="demandMask" onclick="closeDemand()">
+    <div class="demand-sheet" onclick="event.stopPropagation()">
+      <div class="demand-head"><b id="demandAuthor"></b><button onclick="closeDemand()">关闭</button></div>
+      <h3 id="demandTitle"></h3>
+      <div class="copy" id="demandCopy"></div>
+      <div class="demand-acts">
+        <button id="demandLike" onclick="demandLike()">我也有</button>
+        <button class="ghost" id="demandSave" onclick="demandSave()">收藏</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-bar" style="display:none">
+    <button class="main" id="regBtn" onclick="registerActivity()">立即报名</button>
+    <button class="ghost" onclick="considerActivity()">考虑一下</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
 <script>
   var posters = [
-    { src: "./pages/index/images/posters/poster-dinner.jpg", t: "周五轻聊天晚餐局", d: "8/14 明天 19:30" },
-    { src: "./pages/index/images/posters/poster-walk.jpg", t: "我们向月亮走去 · 散步", d: "8/15 明天 19:00" },
-    { src: "./pages/index/images/posters/poster-deep.jpg", t: "深度对谈夜局", d: "8/14 明天 20:00" },
-    { src: "./pages/index/images/posters/poster-workshop.jpg", t: "关系说明书工作坊", d: "8/15 明天 14:00" },
-    { src: "./pages/index/images/posters/poster-lunch.jpg", t: "午间同频小桌", d: "8/12 12:30" }
+    { id: "dinner", src: "./pages/index/images/posters/poster-dinner.jpg", t: "周五轻聊天晚餐局", d: "8/14 明天 19:30" },
+    { id: "walk", src: "./pages/index/images/posters/poster-walk.jpg", t: "我们向月亮走去 · 散步", d: "8/15 明天 19:00" },
+    { id: "ai", src: "./pages/index/images/posters/poster-deep.jpg", t: "深度对谈夜局", d: "8/14 明天 20:00" },
+    { id: "workshop", src: "./pages/index/images/posters/poster-workshop.jpg", t: "关系说明书工作坊", d: "8/15 明天 14:00" },
+    { id: "lunch", src: "./pages/index/images/posters/poster-lunch.jpg", t: "午间同频小桌", d: "8/12 12:30" }
   ]
   var needs = [
     { img: "./pages/index/images/posters/need-d1.jpg", sub: "正在寻找低压力的认识方式", a: "林 · 2小时前", t: "不想尴尬交换微信，但想认真认识人", c: "如果有一个中间场域，我会更愿意出来。", res: 72, com: 38 },
@@ -201,23 +267,93 @@
     { img: "./pages/index/images/posters/need-d5.jpg", sub: "怕尴尬、想慢慢来", a: "圆圆 · 昨天", t: "第一次见面能不能不交换微信", c: "先认识，不急着留联系方式。", res: 51, com: 20 },
     { img: "./pages/index/images/posters/need-d6.jpg", sub: "喜欢看展、慢节奏", a: "阿May · 今天", t: "想找人一起看展，然后随便聊聊", c: "看完展不用硬聊，舒服就好。", res: 17, com: 5 }
   ]
-  var explores = posters.map(function (p) { return { img: p.src, t: p.t, d: p.d, loc: "大学路 · KIC", tags: ["低压力", "少人数"] } })
-  var idx = 0, timer
+  var activities = {
+    dinner: {
+      id: "dinner", img: "./pages/index/images/posters/poster-dinner.jpg", date: "8/14", weekday: "周五", time: "19:30",
+      title: "周五轻聊天晚餐局", subtitle: "成熟活动 · 少人数 · 想认识靠谱的人",
+      location: "KIC / 大学路附近", people: "6-8人 · 高同频", fee: "¥99",
+      crowd: "多为25-35岁，想认真认识、不想无效社交的人",
+      cc: "这一场有6-8人，节奏清楚，先吃饭再聊天，不会有人硬cue你介绍自己。适合第一次低压力见面。",
+      schedule: [
+        { time: "19:30", title: "到场 · 小CC轻破冰，不做简历式自我介绍" },
+        { time: "19:45", title: "共桌轻餐 · 围绕3个低压力话题自然聊天" },
+        { time: "20:35", title: "自由换座 · 可继续聊，也可加入散步小组" },
+        { time: "21:20", title: "反馈 · 写下想继续认识谁、还顾虑什么" }
+      ]
+    },
+    ai: {
+      id: "ai", img: "./pages/index/images/posters/poster-deep.jpg", date: "8/14", weekday: "周五", time: "20:00",
+      title: "深度对谈夜局", subtitle: "预活动 · 价值观 · 先看人",
+      location: "大学路合作空间", people: "6人 · 正在准备", fee: "¥89",
+      crowd: "喜欢慢聊、愿意分享真实想法的人",
+      cc: "这一场围绕三个真实的关系问题慢慢聊，先听彼此，再决定要不要靠近，不赶进度。",
+      schedule: [
+        { time: "20:00", title: "到场 · 简单认识，确认今晚的三个问题" },
+        { time: "20:15", title: "深度对谈 · 分组围绕价值观与关系体验自然聊天" },
+        { time: "21:20", title: "自由交流 · 可继续聊，也可提前安静离开" },
+        { time: "21:50", title: "收束 · 写下今晚印象最深的一句话" }
+      ]
+    },
+    walk: {
+      id: "walk", img: "./pages/index/images/posters/poster-walk.jpg", date: "8/15", weekday: "周六", time: "19:00",
+      title: "我们向月亮走去 · 周五散步局", subtitle: "散步 · 轻社交 · 附近 · 免费",
+      location: "江湾体育场出发", people: "5人成行 · 免费", fee: "免费",
+      crowd: "想慢慢认识、不喜欢室内局的人",
+      cc: "散步是最低阻力的见面——5人成行，边走边聊，不想说话就看看月亮，走到哪聊到哪。",
+      schedule: [
+        { time: "19:00", title: "集合 · 江湾体育场门口轻破冰，确认路线" },
+        { time: "19:15", title: "边走边聊 · 两三人一组自然聊天，可随时换位" },
+        { time: "20:10", title: "补给 · 找地方喝水休息，想继续的人可加一段" },
+        { time: "20:30", title: "散场 · 各自离开，不强制合影或加微信" }
+      ]
+    },
+    workshop: {
+      id: "workshop", img: "./pages/index/images/posters/poster-workshop.jpg", date: "8/15", weekday: "周六", time: "14:00",
+      title: "关系说明书工作坊", subtitle: "工作坊 · 关系模式 · 慢了解",
+      location: "大学路", people: "10人 · 报名中", fee: "¥129",
+      crowd: "对关系有困惑、愿意认真练习表达的人",
+      cc: "用一份关系说明书练习表达自己的靠近方式，有结构、不点名，慢热的人也能舒服开口。",
+      schedule: [
+        { time: "14:00", title: "开场 · 说明规则与安全边界，不做公开点名" },
+        { time: "14:20", title: "个人书写 · 写下自己的关系说明书要点" },
+        { time: "15:10", title: "小组共创 · 小范围分享，可选择只听不说" },
+        { time: "16:30", title: "收束 · 带走一张属于自己的说明书" }
+      ]
+    },
+    lunch: {
+      id: "lunch", img: "./pages/index/images/posters/poster-lunch.jpg", date: "8/12", weekday: "周三", time: "12:30",
+      title: "午间同频小桌", subtitle: "预活动 · 午间 · 一小时认识附近的人",
+      location: "静安寺附近", people: "4人 · 正在准备", fee: "¥39",
+      crowd: "工作日想轻松认识附近人的上班族",
+      cc: "一小时、一顿饭的时间认识附近的人，午休刚好够，不用提前准备话题。",
+      schedule: [
+        { time: "12:30", title: "入座 · 4人小桌，简单自我介绍一句即可" },
+        { time: "12:40", title: "共餐聊天 · 围绕最近生活与周末计划自然聊" },
+        { time: "13:20", title: "收束 · 想继续认识的人可自行约定" }
+      ]
+    }
+  }
+  var explores = posters.map(function (p) { return { id: p.id, img: p.src, t: p.t, d: p.d, loc: "大学路 · KIC", tags: ["低压力", "少人数"] } })
+  var idx = 0, timer, lastTab = "home", currentActivity = null, registered = {}
 
   function enter() {
     document.getElementById("welcome").style.display = "none"
     document.getElementById("app").style.display = "block"
+    tab("home")
     startCarousel(); renderNeed(); renderExplore()
   }
   function tab(name) {
     document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("on") })
     document.getElementById("tab-" + name).classList.add("on")
     document.querySelectorAll(".tabbar button").forEach(function (b, i) { b.classList.toggle("on", ["home","explore","need","mine"][i] === name) })
+    var isDetail = name === "detail"
+    document.querySelector(".tabbar").style.display = isDetail ? "none" : "flex"
+    document.querySelector(".detail-bar").style.display = isDetail ? "flex" : "none"
   }
   function startCarousel() {
     var track = document.getElementById("track")
     track.innerHTML = posters.map(function (p) {
-      return '<div class="slide"><img src="' + p.src + '" alt="" /><div class="cap">' + p.t + '<small>' + p.d + "</small></div></div>"
+      return '<div class="slide" style="cursor:pointer" onclick="openActivity(\'' + p.id + '\')"><img src="' + p.src + '" alt="" /><div class="cap">' + p.t + '<small>' + p.d + "</small></div></div>"
     }).join("")
     clearInterval(timer)
     timer = setInterval(function () { idx = (idx + 1) % posters.length; track.style.transform = "translateX(-" + idx * 100 + "%)" }, 4000)
@@ -225,8 +361,8 @@
   function renderNeed() {
     var body = document.getElementById("needBody")
     body.innerHTML = '<div class="subhead"><div><b>大家正在寻找</b><small>看看谁和你想的一样</small></div><div class="filter"><button class="on">全部需求</button><button>和你相似</button></div></div>' +
-      '<div class="hlist">' + needs.map(function (n) {
-        return '<div class="need-card"><div class="media"><img src="' + n.img + '" alt="" /><span>' + n.sub + '</span></div><div class="body"><div class="auth">' + n.a + '</div><h4>' + n.t + '</h4><p>' + n.c + '</p><div class="acts"><span>我也有 ' + n.res + '</span><span>评论 ' + n.com + '</span><span>收藏</span></div></div></div>'
+      '<div class="hlist">' + needs.map(function (n, i) {
+        return '<div class="need-card" style="cursor:pointer" onclick="showDemand(' + i + ')"><div class="media"><img src="' + n.img + '" alt="" /><span>' + n.sub + '</span></div><div class="body"><div class="auth">' + n.a + '</div><h4>' + n.t + '</h4><p>' + n.c + '</p><div class="acts"><span>我也有 ' + n.res + '</span><span>评论 ' + n.com + '</span><span>收藏</span></div></div></div>'
       }).join("") + "</div>"
   }
   function renderExplore() {
@@ -235,8 +371,78 @@
     var df = document.getElementById("df")
     df.innerHTML = ["全部距离","3km内","5km内","同城可达"].map(function (f) { return "<button>" + f + "</button>" }).join("")
     document.getElementById("elist").innerHTML = explores.map(function (e) {
-      return '<div class="ecard"><img src="' + e.img + '" alt="" /><div class="info"><div class="date">' + e.d + '</div><h4>' + e.t + '</h4><div class="loc">' + e.loc + '</div><div class="tags">' + e.tags.map(function (t) { return "<span>" + t + "</span>" }).join("") + "</div></div></div>"
+      return '<div class="ecard" onclick="openActivity(\'' + e.id + '\')"><img src="' + e.img + '" alt="" /><div class="info"><div class="date">' + e.d + '</div><h4>' + e.t + '</h4><div class="loc">' + e.loc + '</div><div class="tags">' + e.tags.map(function (t) { return "<span>" + t + "</span>" }).join("") + "</div></div></div>"
     }).join("")
+  }
+  function openActivity(id) {
+    var a = activities[id]; if (!a) return
+    currentActivity = id
+    lastTab = document.querySelector(".screen.on").id.replace("tab-", "")
+    var sched = a.schedule.map(function (s) {
+      return '<div class="step"><i></i><time>' + s.time + '</time><p>' + s.title + '</p></div>'
+    }).join("")
+    document.getElementById("detailBody").innerHTML =
+      '<img class="detail-poster" src="' + a.img + '" alt="" />' +
+      '<div class="info-card"><h1>' + a.title + '</h1><div class="sub">' + a.subtitle + '</div><div class="facts">' +
+        '<div class="fact"><span>时间</span><b>' + a.date + ' ' + a.weekday + ' · ' + a.time + '</b></div>' +
+        '<div class="fact"><span>地点</span><b>' + a.location + '</b></div>' +
+        '<div class="fact"><span>人数</span><b>' + a.people + '</b></div>' +
+        '<div class="fact"><span>费用</span><b>' + a.fee + '</b></div>' +
+      '</div></div>' +
+      '<div class="block"><div class="bt">适合谁</div><p>' + a.crowd + '</p><div class="note">不换简历、不点名配对，你可以只来听，也可以慢慢开口。</div></div>' +
+      '<div class="block cc"><div class="bt">小CC的话</div><p>' + a.cc + '</p></div>' +
+      '<div class="block"><div class="bt">活动流程 <span style="font-size:10px;color:#8a867c;font-weight:400">每个环节都是低压力设计</span></div>' + sched + '</div>' +
+      '<div class="block"><div class="bt">安全提醒</div><p>第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。</p></div>'
+    var reg = document.getElementById("regBtn")
+    reg.className = registered[id] ? "main done" : "main"
+    reg.innerHTML = registered[id] ? "已报名，等待活动确认" : "立即报名"
+    tab("detail")
+  }
+  function closeActivity() {
+    tab(lastTab)
+  }
+  function registerActivity() {
+    if (!currentActivity || registered[currentActivity]) return
+    registered[currentActivity] = true
+    var reg = document.getElementById("regBtn")
+    reg.className = "main done"
+    reg.innerHTML = "已报名，等待活动确认"
+    showToast("报名已提交，小CC会尽快确认")
+  }
+  function considerActivity() {
+    showToast("已记下你的考虑，小CC会继续观察你的意向")
+  }
+  function showDemand(i) {
+    var n = needs[i]; if (!n) return
+    document.getElementById("demandAuthor").textContent = n.a
+    document.getElementById("demandTitle").textContent = n.t
+    document.getElementById("demandCopy").textContent = n.c
+    document.getElementById("demandLike").innerHTML = "我也有 " + n.res
+    document.getElementById("demandSave").innerHTML = "收藏"
+    document.getElementById("demandMask").classList.add("on")
+  }
+  function closeDemand() {
+    document.getElementById("demandMask").classList.remove("on")
+  }
+  function demandLike() {
+    var b = document.getElementById("demandLike")
+    if (b.innerHTML.indexOf("已共鸣") === 0) return
+    b.innerHTML = "已共鸣 " + (b.innerHTML.match(/\d+/) ? Number(b.innerHTML.match(/\d+/)[0]) + 1 : 1)
+    showToast("已共鸣，小CC看到了")
+  }
+  function demandSave() {
+    var b = document.getElementById("demandSave")
+    if (b.innerHTML.indexOf("已收藏") === 0) return
+    b.innerHTML = "已收藏"
+    showToast("已收藏这条需求")
+  }
+  var toastTimer = null
+  function showToast(msg) {
+    var t = document.getElementById("toast")
+    t.textContent = msg
+    t.style.display = "block"
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(function () { t.style.display = "none" }, 2000)
   }
 </script>
 </body>
