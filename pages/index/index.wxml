@@ -502,15 +502,27 @@
           <view class="need-frag-row">
             <button wx:for="{{needFragRelation}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
           </view>
-          <view class="need-frag-label">选一张氛围封面（可选）</view>
+          <view class="need-frag-label">封面（可选）</view>
+          <view class="need-cover-preview">
+            <image wx:if="{{needCoverPreview}}" class="need-cover-preview-img" src="{{needCoverPreview}}" mode="aspectFill" />
+            <view wx:else class="need-cover-empty">让恰好生成一张，或从相册上传</view>
+            <text wx:if="{{needCoverName}}" class="need-cover-preview-name">{{needCoverName}}</text>
+          </view>
+          <view class="need-cover-actions">
+            <button class="need-cover-act" bindtap="aiGenerateCover">{{needCoverPreview ? '换一张' : '让恰好生成'}}</button>
+            <button class="need-cover-act" bindtap="uploadCover">从相册上传</button>
+          </view>
           <scroll-view scroll-x class="need-covers">
             <view wx:for="{{needCovers}}" wx:key="id" class="need-cover {{selectedNeedCover === item.id ? 'on' : ''}}" data-cover="{{item.id}}" bindtap="selectNeedCover">
               <image src="{{item.src}}" mode="aspectFill" />
               <text>{{item.name}}</text>
             </view>
           </scroll-view>
-          <view class="btn-row"><button class="ghost-btn" bindtap="cancelNeedComposer">取消</button><button class="primary-btn" bindtap="publishNeed">发布需求卡</button></view>
         </scroll-view>
+        <view class="need-sheet-foot">
+          <button class="ghost-btn" bindtap="cancelNeedComposer">取消</button>
+          <button class="primary-btn" bindtap="publishNeed">发布需求卡</button>
+        </view>
       </view>
     </view>
   </scroll-view>

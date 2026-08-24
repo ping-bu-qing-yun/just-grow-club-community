@@ -457,6 +457,8 @@ Page({
     ],
     selectedNeedFragMap: {},
     selectedNeedCover: "",
+    needCoverPreview: "",
+    needCoverName: "",
     registeredActivities: [],
     hostForm: { title: "", description: "" },
     hostSubmitted: false,
@@ -1381,7 +1383,7 @@ Page({
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, selectedNeedCover: "" })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, selectedNeedCover: "", needCoverPreview: "", needCoverName: "" })
   },
 
   cancelNeedComposer() {
@@ -1404,7 +1406,34 @@ Page({
   },
 
   selectNeedCover(e) {
-    this.setData({ selectedNeedCover: e.currentTarget.dataset.cover })
+    const cover = this.data.needCovers.find(c => c.id === e.currentTarget.dataset.cover)
+    if (!cover) return
+    this.setData({ selectedNeedCover: cover.id, needCoverPreview: cover.src, needCoverName: cover.name })
+  },
+
+  aiGenerateCover() {
+    const pool = this.data.needCovers
+    const currentId = this.data.selectedNeedCover
+    const others = pool.filter(c => c.id !== currentId)
+    const next = others.length ? others[Math.floor(Math.random() * others.length)] : pool[0]
+    this.setData({ selectedNeedCover: next.id, needCoverPreview: next.src, needCoverName: next.name })
+    wx.showToast({ title: "恰好帮你挑了一张", icon: "none" })
+  },
+
+  uploadCover() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sizeType: ["compressed"],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0]
+        if (!file) return
+        this.setData({ selectedNeedCover: "", needCoverPreview: file.tempFilePath, needCoverName: "我的照片" })
+      },
+      fail: () => {
+        wx.showToast({ title: "没有选择照片", icon: "none" })
+      }
+    })
   },
 
   publishNeed() {
@@ -1415,11 +1444,10 @@ Page({
     }
     const id = `need-${Date.now()}`
     const frags = Object.keys(this.data.selectedNeedFragMap)
-    const cover = this.data.needCovers.find(c => c.id === this.data.selectedNeedCover)
     const subtitle = frags.filter(f => f !== "这周能约").slice(0, 2).join(" · ") || "刚刚发布的需求"
-    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: content.slice(0, 18), copy: content, image: cover ? cover.src : "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
+    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: content.slice(0, 18), copy: content, image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
     const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
-    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, selectedNeedCover: "" })
+    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, selectedNeedCover: "", needCoverPreview: "", needCoverName: "" })
     this.refreshNeeds()
     this.persistDraft()
     wx.showToast({ title: frags.length ? "已发布，恰好记下了你的碎片" : "需求卡已发布", icon: "success" })
