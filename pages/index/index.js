@@ -445,6 +445,18 @@ Page({
     demandVoiceText: "",
     myNeedDraft: "",
     showNeedComposer: false,
+    needOpeners: ["想遇见", "最近在找", "周末想", "有点希望"],
+    needFragScene: ["散步", "深夜", "周末", "晚霞", "雨天", "咖啡"],
+    needFragRelation: ["认真", "轻松", "同频", "慢慢来", "被看见", "这周能约"],
+    needCovers: [
+      { id: "walk", name: "散步", src: "/pages/index/images/posters/poster-walk.jpg" },
+      { id: "deep", name: "深夜", src: "/pages/index/images/posters/poster-deep.jpg" },
+      { id: "dinner", name: "晚餐", src: "/pages/index/images/posters/poster-dinner.jpg" },
+      { id: "lunch", name: "午间", src: "/pages/index/images/posters/poster-lunch.jpg" },
+      { id: "cat", name: "猫", src: "/pages/index/images/posters/cat-stretch.png" }
+    ],
+    selectedNeedFragMap: {},
+    selectedNeedCover: "",
     registeredActivities: [],
     hostForm: { title: "", description: "" },
     hostSubmitted: false,
@@ -1369,26 +1381,48 @@ Page({
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, selectedNeedCover: "" })
   },
 
   cancelNeedComposer() {
     this.setData({ showNeedComposer: false })
   },
 
+  tapNeedOpener(e) {
+    const opener = e.currentTarget.dataset.opener
+    const draft = this.data.myNeedDraft || ""
+    if (draft.indexOf(opener) > -1) return
+    this.setData({ myNeedDraft: opener + draft })
+  },
+
+  toggleNeedFrag(e) {
+    const frag = e.currentTarget.dataset.frag
+    const map = { ...this.data.selectedNeedFragMap }
+    if (map[frag]) delete map[frag]
+    else map[frag] = true
+    this.setData({ selectedNeedFragMap: map })
+  },
+
+  selectNeedCover(e) {
+    this.setData({ selectedNeedCover: e.currentTarget.dataset.cover })
+  },
+
   publishNeed() {
     const content = this.data.myNeedDraft.trim()
     if (!content) {
-      wx.showToast({ title: "先写下你最近的需求", icon: "none" })
+      wx.showToast({ title: "先写一句话吧", icon: "none" })
       return
     }
     const id = `need-${Date.now()}`
-    const newNeed = { id, author: "我 · 刚刚", subtitle: "刚刚发布的需求", tags: [], title: content.slice(0, 18), copy: content, image: "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
-    const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动" }, ...this.data.demandHistory]
-    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false })
+    const frags = Object.keys(this.data.selectedNeedFragMap)
+    const cover = this.data.needCovers.find(c => c.id === this.data.selectedNeedCover)
+    const subtitle = frags.filter(f => f !== "这周能约").slice(0, 2).join(" · ") || "刚刚发布的需求"
+    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: content.slice(0, 18), copy: content, image: cover ? cover.src : "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
+    const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
+    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, selectedNeedCover: "" })
     this.refreshNeeds()
     this.persistDraft()
-    wx.showToast({ title: "需求卡已发布", icon: "success" })
+    wx.showToast({ title: frags.length ? "已发布，恰好记下了你的碎片" : "需求卡已发布", icon: "success" })
   },
 
   addDemandComment() {

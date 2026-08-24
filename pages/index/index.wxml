@@ -484,9 +484,26 @@
 
     <button class="need-add-button" bindtap="openNeedComposer"><text class="need-add-plus">+</text><text>发布我的需求卡</text></button>
     <view wx:if="{{showNeedComposer}}" class="need-composer card">
-      <view class="card-title">写下你最近的需求</view>
-      <view class="card-text">先说给恰好听，也许会有人和你有同样的期待。</view>
-      <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="200" placeholder="例如：想认识有生活感的人，但不想再无效社交" />
+      <view class="card-title">发布你的需求卡</view>
+      <view class="card-text">写一句话，点几个心动碎片，恰好会更懂你。</view>
+      <scroll-view scroll-x class="need-openers">
+        <button wx:for="{{needOpeners}}" wx:key="*this" class="need-opener" data-opener="{{item}}" bindtap="tapNeedOpener">{{item}}</button>
+      </scroll-view>
+      <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
+      <view class="need-frag-label">心动碎片（可选）</view>
+      <view class="need-frag-row">
+        <button wx:for="{{needFragScene}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
+      </view>
+      <view class="need-frag-row">
+        <button wx:for="{{needFragRelation}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
+      </view>
+      <view class="need-frag-label">选一张氛围封面（可选）</view>
+      <scroll-view scroll-x class="need-covers">
+        <view wx:for="{{needCovers}}" wx:key="id" class="need-cover {{selectedNeedCover === item.id ? 'on' : ''}}" data-cover="{{item.id}}" bindtap="selectNeedCover">
+          <image src="{{item.src}}" mode="aspectFill" />
+          <text>{{item.name}}</text>
+        </view>
+      </scroll-view>
       <view class="btn-row"><button class="ghost-btn" bindtap="cancelNeedComposer">取消</button><button class="primary-btn" bindtap="publishNeed">发布需求卡</button></view>
     </view>
   </scroll-view>
