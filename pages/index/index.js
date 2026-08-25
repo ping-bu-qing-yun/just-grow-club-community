@@ -440,7 +440,6 @@ Page({
     reasonOptions: ["想看看来的人", "怕无效社交", "时间不合适", "地点有点远", "人数有顾虑", "话题没击中"],
     showDemandDetail: false,
     activeDemand: null,
-    demandFlipped: false,
     demandComment: "",
     demandVoiceText: "",
     myNeedDraft: "",
@@ -1351,20 +1350,20 @@ Page({
       stats: found.stats || `${found.resonance || 0}人共鸣 · ${found.commentsCount || 0}条评论`,
       response: found.response || ""
     }
-    this.setData({ activeDemand, showDemandDetail: true, demandFlipped: true, demandVoiceText: "", demandComment: "" })
+    this.setData({ activeDemand, showDemandDetail: true, demandComment: "", demandKeyboardHeight: 0 })
   },
 
   closeDemandDetail() {
-    this.setData({ showDemandDetail: false, activeDemand: null, demandFlipped: false })
-  },
-
-  flipDemand() {
-    this.setData({ demandFlipped: !this.data.demandFlipped })
+    this.setData({ showDemandDetail: false, activeDemand: null, demandKeyboardHeight: 0 })
   },
 
   updateDemandComment(e) {
     this.setData({ demandComment: e.detail.value })
     this.persistDraft()
+  },
+
+  onDemandKeyboardChange(e) {
+    this.setData({ demandKeyboardHeight: (e.detail && e.detail.height) || 0 })
   },
 
   updateNeedDraft(e) {
@@ -1452,8 +1451,16 @@ Page({
       return
     }
     const comments = [comment, ...(this.data.activeDemand.comments || [])]
-    const communityNeeds = this.data.communityNeeds.map(item => item.id === this.data.activeDemand.id ? { ...item, comments } : item)
-    this.setData({ demandComments: comments, communityNeeds, activeDemand: { ...this.data.activeDemand, comments }, demandComment: "" })
+    const id = this.data.activeDemand.id
+    const communityNeeds = this.data.communityNeeds.map(item => {
+      if (item.id !== id) return item
+      const commentsCount = (item.commentsCount || 0) + 1
+      const stats = `${item.resonance || 0}人共鸣 · ${commentsCount}条评论`
+      return { ...item, comments, commentsCount, stats }
+    })
+    const updated = communityNeeds.find(item => item.id === id)
+    this.setData({ demandComments: comments, communityNeeds, activeDemand: { ...this.data.activeDemand, comments, commentsCount: updated.commentsCount, stats: updated.stats }, demandComment: "" })
+    this.refreshNeeds()
     this.persistDraft()
     wx.showToast({ title: "已发布评论", icon: "success" })
   },

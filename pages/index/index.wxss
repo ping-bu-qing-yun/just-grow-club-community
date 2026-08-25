@@ -1546,6 +1546,7 @@ button::after {
   height: 84vh;
   background: #fdfcf8;
   border-radius: 32rpx 32rpx 0 0;
+  animation: demandSheetUp .34s cubic-bezier(.2, 0, 0, 1);
 }
 
 .need-sheet-head {
@@ -1675,17 +1676,18 @@ button::after {
 }
 
 .need-frag-row {
-  white-space: nowrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
   margin-bottom: 12rpx;
 }
 
 .need-frag {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   min-height: 60rpx;
-  margin-right: 12rpx;
-  padding: 0 26rpx;
+  padding: 0 8rpx;
   border-radius: 99rpx;
   background: #f3f1ef;
   color: #8a867c;
@@ -2003,6 +2005,12 @@ button::after {
   padding: 18rpx 28rpx 44rpx;
   border-radius: 34rpx 34rpx 0 0;
   background: #fdfcf8;
+  animation: demandSheetUp .34s cubic-bezier(.2, 0, 0, 1);
+}
+
+@keyframes demandSheetUp {
+  from { transform: translateY(100%); opacity: .6; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .sheet-handle {
@@ -2026,64 +2034,82 @@ button::after {
   font-size: 23rpx;
 }
 
-.demand-card-stage {
-  position: relative;
-  height: 300rpx;
+.demand-detail-card {
   margin-top: 18rpx;
-  perspective: 1000rpx;
-}
-
-.demand-face {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  padding: 30rpx;
+  padding: 30rpx 28rpx;
   border-radius: 28rpx;
-  backface-visibility: hidden;
-  transition: transform .45s ease;
+  background: #fff;
+  border: 1rpx solid rgba(95, 127, 94, .16);
+  box-shadow: 0 12rpx 28rpx rgba(63, 47, 38, .07);
 }
 
-.demand-front {
-  background: linear-gradient(135deg, #6b8e6b, #e8f4ed);
-  color: #fff;
+.demand-detail-author {
+  color: #929991;
+  font-size: 21rpx;
 }
 
-.demand-back {
-  background: #fffaf4;
-  border: 1rpx solid #eadfce;
-  color: #1a1a2e;
-  transform: rotateY(180deg);
-}
-
-.demand-card-stage.is-flipped .demand-front { transform: rotateY(180deg); }
-.demand-card-stage.is-flipped .demand-back { transform: rotateY(360deg); }
-
-.demand-face-label {
+.demand-detail-question {
+  margin-top: 14rpx;
+  color: #d97757;
   font-size: 22rpx;
-  opacity: .8;
+  font-weight: 800;
 }
 
-.demand-face-title {
-  margin-top: 30rpx;
-  font-size: 32rpx;
+.demand-detail-title {
+  margin-top: 14rpx;
+  font-size: 34rpx;
   font-weight: 900;
+  color: #2f2a24;
+  line-height: 1.4;
 }
 
-.demand-face-hint, .demand-face-stats {
-  position: absolute;
-  left: 30rpx;
-  bottom: 26rpx;
-  font-size: 22rpx;
-  opacity: .78;
+.demand-detail-copy {
+  margin-top: 14rpx;
+  color: #55504a;
+  font-size: 26rpx;
+  line-height: 1.7;
 }
 
-.demand-face-detail {
+.demand-detail-tags {
+  margin-top: 16rpx;
+}
+
+.demand-detail-stats {
   margin-top: 18rpx;
-  color: #737e76;
-  font-size: 25rpx;
-  line-height: 1.6;
+  color: #8a867c;
+  font-size: 21rpx;
+}
+
+.demand-detail-actions {
+  display: flex;
+  gap: 14rpx;
+  margin-top: 16rpx;
+}
+
+.demand-detail-actions button {
+  flex: 1;
+  height: 72rpx;
+  border-radius: 99rpx;
+  background: #f3f1ef;
+  color: #667068;
+  font-size: 24rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demand-detail-actions button.is-active {
+  background: #e8f4ed;
+  color: #21644e;
+  border: 1rpx solid rgba(95, 127, 94, .4);
+}
+
+.comment-empty {
+  padding: 30rpx 0 10rpx;
+  color: #a9a49a;
+  font-size: 23rpx;
+  text-align: center;
 }
 
 .sheet-section-title {
@@ -2233,6 +2259,7 @@ button::after {
   background: #fff;
   border-radius: 36rpx 36rpx 0 0;
   padding: 34rpx 28rpx 44rpx;
+  animation: demandSheetUp .3s cubic-bezier(.2, 0, 0, 1);
 }
 
 .modal-title {
@@ -3344,8 +3371,8 @@ button::after {
 }
 
 .detail-scroll {
-  height: calc(100vh - 122rpx - 132rpx);
-  padding: 20rpx 28rpx 30rpx;
+  height: calc(100vh - 122rpx - 170rpx);
+  padding: 20rpx 28rpx 40rpx;
   box-sizing: border-box;
 }
 
@@ -3732,13 +3759,6 @@ button::after {
   color: #2f2a24;
   line-height: 1.5;
   margin-top: 8rpx;
-}
-
-.demand-face-question {
-  font-size: 24rpx;
-  color: #8a867c;
-  line-height: 1.6;
-  margin-bottom: 10rpx;
 }
 
 .voice-echo {

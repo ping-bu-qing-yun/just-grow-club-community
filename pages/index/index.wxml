@@ -496,12 +496,12 @@
           </scroll-view>
           <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
           <view class="need-frag-label">心动碎片（可选）</view>
-          <scroll-view scroll-x class="need-frag-row">
+          <view class="need-frag-row">
             <button wx:for="{{needFragScene}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
-          </scroll-view>
-          <scroll-view scroll-x class="need-frag-row">
+          </view>
+          <view class="need-frag-row">
             <button wx:for="{{needFragRelation}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
-          </scroll-view>
+          </view>
           <view class="need-frag-label">封面（可选）</view>
           <view class="need-cover-preview">
             <image wx:if="{{needCoverPreview}}" class="need-cover-preview-img" src="{{needCoverPreview}}" mode="aspectFill" />
@@ -556,31 +556,32 @@
     </view>
   </scroll-view>
 
-  <view wx:if="{{showDemandDetail}}" class="detail-sheet-mask" bindtap="closeDemandDetail">
+  <view wx:if="{{showDemandDetail}}" class="detail-sheet-mask" style="padding-bottom: {{demandKeyboardHeight}}px" bindtap="closeDemandDetail">
     <view class="demand-sheet" catchtap="noop">
       <view class="sheet-handle"></view>
       <view class="sheet-topline"><text>需求卡</text><button class="sheet-close" bindtap="closeDemandDetail">关闭</button></view>
-      <view class="demand-card-stage {{demandFlipped ? 'is-flipped' : ''}}" bindtap="flipDemand">
-        <view class="demand-face demand-front">
-          <view class="demand-face-label">{{activeDemand.question ? '来自小CC的提问' : '大家正在说'}}</view>
-          <view class="demand-face-title">{{activeDemand.title}}</view>
-          <view class="demand-face-hint">点击翻开，看完整需求</view>
+      <view class="demand-detail-card">
+        <view class="demand-detail-author">{{activeDemand.author}}</view>
+        <view wx:if="{{activeDemand.question}}" class="demand-detail-question">小CC问：{{activeDemand.question}}</view>
+        <view class="demand-detail-title">{{activeDemand.title}}</view>
+        <view class="demand-detail-copy">{{activeDemand.answer || activeDemand.detail || activeDemand.copy}}</view>
+        <view class="club-tags demand-detail-tags">
+          <text wx:for="{{activeDemand.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
         </view>
-        <view class="demand-face demand-back">
-          <view class="demand-face-label">完整需求</view>
-          <view class="demand-face-title">{{activeDemand.title}}</view>
-          <view wx:if="{{activeDemand.question}}" class="demand-face-question">小CC问：{{activeDemand.question}}</view>
-          <view class="demand-face-detail">{{activeDemand.answer || activeDemand.detail}}</view>
-          <view class="demand-face-stats">{{activeDemand.stats}}</view>
-        </view>
+        <view class="demand-detail-stats">{{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}} 人共鸣 · {{activeDemand.commentsCount}} 条评论</view>
       </view>
-      <view class="comment-section-title">其他人的回应 <text>{{activeDemand.comments.length}}条</text></view>
+      <view class="demand-detail-actions">
+        <button class="{{resonatedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedResonance">{{resonatedNeedIds[activeDemand.id] ? '已共鸣' : '我也有'}} {{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</button>
+        <button class="{{savedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedSave">{{savedNeedIds[activeDemand.id] ? '已收藏' : '收藏'}}</button>
+      </view>
+      <view class="comment-section-title">大家怎么说 <text>{{activeDemand.commentsCount}}条</text></view>
       <view class="comment-list">
         <view wx:for="{{activeDemand.comments}}" wx:key="*this" class="comment-item"><view class="comment-avatar">Z</view><view><view class="comment-name">恰好用户</view><view>{{item}}</view></view></view>
+        <view wx:if="{{!activeDemand.comments.length}}" class="comment-empty">还没有人说话，你来当第一个</view>
       </view>
       <view class="demand-composer-sticky">
         <view class="sheet-section-title">留下你的评论</view>
-        <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" maxlength="300" placeholder="写下一句你的想法" />
+        <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" maxlength="300" placeholder="写下一句你的想法" />
         <view class="sheet-actions">
           <button class="tiny-btn primary" bindtap="addDemandComment">发布评论</button>
         </view>
