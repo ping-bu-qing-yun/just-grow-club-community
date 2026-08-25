@@ -459,7 +459,7 @@
           <view wx:else class="need-card-row-img need-card-row-img-empty"></view>
           <view class="need-card-row-body">
             <view class="need-card-row-title">{{item.title}}</view>
-            <view class="need-card-row-copy">{{item.copy}}</view>
+            <view class="need-card-row-copy">{{item.question ? '小CC问：' + item.question : item.copy}}</view>
             <view class="need-card-row-tags">
               <text wx:for="{{item.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
             </view>
