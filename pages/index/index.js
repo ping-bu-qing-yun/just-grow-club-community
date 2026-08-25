@@ -343,6 +343,20 @@ const homeQuestions = [
 ]
 const todayHomeQuestion = homeQuestions[Math.floor(Date.now() / 86400000) % homeQuestions.length]
 
+const coverPool = [
+  { id: "walk", name: "月亮散步", src: "/pages/index/images/posters/poster-walk.jpg", keys: ["散步", "月亮", "晚霞", "夜跑", "遛狗", "走走", "逛"] },
+  { id: "deep", name: "深夜深聊", src: "/pages/index/images/posters/poster-deep.jpg", keys: ["深夜", "深聊", "价值观", "夜谈", "心事", "聊"] },
+  { id: "dinner", name: "晚餐烟火", src: "/pages/index/images/posters/poster-dinner.jpg", keys: ["晚餐", "饭", "咖啡", "吃", "烟火", "美食"] },
+  { id: "lunch", name: "午间轻餐", src: "/pages/index/images/posters/poster-lunch.jpg", keys: ["午间", "中午", "午饭", "午休"] },
+  { id: "cat", name: "猫", src: "/pages/index/images/posters/cat-stretch.png", keys: ["猫", "宠物", "撸猫"] },
+  { id: "d1", name: "低压力认识", src: "/pages/index/images/posters/need-d1.jpg", keys: ["尴尬", "低压力", "紧张", "怕", "轻松"] },
+  { id: "d2", name: "关系松弛", src: "/pages/index/images/posters/need-d2.jpg", keys: ["恋爱", "关系", "心动", "感情"] },
+  { id: "d3", name: "同频深聊", src: "/pages/index/images/posters/need-d3.jpg", keys: ["同频", "价值观", "深聊", "认真"] },
+  { id: "d4", name: "附近散步", src: "/pages/index/images/posters/need-d4.jpg", keys: ["附近", "周末", "散步", "小区"] },
+  { id: "d5", name: "慢慢认识", src: "/pages/index/images/posters/need-d5.jpg", keys: ["慢慢", "微信", "第一次"] },
+  { id: "d6", name: "看展文艺", src: "/pages/index/images/posters/need-d6.jpg", keys: ["看展", "艺术", "电影", "文艺", "展"] }
+]
+
 const defaultCommunityNeeds = [
   { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: needCommentsPool.slice(0, 3), user: false },
   { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: needCommentsPool.slice(2, 5), user: false },
@@ -458,13 +472,6 @@ Page({
     needOpeners: ["想遇见", "最近在找", "周末想", "有点希望"],
     needFragScene: ["散步", "深夜", "周末", "晚霞", "雨天", "咖啡"],
     needFragRelation: ["认真", "轻松", "同频", "慢慢来", "被看见", "这周能约"],
-    needCovers: [
-      { id: "walk", name: "散步", src: "/pages/index/images/posters/poster-walk.jpg" },
-      { id: "deep", name: "深夜", src: "/pages/index/images/posters/poster-deep.jpg" },
-      { id: "dinner", name: "晚餐", src: "/pages/index/images/posters/poster-dinner.jpg" },
-      { id: "lunch", name: "午间", src: "/pages/index/images/posters/poster-lunch.jpg" },
-      { id: "cat", name: "猫", src: "/pages/index/images/posters/cat-stretch.png" }
-    ],
     selectedNeedFragMap: {},
     needCoverPreview: "",
     needCoverName: "",
@@ -1412,10 +1419,13 @@ Page({
   },
 
   aiGenerateCover() {
-    const pool = this.data.needCovers
-    const next = pool[Math.floor(Math.random() * pool.length)]
+    const text = (this.data.myNeedDraft || "") + " " + Object.keys(this.data.selectedNeedFragMap).join(" ")
+    const matched = coverPool.filter(c => c.keys.some(k => text.indexOf(k) > -1))
+    const pool = matched.length ? matched : coverPool
+    const candidates = pool.filter(c => c.src !== this.data.needCoverPreview)
+    const next = (candidates.length ? candidates : pool)[Math.floor(Math.random() * (candidates.length ? candidates.length : pool.length))]
     this.setData({ needCoverPreview: next.src, needCoverName: next.name })
-    wx.showToast({ title: "恰好帮你挑了一张", icon: "none" })
+    wx.showToast({ title: matched.length ? "恰好按你的话挑了一张" : "恰好帮你挑了一张", icon: "none" })
   },
 
   uploadCover() {
