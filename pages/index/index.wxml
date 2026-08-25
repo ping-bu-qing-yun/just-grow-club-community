@@ -482,9 +482,9 @@
       </scroll-view>
     </block>
 
-    <button class="need-fab" bindtap="openNeedComposer"><text class="need-fab-plus">+</text></button>
-    <view wx:if="{{showNeedComposer}}" class="need-composer-mask" style="padding-bottom: {{needKeyboardHeight}}px" bindtap="cancelNeedComposer">
-      <view class="need-composer-sheet" catchtap="noop">
+    <view class="need-fab" bindtap="openNeedComposer" hover-class="need-fab-hover"><text class="need-fab-plus">+</text></view>
+    <view wx:if="{{showNeedComposer}}" class="need-composer-mask" bindtap="cancelNeedComposer">
+      <view class="need-composer-sheet" style="bottom: {{needKeyboardHeight}}px" catchtap="noop">
         <view class="need-sheet-head">
           <text>发布你的需求卡</text>
           <button class="need-sheet-close" bindtap="cancelNeedComposer">关闭</button>

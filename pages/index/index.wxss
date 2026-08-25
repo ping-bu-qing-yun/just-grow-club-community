@@ -1500,25 +1500,26 @@ button::after {
 .need-fab {
   position: fixed;
   right: 36rpx;
-  bottom: 200rpx;
-  width: 104rpx;
-  height: 104rpx;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  border: none;
+  bottom: 180rpx;
+  width: 88rpx;
+  height: 88rpx;
   border-radius: 50%;
   background: linear-gradient(145deg, #6f916c, #587b59);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 14rpx 30rpx rgba(45, 72, 52, .3);
+  box-shadow: 0 8rpx 20rpx rgba(45, 72, 52, .28);
   z-index: 15;
 }
 
+.need-fab-hover {
+  transform: scale(.94);
+  opacity: .9;
+}
+
 .need-fab-plus {
-  font-size: 44rpx;
+  font-size: 34rpx;
   font-weight: 300;
   line-height: 1;
 }
@@ -1535,26 +1536,29 @@ button::after {
   bottom: 0;
   background: rgba(30, 26, 22, .45);
   z-index: 30;
-  display: flex;
-  align-items: flex-end;
 }
 
 .need-composer-sheet {
-  width: 100%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 84vh;
   background: #fdfcf8;
   border-radius: 32rpx 32rpx 0 0;
-  max-height: 84vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .need-sheet-head {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100rpx;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28rpx 28rpx 6rpx;
-  flex-shrink: 0;
+  padding: 0 28rpx;
+  box-sizing: border-box;
 }
 
 .need-sheet-head text {
@@ -1581,18 +1585,25 @@ button::after {
 }
 
 .need-sheet-body {
-  flex: 1;
-  height: 0;
-  min-height: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100rpx;
+  bottom: 150rpx;
   padding: 8rpx 28rpx;
   box-sizing: border-box;
 }
 
 .need-sheet-foot {
-  flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 150rpx;
+  padding: 18rpx 28rpx 36rpx;
+  box-sizing: border-box;
   display: flex;
   gap: 14rpx;
-  padding: 18rpx 28rpx 36rpx;
   border-top: 1rpx solid rgba(95, 127, 94, .12);
   background: #fdfcf8;
   border-radius: 0 0 32rpx 32rpx;
