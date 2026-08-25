@@ -474,12 +474,11 @@
     </block>
 
     <view class="need-fab" bindtap="openNeedComposer" hover-class="need-fab-hover"><text class="need-fab-plus">+</text></view>
-    <view wx:if="{{showNeedComposer}}" class="need-composer-mask" bindtap="cancelNeedComposer">
-      <view class="publish-page" catchtap="noop">
-        <view class="publish-top">
-          <button class="publish-close" bindtap="cancelNeedComposer">×</button>
-          <text>发布需求卡</text>
-        </view>
+    <view wx:if="{{showNeedComposer}}" class="publish-page">
+      <view class="publish-top">
+        <button class="publish-close" bindtap="cancelNeedComposer">‹ 返回</button>
+        <text>发布需求卡</text>
+      </view>
         <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight + 90}}px">
           <view class="publish-cover" bindtap="aiGenerateCover">
             <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
@@ -520,9 +519,8 @@
             <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /><button class="publish-addtag-btn" bindtap="addNeedTagManual">添加</button></view>
           </view>
         </scroll-view>
-        <view class="publish-bottom" style="bottom: {{needKeyboardHeight}}px">
-          <button class="publish-bottom-btn {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布需求卡</button>
-        </view>
+      <view class="publish-bottom" style="bottom: {{needKeyboardHeight}}px">
+        <button class="publish-bottom-btn {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布需求卡</button>
       </view>
     </view>
   </scroll-view>
