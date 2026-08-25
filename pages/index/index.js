@@ -505,6 +505,7 @@ Page({
     needTopicCat: "生活感悟",
     needTopicColor: "#7fae7f",
     needTopicMode: "ask",
+    topicFlipping: false,
     needHint: "围绕这个话题说点什么，恰好会帮你整理成需求卡",
     needTagOptions: [],
     needManualTag: "",
@@ -1557,13 +1558,18 @@ Page({
   },
 
   switchNeedTopicMode() {
+    if (this.data.topicFlipping) return
+    this.setData({ topicFlipping: true })
     const next = this.data.needTopicMode === "ask" ? "free" : "ask"
-    this.setData({
-      needTopicMode: next,
-      needHint: next === "ask" ? "围绕这个话题说点什么，恰好会帮你整理成需求卡" : ""
-    })
-    if (next === "ask") this.pickNeedTopic()
-    this.refreshNeedTags()
+    setTimeout(() => {
+      this.setData({
+        needTopicMode: next,
+        needHint: next === "ask" ? "围绕这个话题说点什么，恰好会帮你整理成需求卡" : ""
+      })
+      if (next === "ask") this.pickNeedTopic()
+      this.refreshNeedTags()
+    }, 280)
+    setTimeout(() => this.setData({ topicFlipping: false }), 620)
   },
 
   refreshNeedTags() {

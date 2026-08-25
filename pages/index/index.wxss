@@ -1686,6 +1686,22 @@ button::after {
   padding: 20rpx;
 }
 
+.publish-topic.topic-flipping {
+  animation: topicFlip .6s ease;
+}
+
+@keyframes topicFlip {
+  0% {
+    transform: perspective(900rpx) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(900rpx) rotateY(180deg);
+  }
+  100% {
+    transform: perspective(900rpx) rotateY(360deg);
+  }
+}
+
 .publish-topic-head {
   display: flex;
   align-items: center;
