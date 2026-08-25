@@ -1560,7 +1560,7 @@ Page({
     const next = this.data.needTopicMode === "ask" ? "free" : "ask"
     this.setData({
       needTopicMode: next,
-      needHint: next === "ask" ? "围绕这个话题说点什么，恰好会帮你整理成需求卡" : "自由写下你的需求，恰好会帮你整理成需求卡"
+      needHint: next === "ask" ? "围绕这个话题说点什么，恰好会帮你整理成需求卡" : ""
     })
     if (next === "ask") this.pickNeedTopic()
     this.refreshNeedTags()

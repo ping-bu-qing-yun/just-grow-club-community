@@ -608,16 +608,6 @@
       <text>发布需求卡</text>
     </view>
     <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight + 90}}px">
-      <view class="publish-cover-row">
-        <view class="publish-cover" bindtap="uploadCover">
-          <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
-          <view wx:else class="publish-cover-empty">
-            <text class="publish-cover-plus">＋</text>
-            <text class="publish-cover-hint">点击上传照片</text>
-          </view>
-        </view>
-        <button class="publish-gen-btn" catchtap="aiGenerateCover">让恰好生成</button>
-      </view>
       <view class="publish-body">
         <view class="publish-topic">
           <view class="publish-topic-head">
@@ -631,11 +621,21 @@
         <input class="publish-title" value="{{myNeedTitle}}" bindinput="updateNeedTitle" maxlength="14" placeholder="给你的回答起个标题（最多14字）" />
         <textarea class="publish-content" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="{{needTopicMode === 'ask' ? '' : '写下你想遇见的人、想一起做的事…'}}" />
         <view class="publish-count">{{myNeedDraft.length}}/200</view>
-        <view class="publish-hint"><view class="publish-hint-dot"></view><text>{{needHint}}</text></view>
+        <view wx:if="{{needHint}}" class="publish-hint"><view class="publish-hint-dot"></view><text>{{needHint}}</text></view>
         <view class="publish-tags">
           <button wx:for="{{needTagOptions}}" wx:key="*this" class="publish-tag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
         </view>
         <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /><button class="publish-addtag-btn" bindtap="addNeedTagManual">添加</button></view>
+        <view class="publish-cover-row">
+          <view class="publish-cover" bindtap="uploadCover">
+            <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
+            <view wx:else class="publish-cover-empty">
+              <text class="publish-cover-plus">＋</text>
+              <text class="publish-cover-hint">点击上传照片</text>
+            </view>
+          </view>
+          <button class="publish-gen-btn" catchtap="aiGenerateCover">让恰好生成</button>
+        </view>
       </view>
     </scroll-view>
     <view class="publish-bottom" style="bottom: {{needKeyboardHeight}}px">
