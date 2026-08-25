@@ -615,7 +615,7 @@
           <view wx:else class="need-detail-comments-list">
             <view wx:for="{{activeDemand.comments}}" wx:key="text" class="need-detail-comment-item">
               <image wx:if="{{item.avatar}}" class="need-detail-comment-avatar" src="{{item.avatar}}" mode="aspectFill" />
-              <view wx:else class="need-detail-comment-avatar need-detail-comment-avatar-initial">{{(item.author || '恰好')[0]}}</view>
+              <view wx:else class="need-detail-comment-avatar need-detail-comment-avatar-initial">{{item.initial || '恰'}}</view>
               <view class="need-detail-comment-copy">
                 <view class="need-detail-comment-meta">
                   <text class="need-detail-comment-author">{{item.author || '恰好用户'}}</text>
