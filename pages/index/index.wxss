@@ -1679,27 +1679,36 @@ button::after {
   margin-top: 24rpx;
 }
 
+.publish-topic-wrap {
+  perspective: 1000rpx;
+}
+
 .publish-topic {
+  position: relative;
+  min-height: 240rpx;
+  transform-style: preserve-3d;
+  transition: transform .45s cubic-bezier(.2, 0, 0, 1);
+}
+
+.publish-topic.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.publish-topic-face {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  backface-visibility: hidden;
   background: linear-gradient(135deg, #f4faf5, #fff6ee);
   border: 1rpx solid rgba(95, 127, 94, .2);
   border-radius: 20rpx;
   padding: 20rpx;
 }
 
-.publish-topic.topic-flipping {
-  animation: topicFlip .6s ease;
-}
-
-@keyframes topicFlip {
-  0% {
-    transform: perspective(900rpx) rotateY(0deg);
-  }
-  50% {
-    transform: perspective(900rpx) rotateY(180deg);
-  }
-  100% {
-    transform: perspective(900rpx) rotateY(360deg);
-  }
+.publish-topic-back {
+  transform: rotateY(180deg);
 }
 
 .publish-topic-head {
