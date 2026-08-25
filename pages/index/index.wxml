@@ -611,17 +611,23 @@
             <view class="need-detail-comments-title">大家怎么说</view>
             <text>{{activeDemand.commentsCount}} 条</text>
           </view>
-          <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有人说话，你来当第一个</view>
-          <view wx:for="{{activeDemand.comments}}" wx:key="text" class="need-detail-comment">
-            <view class="comment-avatar">Z</view>
-            <view class="need-detail-comment-body">
-              <view class="comment-name">{{item.author || '恰好用户'}}</view>
-              <view>{{item.text || item}}</view>
+          <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有评论</view>
+          <view wx:else class="need-detail-comments-list">
+            <view wx:for="{{activeDemand.comments}}" wx:key="text" class="need-detail-comment-item">
+              <image wx:if="{{item.avatar}}" class="need-detail-comment-avatar" src="{{item.avatar}}" mode="aspectFill" />
+              <view wx:else class="need-detail-comment-avatar need-detail-comment-avatar-initial">{{(item.author || '恰好')[0]}}</view>
+              <view class="need-detail-comment-copy">
+                <view class="need-detail-comment-meta">
+                  <text class="need-detail-comment-author">{{item.author || '恰好用户'}}</text>
+                  <text wx:if="{{item.time}}" class="need-detail-comment-time">{{item.time}}</text>
+                </view>
+                <view class="need-detail-comment-text">{{item.text || item}}</view>
+              </view>
             </view>
           </view>
           <view class="need-detail-composer">
-            <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
-            <button class="tiny-btn primary" bindtap="addDemandComment">发布</button>
+            <textarea class="need-detail-composer-input" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
+            <button class="need-detail-composer-send" bindtap="addDemandComment">➤</button>
           </view>
         </view>
       </view>

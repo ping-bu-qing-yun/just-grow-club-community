@@ -1548,7 +1548,7 @@ Page({
       return
     }
     const author = this.data.basicInfo.name || this.data.accountName || "恰好用户"
-    const comments = [{ author, text: comment }, ...(this.data.activeDemand.comments || [])]
+    const comments = [{ id: `c-${Date.now()}`, author, avatar: this.data.avatarUrl || "", time: "刚刚", text: comment }, ...(this.data.activeDemand.comments || [])]
     const id = this.data.activeDemand.id
     const communityNeeds = this.data.communityNeeds.map(item => {
       if (item.id !== id) return item

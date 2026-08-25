@@ -2333,8 +2333,9 @@ button::after {
 
 .need-detail-comments {
   border-top: 1rpx solid rgba(26, 26, 46, .08);
-  margin-top: 30rpx;
-  padding-top: 26rpx;
+  margin-top: 50rpx;
+  padding-top: 44rpx;
+  padding-bottom: 24rpx;
 }
 
 .need-detail-comments-head {
@@ -2355,43 +2356,107 @@ button::after {
 }
 
 .need-detail-comments-empty {
-  color: #a9a49a;
-  font-size: 22rpx;
-  text-align: center;
-  padding: 30rpx 0;
-}
-
-.need-detail-comment {
-  display: flex;
-  gap: 14rpx;
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid rgba(26, 26, 46, .05);
-  color: #40483f;
+  min-height: 192rpx;
+  color: #8a867c;
   font-size: 24rpx;
-  line-height: 1.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.need-detail-comment-body {
-  flex: 1;
+.need-detail-comments-list {
+  margin-top: 32rpx;
+}
+
+.need-detail-comment-item {
+  display: grid;
+  grid-template-columns: 68rpx minmax(0, 1fr);
+  gap: 18rpx;
+  margin-bottom: 32rpx;
+}
+
+.need-detail-comment-avatar {
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  background: #eff5f1;
+}
+
+.need-detail-comment-avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #476256;
+  font-size: 24rpx;
+  font-weight: 800;
+}
+
+.need-detail-comment-copy {
   min-width: 0;
 }
 
-.need-detail-composer {
+.need-detail-comment-meta {
   display: flex;
-  gap: 12rpx;
-  margin-top: 20rpx;
+  align-items: baseline;
+  gap: 14rpx;
+}
+
+.need-detail-comment-author {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #2f2a24;
+}
+
+.need-detail-comment-time {
+  color: #9b9b9b;
+  font-size: 18rpx;
+}
+
+.need-detail-comment-text {
+  margin-top: 8rpx;
+  color: #514d49;
+  font-size: 24rpx;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.need-detail-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84rpx;
+  gap: 16rpx;
+  margin-top: 34rpx;
   align-items: flex-end;
 }
 
-.need-detail-composer .demand-editor {
-  flex: 1;
-  min-height: 76rpx;
-  margin-top: 0;
+.need-detail-composer-input {
+  border: 1rpx solid #e8e1da;
+  min-height: 84rpx;
+  max-height: 260rpx;
+  border-radius: 8rpx;
+  padding: 22rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  background: #fff;
+  box-sizing: border-box;
 }
 
-.need-detail-composer .tiny-btn {
-  height: 76rpx;
-  flex-shrink: 0;
+.need-detail-composer-send {
+  width: 84rpx;
+  height: 84rpx;
+  background: #6f916c;
+  color: #fff;
+  border: 0;
+  border-radius: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.need-detail-composer-send::after {
+  border: none;
 }
 
 .need-detail-actions {
