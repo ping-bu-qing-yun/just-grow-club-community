@@ -797,16 +797,23 @@ Page({
     const q = this.data.homeQuestion
     let communityNeeds = [...this.data.communityNeeds]
     if (this.data.myNeedId) {
-      communityNeeds = communityNeeds.map(n => n.id === this.data.myNeedId ? { ...n, question: q, answer: content, title: content.slice(0, 18), copy: `小CC问：${q}`, stats: "刚刚发布 · 等待更多人回应" } : n)
+      communityNeeds = communityNeeds.map(n => n.id === this.data.myNeedId ? { ...n, question: q, answer: content, title: content.slice(0, 14), copy: content, image: this.pickCoverForText(content), stats: "刚刚发布 · 等待更多人回应" } : n)
     } else {
       const id = `need-home-${Date.now()}`
-      communityNeeds = [{ id, author: "我 · 刚刚", subtitle: "来自小CC的提问", tags: [], question: q, answer: content, title: content.slice(0, 18), copy: `小CC问：${q}`, image: "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: true, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }, ...communityNeeds]
+      communityNeeds = [{ id, author: "我 · 刚刚", subtitle: "来自小CC的提问", tags: [], question: q, answer: content, title: content.slice(0, 14), copy: content, image: this.pickCoverForText(content), resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: true, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }, ...communityNeeds]
       this.setData({ myNeedId: id })
     }
     this.setData({ myNeed: content, myNeedQuestion: q, needAsked: true, communityNeeds })
     this.refreshNeeds()
     this.persistDraft()
     wx.showToast({ title: "收到，小CC记下了", icon: "success" })
+  },
+
+  pickCoverForText(text) {
+    const t = (text || "").toLowerCase()
+    const matched = coverPool.filter(c => c.keys.some(k => t.indexOf(k) > -1))
+    const pool = matched.length ? matched : coverPool
+    return pool[Math.floor(Math.random() * pool.length)].src
   },
 
   editMyNeed() {
