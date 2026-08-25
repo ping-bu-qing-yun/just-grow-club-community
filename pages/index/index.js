@@ -332,6 +332,17 @@ const needCommentsPool = [
   "已经收藏，想继续关注大家的建议。"
 ]
 
+const homeQuestions = [
+  { q: "你上一次觉得“要是有人一起就好了”，是在哪里？", opts: ["下班路上", "一个人吃饭", "好看的晚霞", "想去的地方没人陪"] },
+  { q: "周末下午，你更愿意怎么过？", opts: ["出门走走", "在家发呆", "约人吃饭", "尝试新东西"] },
+  { q: "最近有件小事，你想说给谁听？", opts: ["工作琐事", "一个新爱好", "最近的困惑", "开心的事"] },
+  { q: "今晚如果有空，你更想？", opts: ["安静散步", "小桌聊天", "看场电影", "运动一下"] },
+  { q: "你希望新朋友先了解你哪一面？", opts: ["我的爱好", "生活节奏", "关系想法", "最近状态"] },
+  { q: "什么小事会让你觉得“这人不错”？", opts: ["认真倾听", "记得细节", "共同爱好", "让人放松"] },
+  { q: "如果恰好有场活动，你希望是？", opts: ["少人小局", "有话题晚餐", "一起做点事", "随便走走"] }
+]
+const todayHomeQuestion = homeQuestions[Math.floor(Date.now() / 86400000) % homeQuestions.length]
+
 const defaultCommunityNeeds = [
   { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: needCommentsPool.slice(0, 3), user: false },
   { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: needCommentsPool.slice(2, 5), user: false },
@@ -378,8 +389,8 @@ Page({
     homeTags: [],
     homeCards: [],
     posterIndex: 0,
-    homeQuestion: "你上一次觉得“要是有人一起就好了”，是在哪里？",
-    homeQuestionOpts: ["下班路上", "一个人吃饭时", "看到好看的晚霞时", "想去的地方没人陪时"],
+    homeQuestion: todayHomeQuestion.q,
+    homeQuestionOpts: todayHomeQuestion.opts,
     myNeedSel: "",
     myNeedOther: "",
     myNeed: "",
