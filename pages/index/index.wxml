@@ -63,8 +63,8 @@
         <button class="primary-btn wide auth-login-btn" bindtap="loginUser">{{loggedIn ? '继续进入恰好' : '微信快捷进入'}}</button>
       </block>
       <block wx:else>
-        <input class="auth-input" type="number" value="{{phoneNumber}}" data-field="phoneNumber" bindinput="updateAuthField" maxlength="11" placeholder="手机号" />
-        <input class="auth-input" type="number" value="{{verificationCode}}" data-field="verificationCode" bindinput="updateAuthField" maxlength="6" placeholder="验证码（体验阶段可填写任意6位）" />
+        <input class="auth-input" type="number" value="{{phoneNumber}}" data-field="phoneNumber" bindinput="updateAuthField" cursor-spacing="20" maxlength="11" placeholder="手机号" />
+        <input class="auth-input" type="number" value="{{verificationCode}}" data-field="verificationCode" bindinput="updateAuthField" cursor-spacing="20" maxlength="6" placeholder="验证码（体验阶段可填写任意6位）" />
         <button class="primary-btn wide auth-login-btn" bindtap="loginUser">登录并开始认识彼此</button>
       </block>
       <view class="auth-footnote">注册即代表你愿意遵守社区的真实、尊重与隐私约定</view>
@@ -159,7 +159,7 @@
       <view class="avatar-hint">{{avatarUrl ? '点击更换头像' : '点击上传头像（选填）'}}</view>
     </view>
     <view class="basic-info-card">
-      <view class="soft-field full"><text>昵称<i>*</i></text><input value="{{basicInfo.name}}" data-field="name" bindinput="updateBasicField" placeholder="比如：小鱼" /></view>
+      <view class="soft-field full"><text>昵称<i>*</i></text><input value="{{basicInfo.name}}" data-field="name" bindinput="updateBasicField" cursor-spacing="20" placeholder="比如：小鱼" /></view>
       <view class="soft-field full">
         <text>性别<i>*</i></text>
         <picker mode="selector" range="{{genderOptions}}" data-field="gender" bindchange="updateBasicSelector">
@@ -172,7 +172,7 @@
           <view class="picker-value {{basicInfo.birth ? '' : 'placeholder'}}">{{basicInfo.birth || '选择年月日'}}</view>
         </picker>
       </view>
-      <view class="soft-field full"><text>身高（选填）</text><input type="number" value="{{basicInfo.height}}" data-field="height" bindinput="updateBasicField" placeholder="cm，比如 168" /></view>
+      <view class="soft-field full"><text>身高（选填）</text><input type="number" value="{{basicInfo.height}}" data-field="height" bindinput="updateBasicField" cursor-spacing="20" placeholder="cm，比如 168" /></view>
       <view class="soft-field full">
         <text>学历（选填）</text>
         <picker mode="selector" range="{{educationOptions}}" data-field="education" bindchange="updateBasicSelector">
@@ -191,10 +191,10 @@
           <view class="picker-value {{basicInfo.area ? '' : 'placeholder'}}">{{basicInfo.area || '选择省 / 市 / 区'}}</view>
         </picker>
       </view>
-      <view class="soft-field full"><text>职业（选填）</text><input value="{{basicInfo.occupation}}" data-field="occupation" bindinput="updateBasicField" placeholder="比如：设计师" /></view>
+      <view class="soft-field full"><text>职业（选填）</text><input value="{{basicInfo.occupation}}" data-field="occupation" bindinput="updateBasicField" cursor-spacing="20" placeholder="比如：设计师" /></view>
       <view class="soft-field full">
         <text>如果恰好这里是进入另一个你的平行宇宙的入口，你希望出现在一个什么样的场景里面，遇见谁？（选填）</text>
-        <textarea class="scene-editor" value="{{basicInfo.scene}}" data-field="scene" bindinput="updateBasicField" maxlength="160" placeholder="或写下你自己的画面：场景 + 你想遇见谁。比如：在老家的稻田边躺着看云，遇见小时候的自己……" />
+        <textarea class="scene-editor" value="{{basicInfo.scene}}" data-field="scene" bindinput="updateBasicField" cursor-spacing="20" maxlength="160" placeholder="或写下你自己的画面：场景 + 你想遇见谁。比如：在老家的稻田边躺着看云，遇见小时候的自己……" />
       </view>
     </view>
     <button class="primary-btn wide" bindtap="submitBasicInfo">生成我的初印象画像</button>
@@ -297,7 +297,7 @@
       <view class="need-opts">
         <button wx:for="{{homeQuestionOpts}}" wx:key="*this" class="need-opt {{myNeedSel === item ? 'active' : ''}}" data-val="{{item}}" bindtap="toggleNeedOption">{{item}}</button>
       </view>
-      <input class="need-other" value="{{myNeedOther}}" data-field="myNeedOther" bindinput="updateNeedOther" placeholder="其他，写下来（比如：周末下午，有人一起逛公园）" />
+      <input class="need-other" value="{{myNeedOther}}" data-field="myNeedOther" bindinput="updateNeedOther" cursor-spacing="20" placeholder="其他，写下来（比如：周末下午，有人一起逛公园）" />
       <button class="primary-btn wide" bindtap="submitHomeNeed">告诉小CC</button>
     </view>
 
@@ -406,7 +406,7 @@
       <view class="explore-hero-desc">按出门阻力和见面方式，挑一场刚刚好的局。</view>
     </view>
     <view class="explore-search">
-      <input class="explore-input" value="{{exploreSearch}}" bindinput="updateExploreSearch" placeholder="搜索活动、地点或场景" />
+      <input class="explore-input" value="{{exploreSearch}}" bindinput="updateExploreSearch" cursor-spacing="20" placeholder="搜索活动、地点或场景" />
     </view>
     <scroll-view scroll-x class="explore-filters">
       <button class="{{exploreFilter === 'all' ? 'is-active' : ''}}" data-filter="all" bindtap="setExploreFilter">全部</button>
