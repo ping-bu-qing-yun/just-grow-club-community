@@ -851,7 +851,7 @@ Page({
   },
 
   editMyNeed() {
-    this.setData({ needAsked: false })
+    this.setData({ needAsked: false, myNeedSel: "", myNeedOther: "" })
   },
 
   refreshNeeds() {
