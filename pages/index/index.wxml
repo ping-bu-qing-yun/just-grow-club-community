@@ -475,46 +475,42 @@
 
     <view class="need-fab" bindtap="openNeedComposer" hover-class="need-fab-hover"><text class="need-fab-plus">+</text></view>
     <view wx:if="{{showNeedComposer}}" class="need-composer-mask" bindtap="cancelNeedComposer">
-      <view class="need-composer-sheet" style="bottom: {{needKeyboardHeight}}px" catchtap="noop">
-        <view class="need-sheet-head">
-          <button class="need-sheet-close" bindtap="cancelNeedComposer">×</button>
-          <text class="need-sheet-title">发布需求卡</text>
-          <button class="need-pub-top-btn {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布</button>
+      <view class="publish-page" catchtap="noop">
+        <view class="publish-top">
+          <button class="publish-close" bindtap="cancelNeedComposer">×</button>
+          <text>发布需求卡</text>
+          <button class="publish-submit {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布</button>
         </view>
-        <scroll-view scroll-y class="need-sheet-body">
-          <view class="pub-main">
-            <view class="pub-cover">
-              <view class="pub-cover-box" bindtap="aiGenerateCover">
-                <image wx:if="{{needCoverPreview}}" class="pub-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
-                <block wx:else>
-                  <text class="pub-cover-plus">＋</text>
-                  <text class="pub-cover-hint">让恰好生成 / 上传照片</text>
-                </block>
-              </view>
-              <view class="pub-cover-actions">
-                <button bindtap="aiGenerateCover">让恰好生成</button>
-                <button bindtap="uploadCover">上传</button>
-              </view>
-            </view>
-            <view class="pub-editor">
-              <view class="pub-topic-card">
-                <view class="pub-topic-head">
-                  <view class="pub-topic-cat"><i style="background: {{needTopicColor}}"></i>{{needTopicCat}}</view>
-                  <button class="pub-topic-switch" bindtap="pickNeedTopic">换一个 ↻</button>
-                </view>
-                <view class="pub-topic-text">{{needTopic}}</view>
-                <view class="pub-topic-sub">先回答这个话题，恰好会帮你整理成需求卡</view>
-              </view>
-              <input class="pub-title-input" value="{{myNeedTitle}}" bindinput="updateNeedTitle" maxlength="14" placeholder="给你的回答起个标题（最多14字）" />
-              <textarea class="pub-editor-area" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="围绕这个话题说点什么…" />
-              <view class="pub-char-count">{{myNeedDraft.length}}/200</view>
+        <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight}}px">
+          <view class="publish-cover" bindtap="aiGenerateCover">
+            <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
+            <view wx:else class="publish-cover-empty">
+              <text class="publish-cover-plus">＋</text>
+              <text class="publish-cover-hint">让恰好生成 / 上传照片</text>
             </view>
           </view>
-          <view class="pub-hint-line"><view class="pub-hint-dot"></view><text>{{needHint}}</text></view>
-          <view class="pub-tags">
-            <button wx:for="{{needTagOptions}}" wx:key="*this" class="pub-tag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
+          <view class="publish-cover-actions">
+            <button bindtap="aiGenerateCover">让恰好生成</button>
+            <button bindtap="uploadCover">上传照片</button>
           </view>
-          <view class="pub-add-tag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /></view>
+          <view class="publish-body">
+            <view class="publish-topic">
+              <view class="publish-topic-head">
+                <view class="publish-topic-cat"><i style="background: {{needTopicColor}}"></i>{{needTopicCat}}</view>
+                <button class="publish-topic-switch" bindtap="pickNeedTopic">换一个 ↻</button>
+              </view>
+              <view class="publish-topic-text">{{needTopic}}</view>
+              <view class="publish-topic-sub">先回答这个话题，恰好会帮你整理成需求卡</view>
+            </view>
+            <input class="publish-title" value="{{myNeedTitle}}" bindinput="updateNeedTitle" maxlength="14" placeholder="给你的回答起个标题（最多14字）" />
+            <textarea class="publish-content" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="围绕这个话题说点什么…" />
+            <view class="publish-count">{{myNeedDraft.length}}/200</view>
+            <view class="publish-hint"><view class="publish-hint-dot"></view><text>{{needHint}}</text></view>
+            <view class="publish-tags">
+              <button wx:for="{{needTagOptions}}" wx:key="*this" class="publish-tag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
+            </view>
+            <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /></view>
+          </view>
         </scroll-view>
       </view>
     </view>
