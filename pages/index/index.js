@@ -504,6 +504,7 @@ Page({
     needTopic: "最近有没有一件小事，让你觉得生活还不错？",
     needTopicCat: "生活感悟",
     needTopicColor: "#7fae7f",
+    needTopicMode: "ask",
     needHint: "围绕这个话题说点什么，恰好会帮你整理成需求卡",
     needTagOptions: [],
     needManualTag: "",
@@ -1503,7 +1504,7 @@ Page({
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", myNeedDraft: "", myNeedTitle: "", needManualTag: "", canPublishNeed: false, needKeyboardHeight: 0 })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", myNeedDraft: "", myNeedTitle: "", needManualTag: "", needTopicMode: "ask", canPublishNeed: false, needKeyboardHeight: 0 })
     this.pickNeedTopic()
     this.refreshNeedTags()
   },
@@ -1530,16 +1531,29 @@ Page({
   },
 
   pickNeedTopic() {
+    if (this.data.needTopicMode !== "ask") return
     const topic = needTopics[Math.floor(Math.random() * needTopics.length)]
     this.setData({ needTopic: topic.text, needTopicCat: topic.cat, needTopicColor: topic.color })
+    this.refreshNeedTags()
+  },
+
+  switchNeedTopicMode() {
+    const next = this.data.needTopicMode === "ask" ? "free" : "ask"
+    this.setData({
+      needTopicMode: next,
+      needHint: next === "ask" ? "围绕这个话题说点什么，恰好会帮你整理成需求卡" : "自由写下你的需求，恰好会帮你整理成需求卡"
+    })
+    if (next === "ask") this.pickNeedTopic()
     this.refreshNeedTags()
   },
 
   refreshNeedTags() {
     const content = (this.data.myNeedDraft || "").toLowerCase()
     const tags = []
-    const current = needTopics.find(t => t.text === this.data.needTopic)
-    if (current) current.tags.forEach(t => { if (tags.indexOf(t) === -1) tags.push(t) })
+    if (this.data.needTopicMode === "ask") {
+      const current = needTopics.find(t => t.text === this.data.needTopic)
+      if (current) current.tags.forEach(t => { if (tags.indexOf(t) === -1) tags.push(t) })
+    }
     needKeywordTags.forEach(rule => {
       if (rule.k.some(k => content.indexOf(k) > -1) && tags.indexOf(rule.t) === -1) tags.push(rule.t)
     })
@@ -1554,6 +1568,16 @@ Page({
     const map = { ...this.data.selectedNeedFragMap, [t]: true }
     const options = this.data.needTagOptions.indexOf(t) === -1 ? [...this.data.needTagOptions, t] : this.data.needTagOptions
     this.setData({ selectedNeedFragMap: map, needTagOptions: options, needManualTag: "" })
+  },
+
+  addNeedTagManual() {
+    const raw = (this.data.needManualTag || "").trim()
+    if (!raw) return
+    const t = raw.indexOf("#") === 0 ? raw : "#" + raw
+    const map = { ...this.data.selectedNeedFragMap, [t]: true }
+    const options = this.data.needTagOptions.indexOf(t) === -1 ? [...this.data.needTagOptions, t] : this.data.needTagOptions
+    this.setData({ selectedNeedFragMap: map, needTagOptions: options, needManualTag: "" })
+    wx.showToast({ title: `已添加 ${t}`, icon: "none" })
   },
 
   updateNeedManualTag(e) {
@@ -1602,7 +1626,8 @@ Page({
     const id = `need-${Date.now()}`
     const frags = Object.keys(this.data.selectedNeedFragMap)
     const subtitle = this.data.needTopicCat || "刚刚发布的需求"
-    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: title || content.slice(0, 14), copy: content, question: this.data.needTopic || "", topic: this.data.needTopic || "", topicCat: this.data.needTopicCat || "", image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
+    const topicText = this.data.needTopicMode === "ask" ? (this.data.needTopic || "") : ""
+    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: title || content.slice(0, 14), copy: content, question: topicText, topic: topicText, topicCat: this.data.needTopicMode === "ask" ? (this.data.needTopicCat || "") : "", image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
     const demandHistory = [{ id: `history-${Date.now()}`, title: title || content.slice(0, 14), date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
     this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", myNeedTitle: "", showNeedComposer: false, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", canPublishNeed: false })
     this.refreshNeeds()

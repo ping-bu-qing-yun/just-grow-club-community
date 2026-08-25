@@ -479,9 +479,8 @@
         <view class="publish-top">
           <button class="publish-close" bindtap="cancelNeedComposer">×</button>
           <text>发布需求卡</text>
-          <button class="publish-submit {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布</button>
         </view>
-        <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight}}px">
+        <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight + 90}}px">
           <view class="publish-cover" bindtap="aiGenerateCover">
             <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
             <view wx:else class="publish-cover-empty">
@@ -494,24 +493,36 @@
             <button bindtap="uploadCover">上传照片</button>
           </view>
           <view class="publish-body">
-            <view class="publish-topic">
+            <view wx:if="{{needTopicMode === 'ask'}}" class="publish-topic">
               <view class="publish-topic-head">
                 <view class="publish-topic-cat"><i style="background: {{needTopicColor}}"></i>{{needTopicCat}}</view>
                 <button class="publish-topic-switch" bindtap="pickNeedTopic">换一个 ↻</button>
               </view>
               <view class="publish-topic-text">{{needTopic}}</view>
               <view class="publish-topic-sub">先回答这个话题，恰好会帮你整理成需求卡</view>
+              <button class="publish-topic-free" bindtap="switchNeedTopicMode">自己发起 ›</button>
+            </view>
+            <view wx:else class="publish-topic publish-topic-free">
+              <view class="publish-topic-head">
+                <view class="publish-topic-cat"><i style="background: #8a867c"></i>自己发起</view>
+                <button class="publish-topic-switch" bindtap="switchNeedTopicMode">回答小CC提问</button>
+              </view>
+              <view class="publish-topic-text">写下你想遇见什么、想被怎样认识</view>
+              <view class="publish-topic-sub">不回答问题，自由表达你的需求</view>
             </view>
             <input class="publish-title" value="{{myNeedTitle}}" bindinput="updateNeedTitle" maxlength="14" placeholder="给你的回答起个标题（最多14字）" />
-            <textarea class="publish-content" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="围绕这个话题说点什么…" />
+            <textarea class="publish-content" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="{{needTopicMode === 'ask' ? '围绕这个话题说点什么…' : '写下你想遇见的人、想一起做的事…'}}" />
             <view class="publish-count">{{myNeedDraft.length}}/200</view>
             <view class="publish-hint"><view class="publish-hint-dot"></view><text>{{needHint}}</text></view>
             <view class="publish-tags">
               <button wx:for="{{needTagOptions}}" wx:key="*this" class="publish-tag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
             </view>
-            <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /></view>
+            <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /><button class="publish-addtag-btn" bindtap="addNeedTagManual">添加</button></view>
           </view>
         </scroll-view>
+        <view class="publish-bottom" style="bottom: {{needKeyboardHeight}}px">
+          <button class="publish-bottom-btn {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布需求卡</button>
+        </view>
       </view>
     </view>
   </scroll-view>
