@@ -3846,6 +3846,30 @@ button::after {
   margin-right: -28rpx;
 }
 
+.needs-sort {
+  display: flex;
+  gap: 10rpx;
+  margin: 4rpx 0 18rpx;
+}
+
+.needs-sort button {
+  min-height: 56rpx;
+  padding: 0 26rpx;
+  border-radius: 99rpx;
+  background: #f3f1ef;
+  color: #8a867c;
+  font-size: 22rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.needs-sort button.on {
+  background: #2f2a24;
+  color: #fff;
+}
+
 .needs-hlist .need-card-large {
   display: inline-flex;
   flex-direction: column;

@@ -469,6 +469,7 @@ Page({
     needCoverPreview: "",
     needCoverName: "",
     needKeyboardHeight: 0,
+    needSort: "latest",
     registeredActivities: [],
     hostForm: { title: "", description: "" },
     hostSubmitted: false,
@@ -748,7 +749,16 @@ Page({
   },
 
   refreshNeeds() {
-    this.setData({ displayedNeeds: this.data.communityNeeds })
+    const list = [...this.data.communityNeeds]
+    if (this.data.needSort === "hot") {
+      list.sort((a, b) => (b.resonance || 0) - (a.resonance || 0))
+    }
+    this.setData({ displayedNeeds: list })
+  },
+
+  switchNeedSort(e) {
+    this.setData({ needSort: e.currentTarget.dataset.sort })
+    this.refreshNeeds()
   },
 
   toggleNeedResonance(e) {

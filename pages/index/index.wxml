@@ -449,6 +449,10 @@
     </view>
 
     <block>
+      <view class="needs-sort">
+        <button class="{{needSort === 'latest' ? 'on' : ''}}" data-sort="latest" bindtap="switchNeedSort">最新</button>
+        <button class="{{needSort === 'hot' ? 'on' : ''}}" data-sort="hot" bindtap="switchNeedSort">最共鸣</button>
+      </view>
       <scroll-view scroll-x class="needs-hlist">
         <view wx:for="{{displayedNeeds}}" wx:key="id" class="need-card-large">
           <view class="need-card-media" data-id="{{item.id}}" bindtap="openDemandDetail">
