@@ -572,37 +572,62 @@
     </view>
   </scroll-view>
 
-  <view wx:if="{{showDemandDetail}}" class="detail-sheet-mask" style="padding-bottom: {{demandKeyboardHeight}}px" bindtap="closeDemandDetail">
-    <view class="demand-sheet" catchtap="noop">
-      <view class="sheet-handle"></view>
-      <view class="sheet-topline"><text>需求卡</text><button class="sheet-close" bindtap="closeDemandDetail">关闭</button></view>
-      <view class="demand-detail-card">
-        <view class="demand-detail-author">{{activeDemand.author}}</view>
-        <view wx:if="{{activeDemand.question}}" class="demand-detail-question">小CC问：{{activeDemand.question}}</view>
-        <view class="demand-detail-title">{{activeDemand.title}}</view>
-        <view class="demand-detail-copy">{{activeDemand.answer || activeDemand.detail || activeDemand.copy}}</view>
-        <view class="club-tags demand-detail-tags">
+  <view wx:if="{{showDemandDetail}}" class="need-detail-page">
+    <scroll-view scroll-y class="need-detail-scroll">
+      <view class="need-detail-media">
+        <image wx:if="{{activeDemand.image}}" class="need-detail-media-img" src="{{activeDemand.image}}" mode="aspectFill" />
+        <view wx:else class="need-detail-media-fallback"></view>
+        <button class="need-detail-back" bindtap="closeDemandDetail">‹</button>
+      </view>
+      <view class="need-detail-content">
+        <small>{{activeDemand.author}} · {{activeDemand.subtitle || 'TA 在恰好说出自己的需求'}}</small>
+        <view wx:if="{{activeDemand.question}}" class="need-detail-question">小CC问：{{activeDemand.question}}</view>
+        <view class="need-detail-title">{{activeDemand.title}}</view>
+        <view class="need-detail-copy">{{activeDemand.answer || activeDemand.detail || activeDemand.copy}}</view>
+        <view class="club-tags need-detail-tags">
           <text wx:for="{{activeDemand.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
         </view>
-        <view class="demand-detail-stats">{{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}} 人共鸣 · {{activeDemand.commentsCount}} 条评论</view>
-      </view>
-      <view class="demand-detail-actions">
-        <button class="{{resonatedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedResonance">{{resonatedNeedIds[activeDemand.id] ? '已共鸣' : '我也有'}} {{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</button>
-        <button class="{{savedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedSave">{{savedNeedIds[activeDemand.id] ? '已收藏' : '收藏'}}</button>
-      </view>
-      <view class="comment-section-title">大家怎么说 <text>{{activeDemand.commentsCount}}条</text></view>
-      <view class="comment-list">
-        <view wx:for="{{activeDemand.comments}}" wx:key="*this" class="comment-item"><view class="comment-avatar">Z</view><view><view class="comment-name">恰好用户</view><view>{{item}}</view></view></view>
-        <view wx:if="{{!activeDemand.comments.length}}" class="comment-empty">还没有人说话，你来当第一个</view>
-      </view>
-      <view class="demand-composer-sticky">
-        <view class="sheet-section-title">留下你的评论</view>
-        <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" adjust-position="{{false}}" maxlength="300" placeholder="写下一句你的想法" />
-        <view class="sheet-actions">
-          <button class="tiny-btn primary" bindtap="addDemandComment">发布评论</button>
+        <view class="need-detail-response">
+          <view class="need-detail-response-head">
+            <view class="need-detail-response-title">这张需求正在发生什么</view>
+            <text class="{{activeDemand.response ? 'is-active' : 'is-waiting'}}">{{activeDemand.response ? '有人接住' : '还在等回应'}}</text>
+          </view>
+          <view class="need-detail-response-stats">
+            <view><b>{{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</b><small>人共鸣</small></view>
+            <view><b>{{activeDemand.commentsCount}}</b><small>条评论</small></view>
+            <view><b>{{activeDemand.response ? 1 : 0}}</b><small>场回应</small></view>
+          </view>
+          <view wx:if="{{activeDemand.response}}" class="need-detail-response-link">
+            <text>有活动回应了 · {{activeDemand.response}}</text>
+          </view>
+          <view wx:else class="need-detail-empty">
+            <text class="need-detail-empty-title">还没有活动回应</text>
+            <text class="need-detail-empty-desc">收藏这张需求，之后有合适的活动，我们会通知你</text>
+          </view>
+        </view>
+        <view class="need-detail-comments">
+          <view class="need-detail-comments-head">
+            <view class="need-detail-comments-title">大家怎么说</view>
+            <text>{{activeDemand.commentsCount}} 条</text>
+          </view>
+          <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有人说话，你来当第一个</view>
+          <view wx:for="{{activeDemand.comments}}" wx:key="*this" class="need-detail-comment">
+            <view class="comment-avatar">Z</view>
+            <view class="need-detail-comment-body">
+              <view class="comment-name">恰好用户</view>
+              <view>{{item}}</view>
+            </view>
+          </view>
+          <view class="need-detail-composer">
+            <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
+            <button class="tiny-btn primary" bindtap="addDemandComment">发布</button>
+          </view>
         </view>
       </view>
-      <button wx:if="{{activeDemand.id === 'host'}}" class="primary-btn wide" bindtap="go" data-view="partner">我来发起活动</button>
+    </scroll-view>
+    <view class="need-detail-actions" style="bottom: {{demandKeyboardHeight}}px">
+      <button class="{{resonatedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedResonance">{{resonatedNeedIds[activeDemand.id] ? '已共鸣' : '我也有'}} {{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</button>
+      <button class="{{savedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedSave">{{savedNeedIds[activeDemand.id] ? '已收藏' : '收藏'}}</button>
     </view>
   </view>
 
