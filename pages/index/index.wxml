@@ -294,9 +294,9 @@
           <view class="need-ask-q">{{homeQuestion}}</view>
         </view>
       </view>
-      <scroll-view scroll-x class="need-opts">
+      <view class="need-opts">
         <button wx:for="{{homeQuestionOpts}}" wx:key="*this" class="need-opt {{myNeedSel === item ? 'active' : ''}}" data-val="{{item}}" bindtap="toggleNeedOption">{{item}}</button>
-      </scroll-view>
+      </view>
       <input class="need-other" value="{{myNeedOther}}" data-field="myNeedOther" bindinput="updateNeedOther" placeholder="其他，写下来（比如：周末下午，有人一起逛公园）" />
       <button class="primary-btn wide" bindtap="submitHomeNeed">告诉小CC</button>
     </view>

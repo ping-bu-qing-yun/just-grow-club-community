@@ -3673,15 +3673,16 @@ button::after {
 }
 
 .need-opts {
-  white-space: nowrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
   margin: 26rpx 0 18rpx;
 }
 
 .need-opt {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 14rpx;
   font-size: 24rpx;
   color: #2f2a24;
   background: #faf6ec;
