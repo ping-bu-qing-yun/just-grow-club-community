@@ -1578,7 +1578,7 @@ Page({
       if (rule.k.some(k => content.indexOf(k) > -1) && tags.indexOf(rule.t) === -1) tags.push(rule.t)
     })
     if (content.trim().length >= 4 && tags.length === 0) tags.push("#想认识", "#认真认识")
-    this.setData({ needTagOptions: tags.slice(0, 6) })
+    this.setData({ needTagOptions: tags.slice(0, 4) })
   },
 
   addNeedTag(e) {
@@ -1605,13 +1605,68 @@ Page({
   },
 
   aiGenerateCover() {
+    const src = this.makeSystemCover()
+    if (src) {
+      this.setData({ needCoverPreview: src, needCoverName: "恰好生成" })
+      wx.showToast({ title: "恰好画了一张氛围图", icon: "none" })
+      return
+    }
     const text = (this.data.myNeedDraft || "") + " " + Object.keys(this.data.selectedNeedFragMap).join(" ")
     const matched = coverPool.filter(c => c.keys.some(k => text.indexOf(k) > -1))
     const pool = matched.length ? matched : coverPool
     const candidates = pool.filter(c => c.src !== this.data.needCoverPreview)
     const next = (candidates.length ? candidates : pool)[Math.floor(Math.random() * (candidates.length ? candidates.length : pool.length))]
     this.setData({ needCoverPreview: next.src, needCoverName: next.name })
-    wx.showToast({ title: matched.length ? "恰好按你的话挑了一张" : "恰好帮你挑了一张", icon: "none" })
+    wx.showToast({ title: "恰好帮你挑了一张", icon: "none" })
+  },
+
+  makeSystemCover() {
+    try {
+      const canvas = wx.createOffscreenCanvas({ type: "2d", width: 300, height: 300 })
+      const ctx = canvas.getContext("2d")
+      const palettes = [
+        ["#6f9fc0", "#eef5f9"], ["#d98a8a", "#fdf1ee"], ["#8b7fb8", "#f4f0fa"],
+        ["#7fae7f", "#eef7ee"], ["#d9a05b", "#fdf5e8"], ["#5f7f5e", "#edf4ed"],
+        ["#c48aa0", "#fbf0f4"], ["#7f9a9b", "#eef4f4"]
+      ]
+      const p = palettes[Math.floor(Math.random() * palettes.length)]
+      const grad = ctx.createLinearGradient(0, 0, 300, 300)
+      grad.addColorStop(0, p[0])
+      grad.addColorStop(1, p[1])
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 300, 300)
+      // 大圆（太阳/月亮），位置随机
+      ctx.fillStyle = "rgba(255,255,255,.28)"
+      ctx.beginPath()
+      ctx.arc(60 + Math.random() * 150, 50 + Math.random() * 90, 34 + Math.random() * 28, 0, Math.PI * 2)
+      ctx.fill()
+      // 两座山
+      ctx.fillStyle = "rgba(255,255,255,.16)"
+      ctx.beginPath()
+      ctx.moveTo(0, 300)
+      ctx.lineTo(90 + Math.random() * 60, 120 + Math.random() * 70)
+      ctx.lineTo(210 + Math.random() * 60, 300)
+      ctx.closePath()
+      ctx.fill()
+      ctx.fillStyle = "rgba(255,255,255,.12)"
+      ctx.beginPath()
+      ctx.moveTo(140, 300)
+      ctx.lineTo(230 + Math.random() * 60, 80 + Math.random() * 60)
+      ctx.lineTo(300, 300)
+      ctx.closePath()
+      ctx.fill()
+      // 点缀小圆
+      ctx.fillStyle = "rgba(255,255,255,.35)"
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath()
+        ctx.arc(20 + Math.random() * 260, 20 + Math.random() * 160, 2 + Math.random() * 4, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      const dataUrl = canvas.toDataURL ? canvas.toDataURL("image/png") : ""
+      return dataUrl || ""
+    } catch (e) {
+      return ""
+    }
   },
 
   uploadCover() {
