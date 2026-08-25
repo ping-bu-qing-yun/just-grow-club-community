@@ -475,7 +475,6 @@ Page({
     qaStarted: false,
     communityNeeds: defaultCommunityNeeds,
     demandComments: defaultCommunityNeeds[0].comments,
-    needFilter: "all",
     displayedNeeds: defaultCommunityNeeds,
     resonatedNeedIds: {},
     savedNeedIds: {},
@@ -748,15 +747,8 @@ Page({
     this.setData({ needAsked: false })
   },
 
-  switchNeedFilter(e) {
-    this.setData({ needFilter: e.currentTarget.dataset.filter })
-    this.refreshNeeds()
-  },
-
   refreshNeeds() {
-    const filter = this.data.needFilter
-    const list = this.data.communityNeeds.filter(n => filter !== "similar" || n.similar || n.user)
-    this.setData({ displayedNeeds: list })
+    this.setData({ displayedNeeds: this.data.communityNeeds })
   },
 
   toggleNeedResonance(e) {

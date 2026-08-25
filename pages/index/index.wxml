@@ -449,16 +449,6 @@
     </view>
 
     <block>
-      <view class="needs-subhead">
-        <view>
-          <view class="needs-subhead-title">大家正在寻找</view>
-          <view class="needs-subhead-desc">看看谁和你想的一样</view>
-        </view>
-      </view>
-      <view class="needs-filter">
-        <button class="{{needFilter === 'all' ? 'is-active' : ''}}" data-filter="all" bindtap="switchNeedFilter">全部需求</button>
-        <button class="{{needFilter === 'similar' ? 'is-active' : ''}}" data-filter="similar" bindtap="switchNeedFilter">和你相似</button>
-      </view>
       <scroll-view scroll-x class="needs-hlist">
         <view wx:for="{{displayedNeeds}}" wx:key="id" class="need-card-large">
           <view class="need-card-media" data-id="{{item.id}}" bindtap="openDemandDetail">
