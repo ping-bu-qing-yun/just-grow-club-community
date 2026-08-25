@@ -2270,23 +2270,31 @@ button::after {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16rpx;
   background: #eef6f0;
   color: #3f6b57;
-  border-radius: 16rpx;
-  padding: 14rpx 14rpx 14rpx 18rpx;
+  border-radius: 24rpx;
+  padding: 20rpx 22rpx;
   font-size: 22rpx;
   font-weight: 800;
+  line-height: 1.45;
+}
+
+.need-detail-response-link text {
+  flex: 1;
+  min-width: 0;
 }
 
 .need-detail-response-link button {
-  flex-shrink: 0;
+  flex: none;
   border: 0;
-  background: transparent;
+  background: #fff;
   color: #3f6b57;
-  min-height: auto;
-  padding: 4rpx 0;
-  font-size: 22rpx;
-  font-weight: 800;
+  border-radius: 18rpx;
+  min-height: 56rpx;
+  padding: 0 18rpx;
+  font-size: 20rpx;
+  font-weight: 900;
   display: flex;
   align-items: center;
   justify-content: center;
