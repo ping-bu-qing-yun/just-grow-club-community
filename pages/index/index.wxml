@@ -552,7 +552,7 @@
 
   <scroll-view wx:elif="{{view === 'savedNeeds'}}" scroll-y class="screen with-tab saved-needs-page">
     <view class="subpage-header">
-      <button class="subpage-back" bindtap="back">‹</button>
+      <button class="subpage-back" bindtap="back">←</button>
       <text>我收藏的需求</text>
     </view>
     <view wx:if="{{!savedNeedsList.length}}" class="saved-empty">
@@ -577,7 +577,7 @@
       <view class="need-detail-media">
         <image wx:if="{{activeDemand.image}}" class="need-detail-media-img" src="{{activeDemand.image}}" mode="aspectFill" />
         <view wx:else class="need-detail-media-fallback"></view>
-        <button class="need-detail-back" bindtap="closeDemandDetail">‹</button>
+        <button class="need-detail-back" bindtap="closeDemandDetail">←</button>
       </view>
       <view class="need-detail-content">
         <small>{{activeDemand.author}} · {{activeDemand.subtitle || 'TA 在恰好说出自己的需求'}}</small>
@@ -597,8 +597,9 @@
             <view><b>{{activeDemand.commentsCount}}</b><small>条评论</small></view>
             <view><b>{{activeDemand.response ? 1 : 0}}</b><small>场回应</small></view>
           </view>
-          <view wx:if="{{activeDemand.response}}" class="need-detail-response-link">
+          <view wx:if="{{activeDemand.responseActivity}}" class="need-detail-response-link" bindtap="openDemandActivity">
             <text>有活动回应了 · {{activeDemand.response}}</text>
+            <button>查看</button>
           </view>
           <view wx:else class="need-detail-empty">
             <text class="need-detail-empty-title">还没有活动回应</text>
@@ -611,11 +612,11 @@
             <text>{{activeDemand.commentsCount}} 条</text>
           </view>
           <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有人说话，你来当第一个</view>
-          <view wx:for="{{activeDemand.comments}}" wx:key="*this" class="need-detail-comment">
+          <view wx:for="{{activeDemand.comments}}" wx:key="text" class="need-detail-comment">
             <view class="comment-avatar">Z</view>
             <view class="need-detail-comment-body">
-              <view class="comment-name">恰好用户</view>
-              <view>{{item}}</view>
+              <view class="comment-name">{{item.author || '恰好用户'}}</view>
+              <view>{{item.text || item}}</view>
             </view>
           </view>
           <view class="need-detail-composer">

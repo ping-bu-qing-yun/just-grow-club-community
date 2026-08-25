@@ -1396,14 +1396,46 @@ Page({
   openDemandDetail(e) {
     const id = e.currentTarget.dataset.id
     const found = this.data.communityNeeds.find(item => item.id === id) || this.data.communityNeeds[0]
+    const responseActivity = this.matchNeedActivity(found)
     const activeDemand = {
       ...found,
       title: found.title,
       detail: found.copy || found.detail,
       stats: found.stats || `${found.resonance || 0}人共鸣 · ${found.commentsCount || 0}条评论`,
-      response: found.response || ""
+      response: responseActivity ? `主理人正在准备${responseActivity.title}` : (found.response || ""),
+      responseActivity
     }
     this.setData({ activeDemand, showDemandDetail: true, demandComment: "", demandKeyboardHeight: 0 })
+  },
+
+  matchNeedActivity(need) {
+    const feed = this.data.activityFeed || []
+    const text = `${(need.tags || []).join(" ")} ${need.title || ""} ${need.copy || ""}`.toLowerCase()
+    const rules = [
+      { id: "dinner", keys: ["晚餐", "饭", "吃", "靠谱", "轻聊", "轻餐", "下班", "共餐", "认识人"] },
+      { id: "ai", keys: ["深聊", "价值观", "同频", "深谈", "认真", "心事", "夜谈", "关系"] },
+      { id: "walk", keys: ["散步", "月亮", "遛狗", "附近", "周末", "走", "晚霞", "逛"] },
+      { id: "workshop", keys: ["工作坊", "模式", "慢了解", "说明书", "练习"] },
+      { id: "lunch", keys: ["午间", "中午", "午饭", "一小时", "午休"] }
+    ]
+    let best = null
+    let bestScore = 0
+    rules.forEach(rule => {
+      const score = rule.keys.reduce((sum, key) => sum + (text.indexOf(key) > -1 ? 1 : 0), 0)
+      if (score > bestScore) {
+        bestScore = score
+        best = rule
+      }
+    })
+    if (!best || bestScore === 0) return null
+    return feed.find(item => item.id === best.id) || null
+  },
+
+  openDemandActivity() {
+    const act = this.data.activeDemand && this.data.activeDemand.responseActivity
+    if (!act) return
+    this.closeDemandDetail()
+    this.openActivity({ currentTarget: { dataset: { id: act.id } } })
   },
 
   closeDemandDetail() {
@@ -1509,7 +1541,8 @@ Page({
       wx.showToast({ title: "先写下一句你的想法", icon: "none" })
       return
     }
-    const comments = [comment, ...(this.data.activeDemand.comments || [])]
+    const author = this.data.basicInfo.name || this.data.accountName || "恰好用户"
+    const comments = [{ author, text: comment }, ...(this.data.activeDemand.comments || [])]
     const id = this.data.activeDemand.id
     const communityNeeds = this.data.communityNeeds.map(item => {
       if (item.id !== id) return item

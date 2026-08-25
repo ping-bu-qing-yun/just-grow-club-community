@@ -2267,12 +2267,34 @@ button::after {
 }
 
 .need-detail-response-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: #eef6f0;
   color: #3f6b57;
   border-radius: 16rpx;
-  padding: 18rpx;
+  padding: 14rpx 14rpx 14rpx 18rpx;
   font-size: 22rpx;
   font-weight: 800;
+}
+
+.need-detail-response-link button {
+  flex-shrink: 0;
+  border: 0;
+  background: #3f6b57;
+  color: #fff;
+  border-radius: 99rpx;
+  min-height: 56rpx;
+  padding: 0 26rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.need-detail-response-link button::after {
+  border: none;
 }
 
 .need-detail-empty {
