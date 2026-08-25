@@ -2154,8 +2154,8 @@ button::after {
 
 .need-detail-back {
   position: absolute;
-  left: 8rpx;
-  top: calc(8rpx + env(safe-area-inset-top));
+  left: 0;
+  top: calc(0rpx + env(safe-area-inset-top));
   width: 88rpx;
   height: 88rpx;
   background: transparent;
@@ -2173,6 +2173,11 @@ button::after {
 
 .need-detail-back::after {
   border: none;
+}
+
+.need-detail-back-icon {
+  margin-left: -4rpx;
+  line-height: 1;
 }
 
 .need-detail-content {
