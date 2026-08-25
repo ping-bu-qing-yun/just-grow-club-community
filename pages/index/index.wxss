@@ -1650,21 +1650,21 @@ button::after {
 }
 
 .need-openers {
-  white-space: nowrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12rpx;
   margin-top: 16rpx;
 }
 
 .need-opener {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 56rpx;
-  margin-right: 12rpx;
-  padding: 0 24rpx;
-  border: 1rpx dashed rgba(95, 127, 94, .45);
+  min-height: 60rpx;
+  padding: 0 8rpx;
   border-radius: 99rpx;
-  background: #f4faf5;
-  color: #416054;
+  background: #f3f1ef;
+  color: #8a867c;
   font-size: 22rpx;
   font-weight: 800;
 }

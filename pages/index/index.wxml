@@ -485,9 +485,9 @@
         </view>
         <scroll-view scroll-y class="need-sheet-body">
           <view class="card-text">写一句话，点几个心动碎片，恰好会更懂你。</view>
-          <scroll-view scroll-x class="need-openers">
+          <view class="need-openers">
             <button wx:for="{{needOpeners}}" wx:key="*this" class="need-opener" data-opener="{{item}}" bindtap="tapNeedOpener">{{item}}</button>
-          </scroll-view>
+          </view>
           <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
           <view class="need-frag-label">心动碎片（可选）</view>
           <view class="need-frag-row">
