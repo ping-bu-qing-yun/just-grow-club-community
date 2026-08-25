@@ -456,7 +456,7 @@
       <scroll-view scroll-x class="needs-hlist">
         <view wx:for="{{displayedNeeds}}" wx:key="id" class="need-card-large">
           <view class="need-card-media" data-id="{{item.id}}" bindtap="openDemandDetail">
-            <image wx:if="{{item.image}}" class="need-media-img" src="{{item.image}}" mode="aspectFill" />
+            <image wx:if="{{item.image}}" class="need-media-img" src="{{item.image}}" mode="aspectFit" />
             <text class="need-media-sub">{{item.subtitle}}</text>
           </view>
           <view class="need-card-content">
@@ -498,7 +498,7 @@
           </view>
           <view class="need-frag-label">封面（可选）</view>
           <view class="need-cover-preview">
-            <image wx:if="{{needCoverPreview}}" class="need-cover-preview-img" src="{{needCoverPreview}}" mode="aspectFill" />
+            <image wx:if="{{needCoverPreview}}" class="need-cover-preview-img" src="{{needCoverPreview}}" mode="aspectFit" />
             <view wx:else class="need-cover-empty">让恰好生成一张，或从相册上传</view>
             <text wx:if="{{needCoverName}}" class="need-cover-preview-name">{{needCoverName}}</text>
           </view>
@@ -507,10 +507,10 @@
             <button class="need-cover-act upload" bindtap="uploadCover">＋ 上传照片</button>
           </view>
         </scroll-view>
-        <view class="need-sheet-foot">
-          <button class="ghost-btn" bindtap="cancelNeedComposer">取消</button>
-          <button class="primary-btn" bindtap="publishNeed">发布需求卡</button>
-        </view>
+      </view>
+      <view class="need-sheet-foot" style="bottom: {{needKeyboardHeight}}px" catchtap="noop">
+        <button class="ghost-btn" bindtap="cancelNeedComposer">取消</button>
+        <button class="primary-btn" bindtap="publishNeed">发布需求卡</button>
       </view>
     </view>
   </scroll-view>

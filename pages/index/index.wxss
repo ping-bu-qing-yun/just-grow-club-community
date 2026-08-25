@@ -1590,24 +1590,27 @@ button::after {
   left: 0;
   right: 0;
   top: 100rpx;
-  bottom: 150rpx;
+  bottom: 20rpx;
   padding: 8rpx 28rpx;
   box-sizing: border-box;
 }
 
 .need-sheet-foot {
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   height: 150rpx;
   padding: 18rpx 28rpx 36rpx;
+  padding-bottom: calc(36rpx + env(safe-area-inset-bottom));
   box-sizing: border-box;
   display: flex;
   gap: 14rpx;
   border-top: 1rpx solid rgba(95, 127, 94, .12);
   background: #fdfcf8;
-  border-radius: 0 0 32rpx 32rpx;
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -8rpx 24rpx rgba(63, 47, 38, .08);
+  z-index: 35;
 }
 
 .need-sheet-foot .ghost-btn,
@@ -3892,6 +3895,7 @@ button::after {
   width: 100%;
   height: 220rpx;
   overflow: hidden;
+  background: #f4f1ea;
 }
 
 .need-media-img {
