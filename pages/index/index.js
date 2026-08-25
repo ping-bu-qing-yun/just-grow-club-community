@@ -573,7 +573,13 @@ Page({
       q11: rawRel.q11 && typeof rawRel.q11 === "object" ? rawRel.q11 : {},
       q12: rawRel.q12 && typeof rawRel.q12 === "object" ? rawRel.q12 : {}
     }
-    this.introTimer = setTimeout(() => this.setView(options.activity ? "activityDetail" : "welcome", { push: false, resetHistory: true }), 1400)
+    this.introTimer = setTimeout(() => {
+      if (this.data.loggedIn) {
+        this.enterHome()
+      } else if (!options.activity) {
+        this.setView("welcome", { push: false, resetHistory: true })
+      }
+    }, 1400)
     recorderManager.onStart(() => {
       this.setData({ recording: true, recordHint: "正在听你说，松开发送" })
     })
