@@ -577,7 +577,7 @@
       <view class="need-detail-media">
         <image wx:if="{{activeDemand.image}}" class="need-detail-media-img" src="{{activeDemand.image}}" mode="aspectFill" />
         <view wx:else class="need-detail-media-fallback"></view>
-        <button class="need-detail-back" bindtap="closeDemandDetail">←</button>
+        <button class="need-detail-back" bindtap="closeDemandDetail">‹</button>
       </view>
       <view class="need-detail-content">
         <small>{{activeDemand.author}} · {{activeDemand.subtitle || 'TA 在恰好说出自己的需求'}}</small>

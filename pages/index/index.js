@@ -893,6 +893,11 @@ Page({
       return
     }
     this.setView(previous, { push: false, history })
+    if (this.pendingDemandId && previous !== "activityDetail") {
+      const id = this.pendingDemandId
+      this.pendingDemandId = null
+      this.openDemandDetail({ currentTarget: { dataset: { id } } })
+    }
   },
 
   toggleEntryOption(e) {
@@ -1434,6 +1439,7 @@ Page({
   openDemandActivity() {
     const act = this.data.activeDemand && this.data.activeDemand.responseActivity
     if (!act) return
+    this.pendingDemandId = this.data.activeDemand.id
     this.closeDemandDetail()
     this.openActivity({ currentTarget: { dataset: { id: act.id } } })
   },
