@@ -1563,7 +1563,7 @@ button::after {
 
 .publish-close {
   position: absolute;
-  left: 24rpx;
+  left: 0;
   top: 50%;
   transform: translateY(-50%);
   height: 72rpx;
@@ -1577,6 +1577,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
 }
 
 .publish-close::after {
@@ -1669,6 +1670,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
 }
 
 .publish-gen-btn::after {
@@ -1741,6 +1743,7 @@ button::after {
   display: flex;
   align-items: center;
   gap: 4rpx;
+  width: auto;
 }
 
 .publish-topic-switch::after {
@@ -1764,6 +1767,7 @@ button::after {
   display: flex;
   align-items: center;
   gap: 4rpx;
+  width: auto;
 }
 
 .publish-topic-link::after {
@@ -1806,6 +1810,7 @@ button::after {
   color: #21644e;
   font-size: 22rpx;
   font-weight: 800;
+  width: auto;
 }
 
 .publish-topic-own::after {
@@ -1887,6 +1892,7 @@ button::after {
   border: 1rpx solid transparent;
   white-space: nowrap;
   flex: none;
+  width: auto;
 }
 
 .publish-tag.on {
@@ -1928,6 +1934,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: auto;
 }
 
 .publish-addtag-btn::after {

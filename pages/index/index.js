@@ -1552,19 +1552,20 @@ Page({
   pickNeedTopic() {
     if (this.data.needTopicMode !== "ask") return
     const topic = needTopics[Math.floor(Math.random() * needTopics.length)]
-    this.setData({ needTopic: topic.text, needTopicCat: topic.cat, needTopicColor: topic.color })
+    const map = {}
+    topic.tags.forEach(t => { map[t] = true })
+    this.setData({ needTopic: topic.text, needTopicCat: topic.cat, needTopicColor: topic.color, selectedNeedFragMap: map })
     this.refreshNeedTags()
   },
 
   flipTopicToFree() {
-    this.setData({ needTopicMode: "free", needHint: "" })
+    this.setData({ needTopicMode: "free", needHint: "", selectedNeedFragMap: {} })
     this.refreshNeedTags()
   },
 
   flipTopicToAsk() {
     this.setData({ needTopicMode: "ask", needHint: "围绕这个话题说点什么，恰好会帮你整理成需求卡" })
     this.pickNeedTopic()
-    this.refreshNeedTags()
   },
 
   refreshNeedTags() {
