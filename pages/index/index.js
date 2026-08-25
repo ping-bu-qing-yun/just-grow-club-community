@@ -911,9 +911,15 @@ Page({
       return
     }
     const finishLogin = () => {
+      const saved = wx.getStorageSync("qiahaoDraft") || {}
+      const hasProfile = Boolean(saved.basicInfo && saved.basicInfo.name) || Boolean(saved.entryDone) || Boolean(saved.relDone) || Boolean(saved.qaBasicDone)
       this.setData({ loggedIn: true, accountName: "小Z" })
       this.persistDraft()
-      this.setView("lightQa")
+      if (hasProfile) {
+        this.enterHome()
+      } else {
+        this.setView("lightQa")
+      }
     }
     if (this.data.authMode === "wechat" && typeof wx.login === "function") {
       wx.login({ success: finishLogin, fail: finishLogin })
