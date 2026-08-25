@@ -329,8 +329,12 @@ const needCommentsPool = [
   "这个想法很具体，期待后续的活动回应。",
   "先从轻松聊天开始，感觉会更自然。",
   "谢谢分享，刚好说中了我最近的感受。",
-  "已经收藏，想继续关注大家的建议。"
+  "已经收藏，想继续关注大家的建议。",
+  "同感，我也希望有一场这样低压力的局。",
+  "期待小CC能组织一场这样的活动。"
 ]
+
+const demoComments = (n) => needCommentsPool.slice(0, n)
 
 const homeQuestions = [
   { q: "你上一次觉得“要是有人一起就好了”，是在哪里？", opts: ["下班路上", "一个人吃饭", "好看的晚霞", "想去的地方没人陪"] },
@@ -385,12 +389,12 @@ const needKeywordTags = [
 ]
 
 const defaultCommunityNeeds = [
-  { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: needCommentsPool.slice(0, 3), user: false },
-  { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: needCommentsPool.slice(2, 5), user: false },
-  { id: "d3", author: "阿南 · 3天前", subtitle: "想找到能认真聊天的同频朋友", tags: ["deep talk", "价值观"], title: "想找能聊价值观的人，而不是只聊工作", copy: "6个人的小型夜谈，可能比一场大活动更适合认真认识。", image: "/pages/index/images/posters/need-d3.jpg", resonance: 28, commentsCount: 8, response: "深度对谈预活动收集中", similar: false, stats: "28人共鸣 · 8条评论", comments: needCommentsPool.slice(1, 4), user: false },
-  { id: "d4", author: "小满 · 6小时前", subtitle: "住同一片，却从没聊过天", tags: ["附近", "周末", "散步"], title: "周末想找同小区附近的人，一起散步遛狗", copy: "住得近，却从没好好说过话。想先从散步开始认识。", image: "/pages/index/images/posters/need-d4.jpg", resonance: 33, commentsCount: 12, response: "散步局已有3人感兴趣", similar: true, stats: "33人共鸣 · 12条评论", comments: needCommentsPool.slice(3, 6), user: false },
-  { id: "d5", author: "圆圆 · 昨天", subtitle: "怕尴尬、想慢慢来", tags: ["怕尴尬", "少人数"], title: "第一次见面能不能不交换微信", copy: "先认识，不急着留联系方式，舒服了再交换。", image: "/pages/index/images/posters/need-d5.jpg", resonance: 51, commentsCount: 20, response: "低压力小桌局回应中", similar: true, stats: "51人共鸣 · 20条评论", comments: needCommentsPool.slice(0, 3), user: false },
-  { id: "d6", author: "阿May · 今天", subtitle: "喜欢看展、慢节奏", tags: ["看展", "文艺", "轻社交"], title: "想找人一起看展，然后随便聊聊", copy: "看完展不用硬聊，舒服就好。", image: "/pages/index/images/posters/need-d6.jpg", resonance: 17, commentsCount: 5, response: "看展局已有2人报名", similar: false, stats: "17人共鸣 · 5条评论", comments: needCommentsPool.slice(2, 5), user: false }
+  { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: demoComments(8), user: false },
+  { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: demoComments(8), user: false },
+  { id: "d3", author: "阿南 · 3天前", subtitle: "想找到能认真聊天的同频朋友", tags: ["deep talk", "价值观"], title: "想找能聊价值观的人，而不是只聊工作", copy: "6个人的小型夜谈，可能比一场大活动更适合认真认识。", image: "/pages/index/images/posters/need-d3.jpg", resonance: 28, commentsCount: 8, response: "深度对谈预活动收集中", similar: false, stats: "28人共鸣 · 8条评论", comments: demoComments(8), user: false },
+  { id: "d4", author: "小满 · 6小时前", subtitle: "住同一片，却从没聊过天", tags: ["附近", "周末", "散步"], title: "周末想找同小区附近的人，一起散步遛狗", copy: "住得近，却从没好好说过话。想先从散步开始认识。", image: "/pages/index/images/posters/need-d4.jpg", resonance: 33, commentsCount: 12, response: "散步局已有3人感兴趣", similar: true, stats: "33人共鸣 · 12条评论", comments: demoComments(8), user: false },
+  { id: "d5", author: "圆圆 · 昨天", subtitle: "怕尴尬、想慢慢来", tags: ["怕尴尬", "少人数"], title: "第一次见面能不能不交换微信", copy: "先认识，不急着留联系方式，舒服了再交换。", image: "/pages/index/images/posters/need-d5.jpg", resonance: 51, commentsCount: 20, response: "低压力小桌局回应中", similar: true, stats: "51人共鸣 · 20条评论", comments: demoComments(8), user: false },
+  { id: "d6", author: "阿May · 今天", subtitle: "喜欢看展、慢节奏", tags: ["看展", "文艺", "轻社交"], title: "想找人一起看展，然后随便聊聊", copy: "看完展不用硬聊，舒服就好。", image: "/pages/index/images/posters/need-d6.jpg", resonance: 17, commentsCount: 5, response: "看展局已有2人报名", similar: false, stats: "17人共鸣 · 5条评论", comments: demoComments(8), user: false }
 ]
 
 const recorderManager = wx.getRecorderManager()
