@@ -504,6 +504,7 @@ Page({
     demandComment: "",
     demandCommentsExpanded: false,
     demandVisibleComments: [],
+    paperPlaneSrc: "",
     demandVoiceText: "",
     myNeedDraft: "",
     myNeedTitle: "",
@@ -560,6 +561,7 @@ Page({
   },
 
   onLoad(options = {}) {
+    this.initPaperPlane()
     const saved = wx.getStorageSync("qiahaoDraft") || {}
     const rawEntry = saved.entryAnswers && typeof saved.entryAnswers === "object" ? saved.entryAnswers : {}
     const entryAnswers = {
@@ -683,6 +685,32 @@ Page({
     this.refreshNeeds()
     if (options.activity) {
       this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
+    }
+  },
+
+  initPaperPlane() {
+    try {
+      const canvas = wx.createOffscreenCanvas({ type: "2d", width: 36, height: 36 })
+      const ctx = canvas.getContext("2d")
+      ctx.fillStyle = "#ffffff"
+      ctx.beginPath()
+      ctx.moveTo(32, 5)
+      ctx.lineTo(35, 17)
+      ctx.lineTo(15, 20)
+      ctx.lineTo(4, 19)
+      ctx.closePath()
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(32, 5)
+      ctx.lineTo(13, 29)
+      ctx.lineTo(15, 20)
+      ctx.strokeStyle = "#ffffff"
+      ctx.lineWidth = 1.6
+      ctx.stroke()
+      const url = canvas.toDataURL ? canvas.toDataURL("image/png") : ""
+      if (url) this.setData({ paperPlaneSrc: url })
+    } catch (e) {
+      // 忽略，保留字符兜底
     }
   },
 
