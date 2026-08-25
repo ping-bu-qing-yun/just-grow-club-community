@@ -1626,41 +1626,64 @@ Page({
       const canvas = wx.createOffscreenCanvas({ type: "2d", width: 300, height: 300 })
       const ctx = canvas.getContext("2d")
       const palettes = [
-        ["#6f9fc0", "#eef5f9"], ["#d98a8a", "#fdf1ee"], ["#8b7fb8", "#f4f0fa"],
-        ["#7fae7f", "#eef7ee"], ["#d9a05b", "#fdf5e8"], ["#5f7f5e", "#edf4ed"],
-        ["#c48aa0", "#fbf0f4"], ["#7f9a9b", "#eef4f4"]
+        { sky: ["#e8b4a0", "#fbe3d0"], moon: "#fff7ee", hill1: "#c98d7c", hill2: "#b37a6b", grass: "#8fae88" },
+        { sky: ["#3b4a63", "#8ba3c7"], moon: "#fff8e1", hill1: "#2f3c52", hill2: "#273347", grass: "#46614f" },
+        { sky: ["#f2d8a0", "#fdf3dc"], moon: "#ffd98a", hill1: "#c7a86a", hill2: "#ad8f57", grass: "#8fa86f" },
+        { sky: ["#9cc3a8", "#e7f2e6"], moon: "#fffdf6", hill1: "#7ba284", hill2: "#68906f", grass: "#5f8a67" },
+        { sky: ["#a99ac4", "#e8e2f2"], moon: "#f4eefc", hill1: "#8a7ba5", hill2: "#776a91", grass: "#6e8a76" },
+        { sky: ["#d99aa8", "#fbe9ec"], moon: "#fffdfd", hill1: "#c07f8e", hill2: "#a96d7c", grass: "#7f9b80" }
       ]
       const p = palettes[Math.floor(Math.random() * palettes.length)]
+      const moonX = 80 + Math.random() * 130
+      const moonY = 70 + Math.random() * 60
+      const moonR = 34 + Math.random() * 20
+      // 天空渐变
       const grad = ctx.createLinearGradient(0, 0, 300, 300)
-      grad.addColorStop(0, p[0])
-      grad.addColorStop(1, p[1])
+      grad.addColorStop(0, p.sky[0])
+      grad.addColorStop(1, p.sky[1])
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, 300, 300)
-      // 大圆（太阳/月亮），位置随机
-      ctx.fillStyle = "rgba(255,255,255,.28)"
+      // 月亮光晕
+      const halo = ctx.createRadialGradient(moonX, moonY, moonR * 0.4, moonX, moonY, moonR * 2.4)
+      halo.addColorStop(0, "rgba(255,255,255,.45)")
+      halo.addColorStop(1, "rgba(255,255,255,0)")
+      ctx.fillStyle = halo
       ctx.beginPath()
-      ctx.arc(60 + Math.random() * 150, 50 + Math.random() * 90, 34 + Math.random() * 28, 0, Math.PI * 2)
+      ctx.arc(moonX, moonY, moonR * 2.4, 0, Math.PI * 2)
       ctx.fill()
-      // 两座山
-      ctx.fillStyle = "rgba(255,255,255,.16)"
+      // 月亮
+      ctx.fillStyle = p.moon
+      ctx.beginPath()
+      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2)
+      ctx.fill()
+      // 远山（两层）
+      ctx.fillStyle = p.hill1
       ctx.beginPath()
       ctx.moveTo(0, 300)
-      ctx.lineTo(90 + Math.random() * 60, 120 + Math.random() * 70)
-      ctx.lineTo(210 + Math.random() * 60, 300)
+      ctx.lineTo(70 + Math.random() * 60, 130 + Math.random() * 70)
+      ctx.lineTo(180 + Math.random() * 50, 300)
       ctx.closePath()
       ctx.fill()
-      ctx.fillStyle = "rgba(255,255,255,.12)"
+      ctx.fillStyle = p.hill2
       ctx.beginPath()
-      ctx.moveTo(140, 300)
-      ctx.lineTo(230 + Math.random() * 60, 80 + Math.random() * 60)
+      ctx.moveTo(130, 300)
+      ctx.lineTo(225 + Math.random() * 55, 90 + Math.random() * 60)
       ctx.lineTo(300, 300)
       ctx.closePath()
       ctx.fill()
-      // 点缀小圆
-      ctx.fillStyle = "rgba(255,255,255,.35)"
-      for (let i = 0; i < 5; i++) {
+      // 前景草地
+      ctx.fillStyle = p.grass
+      ctx.beginPath()
+      ctx.moveTo(0, 300)
+      ctx.quadraticCurveTo(60, 235 + Math.random() * 25, 150, 300)
+      ctx.quadraticCurveTo(230, 240 + Math.random() * 25, 300, 300)
+      ctx.closePath()
+      ctx.fill()
+      // 星光
+      ctx.fillStyle = "rgba(255,255,255,.55)"
+      for (let i = 0; i < 7; i++) {
         ctx.beginPath()
-        ctx.arc(20 + Math.random() * 260, 20 + Math.random() * 160, 2 + Math.random() * 4, 0, Math.PI * 2)
+        ctx.arc(20 + Math.random() * 260, 15 + Math.random() * 120, 1.5 + Math.random() * 3, 0, Math.PI * 2)
         ctx.fill()
       }
       const dataUrl = canvas.toDataURL ? canvas.toDataURL("image/png") : ""
