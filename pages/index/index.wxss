@@ -2297,7 +2297,7 @@ button::after {
   color: #3f6b57;
   border-radius: 18rpx;
   min-height: 56rpx;
-  padding: 0 18rpx;
+  padding: 0 8rpx;
   font-size: 20rpx;
   font-weight: 900;
   display: flex;
