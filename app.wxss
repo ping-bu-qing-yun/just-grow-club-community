@@ -17,6 +17,7 @@ button {
   color: inherit;
   font: inherit;
   line-height: 1;
+  width: auto;
 }
 
 button::after {
