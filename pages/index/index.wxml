@@ -488,7 +488,7 @@
           <view class="need-openers">
             <button wx:for="{{needOpeners}}" wx:key="*this" class="need-opener" data-opener="{{item}}" bindtap="tapNeedOpener">{{item}}</button>
           </view>
-          <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
+          <textarea class="need-publish-editor" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" adjust-position="{{false}}" maxlength="60" placeholder="想遇见＿＿，一起＿＿" />
           <view class="need-frag-label">心动碎片（可选）</view>
           <view class="need-frag-row">
             <button wx:for="{{needFragScene}}" wx:key="*this" class="need-frag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
@@ -575,7 +575,7 @@
       </view>
       <view class="demand-composer-sticky">
         <view class="sheet-section-title">留下你的评论</view>
-        <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" maxlength="300" placeholder="写下一句你的想法" />
+        <textarea class="demand-editor" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" adjust-position="{{false}}" maxlength="300" placeholder="写下一句你的想法" />
         <view class="sheet-actions">
           <button class="tiny-btn primary" bindtap="addDemandComment">发布评论</button>
         </view>

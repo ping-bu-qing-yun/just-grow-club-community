@@ -370,6 +370,7 @@ const recorderManager = wx.getRecorderManager()
 let recordTimer = null
 let innerAudioContext = null
 let cancelRecording = false
+const isIOS = (wx.getSystemInfoSync().platform || "").toLowerCase() === "ios"
 
 Page({
   data: {
@@ -1383,7 +1384,8 @@ Page({
   },
 
   onDemandKeyboardChange(e) {
-    this.setData({ demandKeyboardHeight: (e.detail && e.detail.height) || 0 })
+    const h = (e.detail && e.detail.height) || 0
+    this.setData({ demandKeyboardHeight: isIOS ? 0 : h })
   },
 
   updateNeedDraft(e) {
@@ -1400,7 +1402,8 @@ Page({
   },
 
   onNeedKeyboardChange(e) {
-    this.setData({ needKeyboardHeight: (e.detail && e.detail.height) || 0 })
+    const h = (e.detail && e.detail.height) || 0
+    this.setData({ needKeyboardHeight: isIOS ? 0 : h })
   },
 
   tapNeedOpener(e) {

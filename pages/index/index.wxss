@@ -1542,8 +1542,8 @@ button::after {
   position: fixed;
   left: 0;
   right: 0;
+  top: 16vh;
   bottom: 0;
-  height: 84vh;
   background: #fdfcf8;
   border-radius: 32rpx 32rpx 0 0;
   animation: demandSheetUp .34s cubic-bezier(.2, 0, 0, 1);
