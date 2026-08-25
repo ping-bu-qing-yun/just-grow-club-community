@@ -3009,10 +3009,11 @@ button::after {
   background: #fff;
   color: #3f6b57;
   border-radius: 18rpx;
-  min-height: 56rpx;
-  padding: 0 8rpx;
-  font-size: 20rpx;
+  min-height: 40rpx;
+  padding: 0 14rpx;
+  font-size: 18rpx;
   font-weight: 900;
+  width: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3086,6 +3087,12 @@ button::after {
   grid-template-columns: 68rpx minmax(0, 1fr);
   gap: 18rpx;
   margin-bottom: 32rpx;
+  padding-bottom: 32rpx;
+  border-bottom: 1rpx solid rgba(26, 26, 46, .07);
+}
+
+.need-detail-comment-item:last-child {
+  border-bottom: 0;
 }
 
 .need-detail-comment-avatar {
@@ -3156,19 +3163,39 @@ button::after {
 .need-detail-composer-send {
   width: 84rpx;
   height: 84rpx;
-  background: #6f916c;
+  background: #ef554d;
   color: #fff;
   border: 0;
-  border-radius: 8rpx;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
+  font-size: 36rpx;
   padding: 0;
   box-sizing: border-box;
 }
 
 .need-detail-composer-send::after {
+  border: none;
+}
+
+.need-detail-comments-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+  width: 100%;
+  min-height: 72rpx;
+  margin-top: 16rpx;
+  border: 0;
+  border-radius: 20rpx;
+  background: #f5f3f1;
+  color: #5a5550;
+  font-size: 22rpx;
+  font-weight: 700;
+}
+
+.need-detail-comments-toggle::after {
   border: none;
 }
 

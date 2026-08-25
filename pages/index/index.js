@@ -498,6 +498,8 @@ Page({
     showDemandDetail: false,
     activeDemand: null,
     demandComment: "",
+    demandCommentsExpanded: false,
+    demandVisibleComments: [],
     demandVoiceText: "",
     myNeedDraft: "",
     myNeedTitle: "",
@@ -1462,7 +1464,19 @@ Page({
       response: responseActivity ? `主理人正在准备${responseActivity.title}` : (found.response || ""),
       responseActivity
     }
-    this.setData({ activeDemand, showDemandDetail: true, demandComment: "", demandKeyboardHeight: 0 })
+    this.setData({ activeDemand, showDemandDetail: true, demandComment: "", demandCommentsExpanded: false, demandKeyboardHeight: 0 })
+    this.refreshDemandComments()
+  },
+
+  refreshDemandComments() {
+    const comments = (this.data.activeDemand && this.data.activeDemand.comments) || []
+    const visible = this.data.demandCommentsExpanded ? comments : comments.slice(0, 5)
+    this.setData({ demandVisibleComments: visible })
+  },
+
+  toggleDemandComments() {
+    this.setData({ demandCommentsExpanded: !this.data.demandCommentsExpanded })
+    this.refreshDemandComments()
   },
 
   matchNeedActivity(need) {
@@ -1753,6 +1767,7 @@ Page({
     const updated = communityNeeds.find(item => item.id === id)
     this.setData({ demandComments: comments, communityNeeds, activeDemand: { ...this.data.activeDemand, comments, commentsCount: updated.commentsCount, stats: updated.stats }, demandComment: "" })
     this.refreshNeeds()
+    this.refreshDemandComments()
     this.persistDraft()
     wx.showToast({ title: "已发布评论", icon: "success" })
   },

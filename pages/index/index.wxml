@@ -577,7 +577,7 @@
           </view>
           <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有评论</view>
           <view wx:else class="need-detail-comments-list">
-            <view wx:for="{{activeDemand.comments}}" wx:key="text" class="need-detail-comment-item">
+            <view wx:for="{{demandVisibleComments}}" wx:key="text" class="need-detail-comment-item">
               <image wx:if="{{item.avatar}}" class="need-detail-comment-avatar" src="{{item.avatar}}" mode="aspectFill" />
               <view wx:else class="need-detail-comment-avatar need-detail-comment-avatar-initial">{{item.initial || '恰'}}</view>
               <view class="need-detail-comment-copy">
@@ -589,9 +589,10 @@
               </view>
             </view>
           </view>
+          <button wx:if="{{activeDemand.commentsCount > 5}}" class="need-detail-comments-toggle" bindtap="toggleDemandComments">{{demandCommentsExpanded ? '▲ 收起评论' : '💬 展开全部评论'}}</button>
           <view class="need-detail-composer">
             <textarea class="need-detail-composer-input" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
-            <button class="need-detail-composer-send" bindtap="addDemandComment">➤</button>
+            <button class="need-detail-composer-send" bindtap="addDemandComment">✈</button>
           </view>
         </view>
       </view>
