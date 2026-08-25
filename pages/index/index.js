@@ -357,6 +357,33 @@ const coverPool = [
   { id: "d6", name: "看展文艺", src: "/pages/index/images/posters/need-d6.jpg", keys: ["看展", "艺术", "电影", "文艺", "展"] }
 ]
 
+const needTopics = [
+  { cat: "哲学", color: "#8b7fb8", text: "如果人生是一本书，你希望现在翻到哪一章？", tags: ["#认真认识", "#同频"] },
+  { cat: "哲学", color: "#8b7fb8", text: "你觉得「自由」对你来说意味着什么？", tags: ["#自我探索", "#同频"] },
+  { cat: "哲学", color: "#8b7fb8", text: "你相信人和人之间真的有「同频」这件事吗？", tags: ["#同频", "#慢慢来"] },
+  { cat: "情感", color: "#d98a8a", text: "你上一次觉得「被人接住」，是什么时候？", tags: ["#被看见", "#认真认识"] },
+  { cat: "情感", color: "#d98a8a", text: "有没有一个人，让你想起时心里会变软？", tags: ["#情感", "#被看见"] },
+  { cat: "情感", color: "#d98a8a", text: "你觉得一段关系里，最珍贵的是什么？", tags: ["#关系", "#认真认识"] },
+  { cat: "自我探知", color: "#6f9fc0", text: "最近你对自己有什么新的发现？", tags: ["#自我探索", "#慢热"] },
+  { cat: "自我探知", color: "#6f9fc0", text: "如果完全不考虑别人怎么看，你最想成为什么样的人？", tags: ["#自我探索", "#被看见"] },
+  { cat: "自我探知", color: "#6f9fc0", text: "你最近一次为自己骄傲，是因为什么？", tags: ["#认真认识", "#生活感"] },
+  { cat: "生活感悟", color: "#7fae7f", text: "最近有没有一件小事，让你觉得生活还不错？", tags: ["#生活感", "#附近"] },
+  { cat: "生活感悟", color: "#7fae7f", text: "如果明天完全自由，你会怎么过？", tags: ["#周末", "#散步"] },
+  { cat: "生活感悟", color: "#7fae7f", text: "你希望生活里多点什么，少点什么？", tags: ["#生活感", "#轻松"] }
+]
+
+const needKeywordTags = [
+  { k: ["散步", "月亮", "晚霞", "遛狗", "走", "逛"], t: "#散步" },
+  { k: ["深聊", "价值观", "同频", "认真", "心事", "夜谈", "接住"], t: "#同频" },
+  { k: ["晚餐", "饭", "吃", "咖啡"], t: "#晚餐" },
+  { k: ["周末", "附近", "小区"], t: "#附近" },
+  { k: ["猫", "宠物"], t: "#养猫" },
+  { k: ["看展", "电影", "艺术"], t: "#看展" },
+  { k: ["慢慢", "不着急", "第一次", "慢热"], t: "#慢慢来" },
+  { k: ["尴尬", "紧张", "怕", "轻松", "低压力"], t: "#低压力" },
+  { k: ["被看见", "理解", "接住"], t: "#被看见" }
+]
+
 const defaultCommunityNeeds = [
   { id: "d1", author: "林 · 2小时前", subtitle: "正在寻找低压力的认识方式", tags: ["想认识靠谱的人", "少人数"], title: "不想尴尬交换微信，但想认真认识人", copy: "如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。", image: "/pages/index/images/posters/need-d1.jpg", resonance: 72, commentsCount: 38, response: "主理人正在准备低压力小桌局", similar: true, stats: "72人共鸣 · 38条评论", comments: needCommentsPool.slice(0, 3), user: false },
   { id: "d2", author: "Mei · 昨天", subtitle: "想重新感受到关系里的松弛", tags: ["关系困惑", "慢慢了解"], title: "不是不想恋爱，是越来越难进入关系", copy: "希望有一场聊“心动变难”的局，不急着定义关系。", image: "/pages/index/images/posters/need-d2.jpg", resonance: 45, commentsCount: 22, response: "关系主题预活动准备中", similar: false, stats: "45人共鸣 · 22条评论", comments: needCommentsPool.slice(2, 5), user: false },
@@ -473,10 +500,15 @@ Page({
     demandComment: "",
     demandVoiceText: "",
     myNeedDraft: "",
+    myNeedTitle: "",
+    needTopic: "最近有没有一件小事，让你觉得生活还不错？",
+    needTopicCat: "生活感悟",
+    needTopicColor: "#7fae7f",
+    needHint: "围绕这个话题说点什么，恰好会帮你整理成需求卡",
+    needTagOptions: [],
+    needManualTag: "",
+    canPublishNeed: false,
     showNeedComposer: false,
-    needOpeners: ["想遇见", "最近在找", "周末想", "有点希望"],
-    needFragScene: ["散步", "深夜", "周末", "晚霞", "雨天", "咖啡"],
-    needFragRelation: ["认真", "轻松", "同频", "慢慢来", "被看见", "这周能约"],
     selectedNeedFragMap: {},
     needCoverPreview: "",
     needCoverName: "",
@@ -1459,12 +1491,21 @@ Page({
   },
 
   updateNeedDraft(e) {
-    this.setData({ myNeedDraft: e.detail.value })
+    const content = e.detail.value
+    const hint = !content.trim()
+      ? "围绕这个话题说点什么，恰好会帮你整理成需求卡"
+      : content.trim().length < 4
+        ? "再多说一点，恰好更容易猜中你的心意"
+        : "根据你的回答，恰好帮你挑了这些话题，点一下可以带上"
+    this.setData({ myNeedDraft: content, needHint: hint, canPublishNeed: Boolean(content.trim() || this.data.myNeedTitle.trim()) })
+    this.refreshNeedTags()
     this.persistDraft()
   },
 
   openNeedComposer() {
-    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", needKeyboardHeight: 0 })
+    this.setData({ showNeedComposer: true, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", myNeedDraft: "", myNeedTitle: "", needManualTag: "", canPublishNeed: false, needKeyboardHeight: 0 })
+    this.pickNeedTopic()
+    this.refreshNeedTags()
   },
 
   cancelNeedComposer() {
@@ -1476,11 +1517,8 @@ Page({
     this.setData({ needKeyboardHeight: isIOS ? 0 : h })
   },
 
-  tapNeedOpener(e) {
-    const opener = e.currentTarget.dataset.opener
-    const draft = this.data.myNeedDraft || ""
-    if (draft.indexOf(opener) > -1) return
-    this.setData({ myNeedDraft: opener + draft })
+  updateNeedTitle(e) {
+    this.setData({ myNeedTitle: e.detail.value, canPublishNeed: Boolean(e.detail.value.trim() || this.data.myNeedDraft.trim()) })
   },
 
   toggleNeedFrag(e) {
@@ -1489,6 +1527,37 @@ Page({
     if (map[frag]) delete map[frag]
     else map[frag] = true
     this.setData({ selectedNeedFragMap: map })
+  },
+
+  pickNeedTopic() {
+    const topic = needTopics[Math.floor(Math.random() * needTopics.length)]
+    this.setData({ needTopic: topic.text, needTopicCat: topic.cat, needTopicColor: topic.color })
+    this.refreshNeedTags()
+  },
+
+  refreshNeedTags() {
+    const content = (this.data.myNeedDraft || "").toLowerCase()
+    const tags = []
+    const current = needTopics.find(t => t.text === this.data.needTopic)
+    if (current) current.tags.forEach(t => { if (tags.indexOf(t) === -1) tags.push(t) })
+    needKeywordTags.forEach(rule => {
+      if (rule.k.some(k => content.indexOf(k) > -1) && tags.indexOf(rule.t) === -1) tags.push(rule.t)
+    })
+    if (content.trim().length >= 4 && tags.length === 0) tags.push("#想认识", "#认真认识")
+    this.setData({ needTagOptions: tags.slice(0, 6) })
+  },
+
+  addNeedTag(e) {
+    const raw = (e.detail.value || "").trim()
+    if (!raw) return
+    const t = raw.indexOf("#") === 0 ? raw : "#" + raw
+    const map = { ...this.data.selectedNeedFragMap, [t]: true }
+    const options = this.data.needTagOptions.indexOf(t) === -1 ? [...this.data.needTagOptions, t] : this.data.needTagOptions
+    this.setData({ selectedNeedFragMap: map, needTagOptions: options, needManualTag: "" })
+  },
+
+  updateNeedManualTag(e) {
+    this.setData({ needManualTag: e.detail.value })
   },
 
   aiGenerateCover() {
@@ -1524,21 +1593,22 @@ Page({
   },
 
   publishNeed() {
-    const content = this.data.myNeedDraft.trim()
-    if (!content) {
-      wx.showToast({ title: "先写一句话吧", icon: "none" })
+    const title = (this.data.myNeedTitle || "").trim().slice(0, 14)
+    const content = (this.data.myNeedDraft || "").trim()
+    if (!title && !content) {
+      wx.showToast({ title: "先回答一下话题吧", icon: "none" })
       return
     }
     const id = `need-${Date.now()}`
     const frags = Object.keys(this.data.selectedNeedFragMap)
-    const subtitle = frags.filter(f => f !== "这周能约").slice(0, 2).join(" · ") || "刚刚发布的需求"
-    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: content.slice(0, 18), copy: content, image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "等待同频的人回应", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
-    const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
-    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "" })
+    const subtitle = this.data.needTopicCat || "刚刚发布的需求"
+    const newNeed = { id, author: "我 · 刚刚", subtitle, tags: frags, title: title || content.slice(0, 14), copy: content, question: this.data.needTopic || "", topic: this.data.needTopic || "", topicCat: this.data.needTopicCat || "", image: this.data.needCoverPreview || "/pages/index/images/posters/poster-lunch.jpg", resonance: 0, commentsCount: 0, response: "", similar: false, stats: "刚刚发布 · 等待更多人回应", comments: [], user: true }
+    const demandHistory = [{ id: `history-${Date.now()}`, title: title || content.slice(0, 14), date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
+    this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", myNeedTitle: "", showNeedComposer: false, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "", canPublishNeed: false })
     this.refreshNeeds()
     this.mergeBehaviorTags(frags)
     this.persistDraft()
-    wx.showToast({ title: frags.length ? "已发布，恰好记下了你的碎片" : "需求卡已发布", icon: "success" })
+    wx.showToast({ title: "已发布，小CC记下了", icon: "success" })
   },
 
   addDemandComment() {
