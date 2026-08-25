@@ -534,7 +534,7 @@
     </view>
     <view class="profile-promos">
       <button bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
-      <button class="orange" bindtap="go" data-view="square"><text class="promo-title">需求收藏</text><text class="promo-sub">查看收藏的需求</text></button>
+      <button class="orange" bindtap="go" data-view="savedNeeds"><text class="promo-title">需求收藏</text><text class="promo-sub">查看收藏的需求</text></button>
     </view>
     <view class="profile-stats">
       <view><text class="stat-num">{{registeredActivities.length}}</text><text class="stat-label">参与活动</text></view>
@@ -547,6 +547,28 @@
       <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
       <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
       <button bindtap="go" data-view="square"><text>我的需求</text><text>{{myNeedCount}} 张需求卡</text><text class="row-arrow">›</text></button>
+    </view>
+  </scroll-view>
+
+  <scroll-view wx:elif="{{view === 'savedNeeds'}}" scroll-y class="screen with-tab saved-needs-page">
+    <view class="subpage-header">
+      <button class="subpage-back" bindtap="back">‹</button>
+      <text>我收藏的需求</text>
+    </view>
+    <view wx:if="{{!savedNeedsList.length}}" class="saved-empty">
+      <text>还没有收藏的需求</text>
+      <button class="ghost-btn wide" bindtap="go" data-view="square">去需求广场看看</button>
+    </view>
+    <view wx:for="{{savedNeedsList}}" wx:key="id" class="saved-card" data-id="{{item.id}}" bindtap="openDemandDetail">
+      <image wx:if="{{item.image}}" class="saved-card-img" src="{{item.image}}" mode="aspectFill" />
+      <view class="saved-card-body">
+        <view class="saved-card-title">{{item.title}}</view>
+        <view class="saved-card-copy">{{item.copy}}</view>
+        <view class="club-tags">
+          <text wx:for="{{item.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
+        </view>
+        <view class="saved-card-foot">{{item.resonance + (resonatedNeedIds[item.id] ? 1 : 0)}} 人共鸣 · {{item.commentsCount}} 条评论</view>
+      </view>
     </view>
   </scroll-view>
 

@@ -464,6 +464,10 @@ Page({
     showReasonModal: false,
     showTab: false,
     reasonOptions: ["想看看来的人", "怕无效社交", "时间不合适", "地点有点远", "人数有顾虑", "话题没击中"],
+    behaviorTags: [],
+    dislikedActivityIds: {},
+    considerReasons: [],
+    savedNeedsList: [],
     showDemandDetail: false,
     activeDemand: null,
     demandComment: "",
@@ -594,6 +598,9 @@ Page({
       needAsked: Boolean(saved.needAsked),
       resonatedNeedIds: saved.resonatedNeedIds || {},
       savedNeedIds: saved.savedNeedIds || {},
+      behaviorTags: saved.behaviorTags || [],
+      dislikedActivityIds: saved.dislikedActivityIds || {},
+      considerReasons: saved.considerReasons || [],
       quickVoiceText: saved.quickVoiceText || "",
       quickVoiceDone: Boolean(saved.quickVoiceDone),
       qaAnswers: saved.qaAnswers || {},
@@ -706,11 +713,22 @@ Page({
     if (dims[2]) tags.push(dims[2].key)
     if (dims[3]) tags.push(dims[3].key)
     if (this.data.basicInfo.area) tags.push(this.data.basicInfo.area)
+    const seen = [];
+    [...tags, ...(this.data.behaviorTags || [])].forEach(t => { if (t && seen.indexOf(t) === -1) seen.push(t) })
     this.setData({
       homeCards: cards,
       homeSummary: summary,
-      homeTags: tags.slice(0, 3)
+      homeTags: seen.slice(0, 6)
     })
+  },
+
+  mergeBehaviorTags(tags) {
+    if (!tags || !tags.length) return
+    const merged = [...(this.data.behaviorTags || [])]
+    tags.forEach(t => { if (t && merged.indexOf(t) === -1) merged.push(t) })
+    this.setData({ behaviorTags: merged.slice(0, 8) })
+    this.prepareHome()
+    this.persistDraft()
   },
 
   tapCat() {
@@ -772,8 +790,11 @@ Page({
   toggleNeedResonance(e) {
     const id = e.currentTarget.dataset.id
     const map = { ...this.data.resonatedNeedIds }
+    const isOn = !map[id]
     if (map[id]) delete map[id]
     else map[id] = true
+    const need = this.data.communityNeeds.find(n => n.id === id)
+    if (isOn && need && need.tags) this.mergeBehaviorTags(need.tags)
     this.setData({ resonatedNeedIds: map })
     this.persistDraft()
   },
@@ -781,8 +802,11 @@ Page({
   toggleNeedSave(e) {
     const id = e.currentTarget.dataset.id
     const map = { ...this.data.savedNeedIds }
+    const isOn = !map[id]
     if (map[id]) delete map[id]
     else map[id] = true
+    const need = this.data.communityNeeds.find(n => n.id === id)
+    if (isOn && need && need.tags) this.mergeBehaviorTags(need.tags)
     this.setData({ savedNeedIds: map })
     this.persistDraft()
   },
@@ -802,6 +826,11 @@ Page({
     if (view === "explore") this.computeExplore()
     if (view === "mine") this.refreshMine()
     if (view === "profile") this.generateProfile()
+    if (view === "savedNeeds") {
+      const savedIds = this.data.savedNeedIds || {}
+      const list = this.data.communityNeeds.filter(n => savedIds[n.id])
+      this.setData({ savedNeedsList: list })
+    }
     if (this.isTab(view)) {
       this.setView(view, { push: false, resetHistory: true })
       return
@@ -1275,6 +1304,9 @@ Page({
       needAsked: this.data.needAsked,
       resonatedNeedIds: this.data.resonatedNeedIds,
       savedNeedIds: this.data.savedNeedIds,
+      behaviorTags: this.data.behaviorTags,
+      dislikedActivityIds: this.data.dislikedActivityIds,
+      considerReasons: this.data.considerReasons,
       quickVoiceText: this.data.quickVoiceText,
       quickVoiceDone: this.data.quickVoiceDone,
       qaStarted: this.data.qaStarted,
@@ -1466,6 +1498,7 @@ Page({
     const demandHistory = [{ id: `history-${Date.now()}`, title: content, date: "刚刚提出", status: "待探索", activity: "等待对应活动", tags: frags }, ...this.data.demandHistory]
     this.setData({ communityNeeds: [newNeed, ...this.data.communityNeeds], demandHistory, myNeedDraft: "", showNeedComposer: false, selectedNeedFragMap: {}, needCoverPreview: "", needCoverName: "" })
     this.refreshNeeds()
+    this.mergeBehaviorTags(frags)
     this.persistDraft()
     wx.showToast({ title: frags.length ? "已发布，恰好记下了你的碎片" : "需求卡已发布", icon: "success" })
   },
@@ -1660,17 +1693,22 @@ Page({
   },
 
   refreshRecommendations() {
-    this.setData({ recommendCards: baseCards })
+    const disliked = this.data.dislikedActivityIds || {}
+    const pool = [...baseCards, ...replacementCards].filter(c => !disliked[c.id])
+    const seen = []
+    pool.forEach(c => { if (seen.findIndex(x => x.id === c.id) === -1) seen.push(c) })
+    this.setData({ recommendCards: seen.slice(0, 3) })
   },
 
   dismissCard(e) {
     const id = e.currentTarget.dataset.id
-    const current = this.data.recommendCards.filter(card => card.id !== id)
-    const usedIds = new Set(current.map(card => card.id))
-    const next = replacementCards.find(card => !usedIds.has(card.id))
-    if (next) current.push(next)
-    this.setData({ recommendCards: current.slice(0, 3) })
-    wx.showToast({ title: "已换一张推荐", icon: "none" })
+    const disliked = { ...this.data.dislikedActivityIds, [id]: true }
+    const pool = [...baseCards, ...replacementCards].filter(c => !disliked[c.id])
+    const seen = []
+    pool.forEach(c => { if (seen.findIndex(x => x.id === c.id) === -1) seen.push(c) })
+    this.setData({ dislikedActivityIds: disliked, recommendCards: seen.slice(0, 3) })
+    this.persistDraft()
+    wx.showToast({ title: "已帮你减少这类推荐", icon: "none" })
   },
 
   openReason() {
@@ -1679,7 +1717,10 @@ Page({
 
   closeReason(e) {
     const reason = e.currentTarget.dataset.reason || "已收藏"
-    this.setData({ showReasonModal: false })
+    const reasons = [...(this.data.considerReasons || [])]
+    if (reason !== "已收藏" && reasons.indexOf(reason) === -1) reasons.push(reason)
+    this.setData({ showReasonModal: false, considerReasons: reasons.slice(0, 6) })
+    if (reason !== "已收藏") this.mergeBehaviorTags([reason])
     wx.showToast({ title: reason, icon: "none" })
   },
 

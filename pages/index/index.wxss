@@ -4199,6 +4199,113 @@ button::after {
   justify-content: center;
 }
 
+.subpage-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+}
+
+.subpage-header text {
+  font-size: 30rpx;
+  font-weight: 900;
+  color: #2f2a24;
+}
+
+.subpage-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #f3f1ef;
+  color: #416054;
+  font-size: 36rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.subpage-back::after {
+  border: none;
+}
+
+.saved-needs-page {
+  padding-bottom: 180rpx;
+}
+
+.saved-empty {
+  padding: 90rpx 0 30rpx;
+  text-align: center;
+  color: #a9a49a;
+  font-size: 26rpx;
+}
+
+.saved-empty .ghost-btn {
+  margin-top: 26rpx;
+}
+
+.saved-card {
+  display: flex;
+  gap: 18rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 20rpx;
+  margin-bottom: 18rpx;
+  box-shadow: 0 10rpx 24rpx rgba(63, 47, 38, .07);
+}
+
+.saved-card-img {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  background: #eef3ee;
+}
+
+.saved-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.saved-card-title {
+  font-size: 28rpx;
+  font-weight: 900;
+  color: #2f2a24;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.saved-card-copy {
+  margin-top: 8rpx;
+  color: #8a867c;
+  font-size: 22rpx;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.saved-card-body .club-tags {
+  margin-top: 10rpx;
+}
+
+.saved-card-foot {
+  margin-top: 12rpx;
+  color: #a9a49a;
+  font-size: 20rpx;
+}
+
 .trust-strip {
   display: flex;
   gap: 20rpx;
