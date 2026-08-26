@@ -1488,8 +1488,10 @@ Page({
     const id = e.currentTarget.dataset.id
     const found = this.data.communityNeeds.find(item => item.id === id) || this.data.communityNeeds[0]
     const responseActivity = this.matchNeedActivity(found)
+    const rawComments = (found.comments || []).map((c, i) => typeof c === "string" ? { id: `c-${i}`, text: c, author: "恰好用户", initial: "恰" } : c)
     const activeDemand = {
       ...found,
+      comments: rawComments,
       title: found.title,
       detail: found.copy || found.detail,
       stats: found.stats || `${found.resonance || 0}人共鸣 · ${found.commentsCount || 0}条评论`,
@@ -1747,7 +1749,9 @@ Page({
       success: (res) => {
         const file = res.tempFiles && res.tempFiles[0]
         if (!file) return
-        this.setData({ needCoverPreview: file.tempFilePath, needCoverName: "我的照片" })
+        this.saveImageLocal(file.tempFilePath, (path) => {
+          this.setData({ needCoverPreview: path, needCoverName: "我的照片" })
+        })
       },
       fail: (err) => {
         const msg = (err && err.errMsg) || ""
@@ -1759,6 +1763,18 @@ Page({
         wx.showToast({ title: "上传失败，请重试", icon: "none" })
       }
     })
+  },
+
+  saveImageLocal(tempPath, callback) {
+    try {
+      wx.getFileSystemManager().saveFile({
+        tempFilePath: tempPath,
+        success: (s) => callback(s.savedFilePath),
+        fail: () => callback(tempPath)
+      })
+    } catch (e) {
+      callback(tempPath)
+    }
   },
 
   publishNeed() {
@@ -1956,8 +1972,10 @@ Page({
       success: (res) => {
         const file = res.tempFiles && res.tempFiles[0]
         if (file && file.tempFilePath) {
-          this.setData({ avatarUrl: file.tempFilePath })
-          this.persistDraft()
+          this.saveImageLocal(file.tempFilePath, (path) => {
+            this.setData({ avatarUrl: path })
+            this.persistDraft()
+          })
         }
       }
     })
