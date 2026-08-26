@@ -14,6 +14,24 @@ button::after {
   background: #fdfcf8;
 }
 
+.intro-skip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(120rpx + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  font-size: 24rpx;
+  color: #8b867b;
+  background: transparent;
+  padding: 16rpx 40rpx;
+  border: 1rpx solid #dcd6c9;
+  border-radius: 40rpx;
+  line-height: 1.4;
+}
+
+.intro-skip::after {
+  border: none;
+}
+
 .intro-cup {
   position: absolute;
   top: 42%;

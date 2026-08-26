@@ -4,6 +4,7 @@
     <view class="intro-line"></view>
     <view class="intro-cup intro-cup-right"></view>
     <view class="intro-word">恰好</view>
+    <button class="intro-skip" bindtap="skipIntro">轻触进入恰好</button>
   </view>
 
   <view wx:if="{{showAppHeader}}" class="app-header">

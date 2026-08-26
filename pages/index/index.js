@@ -702,6 +702,10 @@ Page({
     this.setData({ posterIndex: e.detail.current })
   },
 
+  skipIntro() {
+    this.setView("welcome", { push: false, resetHistory: true })
+  },
+
   toggleNeedOption(e) {
     this.setData({ myNeedSel: e.currentTarget.dataset.val })
   },
