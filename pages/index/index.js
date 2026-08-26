@@ -811,6 +811,7 @@ Page({
       success: (res) => {
         if (!res.code) {
           wx.hideLoading()
+          wx.showToast({ title: "微信未返回登录凭证，请重试", icon: "none" })
           fallbackDemo(true)
           return
         }
@@ -827,11 +828,13 @@ Page({
               wx.showToast({ title: "微信登录成功", icon: "success", duration: 2000 })
               goAfterLogin((result.user && result.user.nickname) || "")
             } else {
+              wx.showToast({ title: (result && result.msg) || "微信登录异常", icon: "none" })
               fallbackDemo(true)
             }
           },
-          fail: () => {
+          fail: (err) => {
             wx.hideLoading()
+            console.log("[login] 云函数调用失败", err)
             fallbackDemo(false)
           }
         })
