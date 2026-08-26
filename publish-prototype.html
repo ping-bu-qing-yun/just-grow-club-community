@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>发布需求卡 · 原型</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:#e9e4da;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;display:flex;justify-content:center;min-height:100vh;padding:20px 0}
+  .phone{width:390px;max-width:100%;background:#fff;min-height:844px;position:relative;overflow:hidden;box-shadow:0 0 40px rgba(63,47,38,.2);border-radius:34px}
+
+  /* ---------- 模拟需求页 ---------- */
+  .tabbar{position:absolute;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #f0e8da;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:5}
+  .tabbar button{flex:1;border:0;background:none;font-size:12px;color:#8a867c;font-weight:700;height:44px}
+  .tabbar button.on{color:#4d704f}
+  .needs{height:844px;padding:20px 16px 90px;overflow-y:auto}
+  .needs h1{font-size:22px;font-weight:900;margin-bottom:6px}
+  .needs .sub{color:#8a867c;font-size:12px;margin-bottom:18px}
+  .need-card{display:flex;gap:12px;background:#fdfcf8;border:1px solid #ece7dc;border-radius:16px;padding:12px;margin-bottom:12px}
+  .need-card img{width:76px;height:76px;border-radius:10px;object-fit:cover;background:#eef3ee;flex:none}
+  .need-card .body{flex:1;min-width:0}
+  .need-card .t{font-size:14px;font-weight:850;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4}
+  .need-card .c{font-size:11px;color:#8a867c;margin-top:5px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .need-card .tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+  .need-card .tags span{font-size:9px;color:#416054;background:#eff5f1;padding:3px 8px;border-radius:99px;font-weight:700}
+  .need-card .acts{display:flex;justify-content:space-between;border-top:1px solid #f2eee7;margin-top:10px;padding-top:8px;font-size:10px;color:#8a867c}
+  .need-card .acts span{display:inline-flex;align-items:center;gap:3px}
+  .need-card .acts .hot{color:#d97757}
+  .fab{position:absolute;right:18px;bottom:86px;width:44px;height:44px;border-radius:50%;background:linear-gradient(145deg,#6f916c,#587b59);color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(45,72,52,.3);z-index:6;cursor:pointer;border:0}
+
+  /* ---------- 发布页（小红书式） ---------- */
+  .publish{position:absolute;left:0;right:0;top:0;bottom:0;background:#fff;z-index:20;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,0,0,1);display:flex;flex-direction:column}
+  .publish.open{transform:translateY(0)}
+  .pub-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f2eee7;flex-shrink:0;min-height:52px}
+  .pub-top .close{width:36px;height:36px;border:0;background:none;font-size:20px;color:#555;cursor:pointer}
+  .pub-top h2{font-size:15px;font-weight:900}
+  .pub-top .publish-btn{border:0;background:#f3f1ef;color:#8a867c;border-radius:18px;padding:7px 20px;font-size:13px;font-weight:800;cursor:pointer}
+  .pub-top .publish-btn.on{background:linear-gradient(145deg,#6f916c,#587b59);color:#fff}
+
+  /* ---------- 需求卡详情（含话题卡） ---------- */
+  .detail{position:absolute;left:0;right:0;top:0;bottom:0;background:#fdfcf8;z-index:25;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,0,0,1);display:flex;flex-direction:column}
+  .detail.open{transform:translateX(0)}
+  .detail-top{display:flex;align-items:center;padding:8px 8px;border-bottom:1px solid #f2eee7;flex-shrink:0;min-height:48px}
+  .detail-top button{width:44px;height:44px;border:0;background:none;font-size:28px;color:#4a6b4a;cursor:pointer}
+  .detail-top span{flex:1;text-align:center;font-size:14px;font-weight:900;margin-right:44px}
+  .detail-scroll{flex:1;overflow-y:auto;padding-bottom:110px}
+  .detail-cover{width:100%;height:0;padding-top:75%;object-fit:cover;display:block;background:#f4f1ea}
+  .detail-body{padding:18px 16px}
+  .detail-topic{background:linear-gradient(135deg,#f4faf5,#fff6ee);border:1px solid rgba(95,127,94,.2);border-radius:12px;padding:12px;font-size:12px;color:#5f7f5e;line-height:1.6}
+  .detail-topic b{display:block;color:#d97757;font-size:10px;font-weight:800;margin-bottom:4px}
+  .detail-title{font-size:19px;font-weight:900;color:#2f2a24;line-height:1.35;margin-top:14px}
+  .detail-copy{font-size:13px;color:#55504a;line-height:1.8;margin-top:8px}
+  .detail-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #f2eee7;margin-top:18px;padding-top:14px;text-align:center}
+  .detail-stats b{display:block;font-size:18px;font-weight:900;color:#2f2a24}
+  .detail-stats small{font-size:9px;color:#8a867c}
+  .detail-comments{border-top:1px solid #f2eee7;margin-top:18px;padding-top:14px}
+  .detail-comments .ch{display:flex;justify-content:space-between;font-size:13px;font-weight:900}
+  .detail-comments .ch small{color:#8a867c;font-weight:400;font-size:11px}
+  .detail-comments .empty{color:#a9a49a;font-size:12px;text-align:center;padding:22px 0}
+  .detail-actions{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #f2eee7;z-index:26}
+  .detail-actions button{height:42px;border:0;border-radius:21px;font-size:13px;font-weight:800;cursor:pointer}
+  .detail-actions .res{background:linear-gradient(145deg,#6f916c,#587b59);color:#fff}
+  .detail-actions .save{background:#f3f1ef;color:#667068}
+
+  .pub-body{flex:1;overflow-y:auto;padding:16px}
+  .pub-main{display:flex;gap:14px;align-items:flex-start}
+  .pub-cover{width:150px;flex-shrink:0}
+  .cover-box{width:150px;height:190px;border-radius:12px;background:#f6f4f0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:1px dashed #d9d2c8;overflow:hidden;position:relative}
+  .cover-box img{width:100%;height:100%;object-fit:cover}
+  .cover-box .plus{font-size:30px;color:#b5afa6;font-weight:300}
+  .cover-box .hint{font-size:11px;color:#b5afa6}
+  .cover-actions{display:flex;gap:8px;margin-top:8px}
+  .cover-actions button{flex:1;height:30px;border-radius:15px;border:1px solid #e0d9cf;background:#fff;color:#5f7f5e;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;padding:0 4px}
+  .pub-editor{flex:1;min-width:0}
+  .topic-card{background:linear-gradient(135deg,#f4faf5,#fff6ee);border:1px solid rgba(95,127,94,.2);border-radius:12px;padding:12px;margin-bottom:12px}
+  .topic-card .topic-head{display:flex;align-items:center;justify-content:space-between}
+  .topic-card .topic-cat{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;color:#5f7f5e;flex:none}
+  .topic-card .topic-cat i{width:6px;height:6px;border-radius:50%}
+  .topic-card .topic-switch{border:0;background:none;color:#8a867c;font-size:10px;cursor:pointer;display:flex;align-items:center;gap:3px;flex:none}
+  .topic-card .topic-text{font-size:13px;font-weight:850;color:#2f2a24;line-height:1.5;margin-top:8px;overflow-wrap:anywhere;word-break:break-word}
+  .topic-card .topic-sub{font-size:10px;color:#b5afa6;margin-top:6px}
+  .title-input{width:100%;border:0;border-bottom:1px solid #eee8df;outline:none;font-size:15px;font-weight:850;color:#2f2a24;padding:4px 0 8px;background:transparent}
+  .title-input::placeholder{color:#c3bdb4;font-weight:400;font-size:13px}
+  .pub-editor textarea{width:100%;min-height:150px;border:0;outline:none;font-size:15px;line-height:1.6;resize:none;color:#2f2a24;font-family:inherit;display:block}
+  .pub-editor textarea::placeholder{color:#c3bdb4}
+  .char-count{text-align:right;color:#c3bdb4;font-size:11px;margin-top:2px}
+
+  .hint-line{display:flex;align-items:flex-start;gap:8px;margin-top:10px;color:#8a867c;font-size:12px;line-height:1.5}
+  .hint-line .dot{width:4px;height:4px;border-radius:50%;background:#d97757}
+  .hint-line .dot{flex:none;margin-top:6px}
+
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .tag{display:inline-flex;align-items:center;gap:4px;background:#f3f1ef;border-radius:16px;padding:6px 12px;font-size:12px;color:#667068;cursor:pointer;border:1px solid transparent;white-space:nowrap}
+  .tag.on{background:#e8f4ed;color:#21644e;border-color:rgba(95,127,94,.4)}
+  .tag .x{color:#b0aaa4;font-size:10px}
+  .tag .x:hover{color:#667068}
+  .add-tag{display:inline-flex;align-items:center;background:#fff;border:1px dashed #d9d2c8;border-radius:16px;padding:5px 12px;font-size:12px;color:#b5afa6;cursor:pointer}
+  .add-tag input{width:64px;border:0;outline:none;font-size:12px;color:#2f2a24;background:transparent}
+
+  .pub-foot{border-top:1px solid #f2eee7;padding:12px 16px calc(12px + env(safe-area-inset-bottom));color:#b5afa6;font-size:11px;flex-shrink:0}
+
+  .toast{position:absolute;left:50%;top:42%;transform:translateX(-50%);background:rgba(47,42,36,.92);color:#fff;font-size:13px;padding:10px 18px;border-radius:99px;z-index:30;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+  <div class="phone">
+    <!-- 模拟需求页 -->
+    <div class="needs">
+      <h1>需求广场</h1>
+      <div class="sub">说出你的关系所想，被同频的人接住</div>
+      <div class="need-card" onclick="openDetail(this)" data-topic="你上一次觉得「被人接住」，是什么时候？"><img src="./pages/index/images/posters/need-d1.jpg" alt="" /><div class="body"><div class="t">不想尴尬交换微信，但想认真认识人</div><div class="c">如果有一个中间场域，我会更愿意出来。先轻松认识，不急着定义关系。</div><div class="tags"><span>#低压力</span><span>#少人数</span></div><div class="acts"><span>我也有 <b class="hot">72</b></span><span>评论 38</span><span>收藏</span></div></div></div>
+      <div class="need-card" onclick="openDetail(this)" data-topic="周末想找同小区附近的人，一起散步遛狗"><img src="./pages/index/images/posters/need-d4.jpg" alt="" /><div class="body"><div class="t">周末想找同小区附近的人，一起散步遛狗</div><div class="c">住得近，却从没好好说过话。想先从散步开始认识。</div><div class="tags"><span>#附近</span><span>#散步</span></div><div class="acts"><span>我也有 <b class="hot">33</b></span><span>评论 12</span><span>收藏</span></div></div></div>
+    </div>
+    <button class="fab" onclick="openPublish()">+</button>
+    <div class="tabbar"><button class="on">专属</button><button>发现</button><button>需求</button><button>我的</button></div>
+
+    <!-- 发布页 -->
+    <div class="publish" id="publish">
+      <div class="pub-top">
+        <button class="close" onclick="closePublish()">×</button>
+        <h2>发布需求卡</h2>
+        <button class="publish-btn" id="pubBtn" onclick="publish()">发布</button>
+      </div>
+      <div class="pub-body">
+        <div class="pub-main">
+          <div class="pub-cover">
+            <div class="cover-box" id="coverBox" onclick="genCover()">
+              <span class="plus" id="coverPlus">＋</span>
+              <span class="hint" id="coverHint">让恰好生成 / 上传照片</span>
+            </div>
+            <div class="cover-actions">
+              <button onclick="genCover()">让恰好生成</button>
+              <button onclick="uploadCover()">上传</button>
+            </div>
+          </div>
+          <div class="pub-editor">
+            <div class="topic-card">
+              <div class="topic-head">
+                <span class="topic-cat"><i></i><span id="topicCat">生活感悟</span></span>
+                <button class="topic-switch" onclick="pickTopic()">换一个 ↻</button>
+              </div>
+              <div class="topic-text" id="topicText">最近有没有一件小事，让你觉得生活还不错？</div>
+              <div class="topic-sub">先回答这个话题，恰好会帮你整理成需求卡</div>
+            </div>
+            <input class="title-input" id="titleInput" maxlength="14" placeholder="给你的回答起个标题（最多14字）" oninput="onInput()" />
+            <textarea id="editor" maxlength="200" placeholder="围绕这个话题说点什么…" oninput="onInput()"></textarea>
+            <div class="char-count"><span id="count">0</span>/200</div>
+          </div>
+        </div>
+        <div class="hint-line"><span class="dot"></span><span id="hintText">写一句想说的话，恰好会帮你整理成需求卡</span></div>
+        <div class="tags" id="tagArea"></div>
+        <div class="add-tag"><span>#</span><input id="tagInput" placeholder="添加话题" maxlength="8" onkeydown="onTagKey(event)" /></div>
+      </div>
+      <div class="pub-foot">发布后会出现在需求广场 · 小CC会根据内容为你匹配合适的活动</div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="detail-top"><button onclick="closeDetail()">‹</button><span>需求卡</span></div>
+      <div class="detail-scroll">
+        <img class="detail-cover" id="dCover" alt="" />
+        <div class="detail-body">
+          <div class="detail-topic"><b>小CC问</b><span id="dTopic"></span></div>
+          <div class="detail-title" id="dTitle"></div>
+          <div class="detail-copy" id="dCopy"></div>
+          <div class="detail-stats"><div><b id="dRes">0</b><small>人共鸣</small></div><div><b>0</b><small>条评论</small></div><div><b>0</b><small>场回应</small></div></div>
+          <div class="detail-comments">
+            <div class="ch"><span>大家怎么说</span><small>0 条</small></div>
+            <div class="empty">还没有评论</div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-actions"><button class="res" onclick="toast('已共鸣')">我也有</button><button class="save" onclick="toast('已收藏')">收藏</button></div>
+    </div>
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+  var covers = [
+    "./pages/index/images/posters/poster-walk.jpg",
+    "./pages/index/images/posters/poster-deep.jpg",
+    "./pages/index/images/posters/poster-dinner.jpg",
+    "./pages/index/images/posters/poster-lunch.jpg",
+    "./pages/index/images/posters/cat-stretch.png",
+    "./pages/index/images/posters/need-d2.jpg",
+    "./pages/index/images/posters/need-d6.jpg"
+  ]
+  var keywordTags = [
+    { k: ["散步", "月亮", "晚霞", "遛狗", "走", "逛"], t: "#散步" },
+    { k: ["深聊", "价值观", "同频", "认真", "心事", "夜谈"], t: "#同频" },
+    { k: ["晚餐", "饭", "吃", "咖啡"], t: "#晚餐" },
+    { k: ["周末", "附近", "小区"], t: "#附近" },
+    { k: ["猫", "宠物"], t: "#养猫" },
+    { k: ["看展", "电影", "艺术"], t: "#看展" },
+    { k: ["慢慢", "不着急", "第一次"], t: "#慢慢来" },
+    { k: ["尴尬", "紧张", "怕", "轻松"], t: "#低压力" }
+  ]
+  var selected = {}
+  var coverSrc = ""
+  var topics = [
+    { cat: "哲学", color: "#8b7fb8", text: "如果人生是一本书，你希望现在翻到哪一章？", tags: ["#认真认识", "#同频"] },
+    { cat: "哲学", color: "#8b7fb8", text: "你觉得「自由」对你来说意味着什么？", tags: ["#自我探索", "#同频"] },
+    { cat: "哲学", color: "#8b7fb8", text: "你相信人和人之间真的有「同频」这件事吗？", tags: ["#同频", "#慢慢来"] },
+    { cat: "情感", color: "#d98a8a", text: "你上一次觉得「被人接住」，是什么时候？", tags: ["#被看见", "#认真认识"] },
+    { cat: "情感", color: "#d98a8a", text: "有没有一个人，让你想起时心里会变软？", tags: ["#情感", "#被看见"] },
+    { cat: "情感", color: "#d98a8a", text: "你觉得一段关系里，最珍贵的是什么？", tags: ["#关系", "#认真认识"] },
+    { cat: "自我探知", color: "#6f9fc0", text: "最近你对自己有什么新的发现？", tags: ["#自我探索", "#慢热"] },
+    { cat: "自我探知", color: "#6f9fc0", text: "如果完全不考虑别人怎么看，你最想成为什么样的人？", tags: ["#自我探索", "#被看见"] },
+    { cat: "自我探知", color: "#6f9fc0", text: "你最近一次为自己骄傲，是因为什么？", tags: ["#认真认识", "#生活感"] },
+    { cat: "生活感悟", color: "#7fae7f", text: "最近有没有一件小事，让你觉得生活还不错？", tags: ["#生活感", "#附近"] },
+    { cat: "生活感悟", color: "#7fae7f", text: "如果明天完全自由，你会怎么过？", tags: ["#周末", "#散步"] },
+    { cat: "生活感悟", color: "#7fae7f", text: "你希望生活里多点什么，少点什么？", tags: ["#生活感", "#轻松"] }
+  ]
+  var currentTopic = null
+
+  function openPublish() {
+    pickTopic()
+    document.getElementById("publish").classList.add("open")
+    setTimeout(function () { document.getElementById("titleInput").focus() }, 320)
+  }
+  function closePublish() {
+    document.getElementById("publish").classList.remove("open")
+  }
+  function pickTopic() {
+    currentTopic = topics[Math.floor(Math.random() * topics.length)]
+    document.getElementById("topicCat").textContent = currentTopic.cat
+    document.getElementById("topicCat").previousElementSibling.style.background = currentTopic.color
+    document.getElementById("topicText").textContent = currentTopic.text
+    renderTags(contentText())
+  }
+  function contentText() { return document.getElementById("editor").value }
+  function onInput() {
+    var title = document.getElementById("titleInput").value
+    var v = contentText()
+    document.getElementById("count").textContent = v.length
+    renderTags(v)
+    updateHint(title, v)
+    updatePublishBtn(title, v)
+  }
+  function renderTags(v) {
+    var tagArea = document.getElementById("tagArea")
+    var matched = keywordTags.filter(function (r) { return r.k.some(function (k) { return v.indexOf(k) > -1 }) })
+    var tags = matched.map(function (r) { return r.t })
+    if (currentTopic) {
+      currentTopic.tags.forEach(function (t) { if (tags.indexOf(t) === -1) tags.push(t) })
+    }
+    if (v.length >= 4 && tags.length === 0) tags = ["#想认识", "#认真认识"]
+    tagArea.innerHTML = ""
+    tags.forEach(function (t) {
+      if (selected[t]) return
+      var el = document.createElement("span")
+      el.className = "tag"
+      el.textContent = t
+      el.onclick = function () { el.classList.toggle("on"); selected[t] = el.classList.contains("on") }
+      tagArea.appendChild(el)
+    })
+  }
+  function updateHint(title, v) {
+    var el = document.getElementById("hintText")
+    if (!v) el.textContent = "围绕这个话题说点什么，恰好会帮你整理成需求卡"
+    else if (v.length < 4) el.textContent = "再多说一点，恰好更容易猜中你的心意"
+    else el.textContent = "根据你的回答，恰好帮你挑了这些话题，点一下可以带上"
+  }
+  function updatePublishBtn(title, v) {
+    var btn = document.getElementById("pubBtn")
+    var has = (title.trim() || v.trim()).length > 0
+    btn.classList.toggle("on", has)
+  }
+  function onTagKey(e) {
+    if (e.key === "Enter") {
+      var input = document.getElementById("tagInput")
+      var t = input.value.trim()
+      if (!t) return
+      var el = document.createElement("span")
+      el.className = "tag on"
+      el.innerHTML = "#" + t + '<span class="x" onclick="removeTag(this)">×</span>'
+      el.onclick = function () { el.classList.toggle("on") }
+      document.getElementById("tagArea").appendChild(el)
+      selected["#" + t] = true
+      input.value = ""
+    }
+  }
+  function removeTag(x) { x.parentElement.remove() }
+  function genCover() {
+    var src = covers[Math.floor(Math.random() * covers.length)]
+    setCover(src)
+    toast("恰好按你的话挑了一张")
+  }
+  function uploadCover() {
+    var input = document.createElement("input")
+    input.type = "file"
+    input.accept = "image/*"
+    input.onchange = function () {
+      var f = input.files[0]
+      if (!f) return
+      var reader = new FileReader()
+      reader.onload = function () { setCover(reader.result); toast("已用你的照片作封面") }
+      reader.readAsDataURL(f)
+    }
+    input.click()
+  }
+  function setCover(src) {
+    coverSrc = src
+    var box = document.getElementById("coverBox")
+    box.innerHTML = '<img src="' + src + '" alt="" />'
+  }
+  function publish() {
+    var title = document.getElementById("titleInput").value.trim()
+    var content = document.getElementById("editor").value.trim()
+    if (!title && !content) { toast("先回答一下话题吧"); return }
+    if (title.length > 14) { title = title.slice(0, 14); toast("标题已精简为14字以内") }
+    var card = document.createElement("div")
+    card.className = "need-card"
+    card.setAttribute("data-topic", currentTopic ? currentTopic.text : "")
+    card.setAttribute("onclick", "openDetail(this)")
+    card.innerHTML = '<img src="' + (coverSrc || "./pages/index/images/posters/need-d3.jpg") + '" alt="" /><div class="body"><div class="t">' + (title || content.slice(0, 14)) + '</div><div class="c">' + (title ? content : "围绕话题说出的回答，恰好帮你整理成需求卡") + '</div><div class="tags"><span>#' + (currentTopic ? currentTopic.cat : "认真认识") + '</span><span>#被看见</span></div><div class="acts"><span>我也有 <b class="hot">0</b></span><span>评论 0</span><span>收藏</span></div></div>'
+    document.querySelector(".needs").insertBefore(card, document.querySelector(".needs .need-card"))
+    toast("已发布，小CC记下了")
+    setTimeout(closePublish, 900)
+  }
+  function openDetail(el) {
+    var img = el.querySelector("img").src
+    var title = el.querySelector(".t").textContent
+    var copy = el.querySelector(".c").textContent
+    var topic = el.getAttribute("data-topic") || ""
+    document.getElementById("dCover").src = img
+    document.getElementById("dTitle").textContent = title
+    document.getElementById("dCopy").textContent = copy
+    document.getElementById("dTopic").textContent = topic || "这张需求，正在被认真的朋友们看见"
+    document.getElementById("dTopic").parentElement.querySelector("b").textContent = topic ? "小CC问" : "大家正在说"
+    document.getElementById("detail").classList.add("open")
+  }
+  function closeDetail() {
+    document.getElementById("detail").classList.remove("open")
+  }
+  var toastTimer = null
+  function toast(msg) {
+    var t = document.getElementById("toast")
+    t.textContent = msg
+    t.classList.add("show")
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(function () { t.classList.remove("show") }, 1800)
+  }
+</script>
+</body>
+</html>
