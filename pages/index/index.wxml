@@ -592,10 +592,12 @@
           <button wx:if="{{activeDemand.commentsCount > 5}}" class="need-detail-comments-toggle" bindtap="toggleDemandComments">{{demandCommentsExpanded ? '▲ 收起评论' : '💬 展开全部评论'}}</button>
           <view class="need-detail-composer">
             <textarea class="need-detail-composer-input" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
-            <button class="need-detail-composer-send" bindtap="addDemandComment">
-              <image wx:if="{{paperPlaneSrc}}" class="send-plane-icon" src="{{paperPlaneSrc}}" mode="aspectFit" />
-              <text wx:else>✈</text>
-            </button>
+            <view class="need-detail-composer-foot">
+              <button class="need-detail-composer-send" bindtap="addDemandComment">
+                <image wx:if="{{paperPlaneSrc}}" class="send-plane-icon" src="{{paperPlaneSrc}}" mode="aspectFit" />
+                <text wx:else>✈</text>
+              </button>
+            </view>
           </view>
         </view>
       </view>

@@ -3141,14 +3141,11 @@ button::after {
 }
 
 .need-detail-composer {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 84rpx;
-  gap: 16rpx;
   margin-top: 34rpx;
-  align-items: flex-end;
 }
 
 .need-detail-composer-input {
+  width: 100%;
   border: 1rpx solid #e8e1da;
   min-height: 84rpx;
   max-height: 260rpx;
@@ -3158,6 +3155,12 @@ button::after {
   line-height: 1.45;
   background: #fff;
   box-sizing: border-box;
+}
+
+.need-detail-composer-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12rpx;
 }
 
 .need-detail-composer-send {
