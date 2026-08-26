@@ -6207,3 +6207,133 @@ button::after {
 .logout-btn::after {
   border: none;
 }
+
+/* ---------- 发布活动：四板块新排版 ---------- */
+.composer-section {
+  margin-bottom: 34rpx;
+}
+
+.composer-section-title {
+  font-size: 26rpx;
+  font-weight: 900;
+  color: #2f2a24;
+  letter-spacing: 1rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid #f0ece4;
+  margin-bottom: 24rpx;
+}
+
+.poster-upload {
+  position: relative;
+  width: 100%;
+  height: 300rpx;
+  border-radius: 20rpx;
+  background: #faf6ec;
+  border: 2rpx dashed #d9c9a3;
+  overflow: hidden;
+  margin-bottom: 26rpx;
+  box-sizing: border-box;
+}
+
+.poster-upload.has {
+  border-style: solid;
+}
+
+.poster-upload-img {
+  width: 100%;
+  height: 100%;
+}
+
+.poster-upload-plus {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.poster-upload-plus-icon {
+  font-size: 72rpx;
+  font-weight: 300;
+  color: #b5a57a;
+  line-height: 1;
+}
+
+.poster-upload-hint {
+  font-size: 25rpx;
+  color: #8a867c;
+}
+
+.poster-upload-edit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14rpx 0;
+  text-align: center;
+  font-size: 23rpx;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(47, 42, 36, .55);
+}
+
+.title-gold {
+  font-size: 34rpx;
+  font-weight: 850;
+  color: #8a6d2f;
+}
+
+.group-card {
+  background: #fffdf8;
+  border: 1rpx solid #eee5d3;
+  border-radius: 20rpx;
+  padding: 22rpx;
+  margin-bottom: 20rpx;
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 25rpx;
+  font-weight: 850;
+  color: #8a6d2f;
+  margin-bottom: 18rpx;
+}
+
+.group-del {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  background: #f3f1ef;
+  color: #a05a44;
+  font-size: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+}
+
+.group-del::after {
+  border: none;
+}
+
+.group-add {
+  width: 100%;
+  height: 84rpx;
+  border-radius: 20rpx;
+  border: 2rpx dashed #d9c9a3;
+  background: #fdfbf5;
+  color: #8a6d2f;
+  font-size: 26rpx;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group-add::after {
+  border: none;
+}

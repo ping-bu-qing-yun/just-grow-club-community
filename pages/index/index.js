@@ -300,6 +300,7 @@ function emptyActivityDraft() {
   return {
     title: "",
     subtitle: "",
+    category: "",
     dateRaw: "",
     date: "",
     weekday: "",
@@ -307,6 +308,9 @@ function emptyActivityDraft() {
     location: "",
     people: "",
     fee: "",
+    groups: [
+      { key: "g1", people: "", price: "" }
+    ],
     tags: [],
     tagMap: {},
     crowd: "",
@@ -497,6 +501,7 @@ Page({
     showActivityComposer: false,
     publishedActivities: [],
     activityDraft: emptyActivityDraft(),
+    categoryIndex: 0,
     activityPosterOptions,
     activityTagOptions
   },
@@ -504,6 +509,7 @@ Page({
   onLoad(options = {}) {
     this.initPaperPlane()
     const saved = wx.getStorageSync("qiahaoDraft") || {}
+    const isReturning = Boolean(saved.loggedIn) && Boolean(saved.openid)
     const rawEntry = saved.entryAnswers && typeof saved.entryAnswers === "object" ? saved.entryAnswers : {}
     const entryAnswers = {
       q1: rawEntry.q1 && typeof rawEntry.q1 === "object" ? rawEntry.q1 : {},
@@ -522,13 +528,6 @@ Page({
       q11: rawRel.q11 && typeof rawRel.q11 === "object" ? rawRel.q11 : {},
       q12: rawRel.q12 && typeof rawRel.q12 === "object" ? rawRel.q12 : {}
     }
-    this.introTimer = setTimeout(() => {
-      if (this.data.loggedIn && this.data.openid) {
-        this.enterHome()
-      } else if (!options.activity) {
-        this.setView("welcome", { push: false, resetHistory: true })
-      }
-    }, 1400)
     recorderManager.onStart(() => {
       this.setData({ recording: true, recordHint: "正在听你说，松开发送" })
     })
@@ -619,6 +618,12 @@ Page({
     this.refreshFeed()
     if (options.activity) {
       this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
+    } else if (isReturning) {
+      this.enterHome()
+    } else {
+      this.introTimer = setTimeout(() => {
+        this.setView("welcome", { push: false, resetHistory: true })
+      }, 1400)
     }
   },
 
@@ -1781,15 +1786,18 @@ Page({
   openActivityComposer() {
     const raw = this.tomorrowRaw()
     const fmt = this.formatActivityDate(raw)
+    const savedDraft = wx.getStorageSync("qiahaoActivityDraft") || {}
+    const hasDraft = Boolean(savedDraft.title || savedDraft.subtitle || savedDraft.location || savedDraft.category)
+    const draft = hasDraft ? savedDraft : { ...emptyActivityDraft(), dateRaw: raw, date: fmt.date, weekday: fmt.weekday }
+    if (!draft.groups || !draft.groups.length) draft.groups = [{ key: "g1", people: "", price: "" }]
     this.setData({
       showActivityComposer: true,
-      activityDraft: {
-        ...emptyActivityDraft(),
-        dateRaw: raw,
-        date: fmt.date,
-        weekday: fmt.weekday
-      }
+      activityDraft: draft,
+      categoryIndex: Math.max(0, activityTagOptions.indexOf(draft.category || ""))
     })
+    if (hasDraft) {
+      wx.showToast({ title: "已恢复上次草稿", icon: "none" })
+    }
   },
 
   closeActivityComposer() {
@@ -1814,6 +1822,51 @@ Page({
 
   pickActivityTime(e) {
     this.setData({ "activityDraft.time": e.detail.value })
+  },
+
+  pickActivityCategory(e) {
+    const category = activityTagOptions[Number(e.detail.value)] || ""
+    const tags = category ? [category] : []
+    const tagMap = category ? { [category]: true } : {}
+    this.setData({
+      categoryIndex: Number(e.detail.value) || 0,
+      "activityDraft.category": category,
+      "activityDraft.tags": tags,
+      "activityDraft.tagMap": tagMap
+    })
+  },
+
+  updateActivityGroup(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const field = e.currentTarget.dataset.field
+    const groups = this.data.activityDraft.groups.map((g, i) => i === index ? { ...g, [field]: e.detail.value } : g)
+    this.setData({ "activityDraft.groups": groups })
+  },
+
+  addActivityGroup() {
+    const groups = [...this.data.activityDraft.groups, { key: `g${Date.now()}-${this.data.activityDraft.groups.length}`, people: "", price: "" }]
+    if (groups.length > 4) {
+      wx.showToast({ title: "分组最多4个", icon: "none" })
+      return
+    }
+    this.setData({ "activityDraft.groups": groups })
+  },
+
+  removeActivityGroup(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const groups = this.data.activityDraft.groups.filter((_, i) => i !== index)
+    if (!groups.length) groups.push({ key: "g1", people: "", price: "" })
+    this.setData({ "activityDraft.groups": groups })
+  },
+
+  saveActivityDraft() {
+    const d = this.data.activityDraft
+    if (!d.title && !d.subtitle && !d.location && !d.category && !(d.groups || []).some(g => g.people || g.price)) {
+      wx.showToast({ title: "还没有可保存的内容", icon: "none" })
+      return
+    }
+    wx.setStorageSync("qiahaoActivityDraft", d)
+    wx.showToast({ title: "草稿已保存", icon: "success" })
   },
 
   toggleActivityTag(e) {
@@ -1923,14 +1976,17 @@ Page({
       wx.showToast({ title: "填一下活动地点", icon: "none" })
       return
     }
-    const tagTypeMap = {
+    const category = (d.category || "").trim()
+    const typeMap = {
       "低压力": "low", "少人数": "low", "晚餐": "low",
       "深聊": "deep", "价值观": "deep", "同频": "deep",
       "散步": "walk", "月亮": "walk",
       "工作坊": "workshop", "练习": "workshop",
       "午间": "lunch"
     }
-    const type = (d.tags || []).map(t => tagTypeMap[t]).filter(Boolean)[0] || "low"
+    const type = typeMap[category] || "low"
+    const groups = (d.groups || []).filter(g => (g.people || "").trim() || (g.price || "").trim())
+    const firstGroup = groups[0] || {}
     const schedule = (d.schedule || []).filter(s => (s.time || "").trim() || (s.title || "").trim())
     const activity = {
       id: `pub-${Date.now()}`,
@@ -1940,16 +1996,18 @@ Page({
       time: (d.time || "").trim(),
       title,
       subtitle: (d.subtitle || "").trim(),
+      category,
       tags: d.tags,
       coverClass: "",
       coverText: "",
       poster: d.poster || activityPosterOptions[0].src,
-      people: (d.people || "").trim() || "小局 · 待定",
-      fee: (d.fee || "").trim() || "待定",
+      people: (firstGroup.people || "").trim() || "小局 · 待定",
+      fee: (firstGroup.price || "").trim() || "待定",
+      groups,
       detail: (d.subtitle || "").trim(),
       location: (d.location || "").trim(),
       crowd: (d.crowd || "").trim() || "想认真认识、不想无效社交的人",
-      matchLabel: (d.tags || [])[0] || "恰好场",
+      matchLabel: category || "恰好场",
       schedule,
       slogan: (d.slogan || "").trim() || "",
       status: "招募中",
@@ -1962,6 +2020,7 @@ Page({
     })
     this.refreshFeed()
     this.persistDraft()
+    wx.removeStorageSync("qiahaoActivityDraft")
     wx.showToast({ title: "活动已发布", icon: "success" })
   },
 

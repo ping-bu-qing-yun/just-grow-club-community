@@ -499,84 +499,81 @@
     </view>
     <scroll-view scroll-y class="composer-scroll">
       <view class="composer-body">
-        <view class="form-group">
-          <view class="form-label">活动标题<text class="req">*</text></view>
-          <input class="form-input" value="{{activityDraft.title}}" data-field="title" bindinput="updateActivityDraftField" placeholder="比如：周五轻聊天晚餐局" maxlength="20" />
+        <!-- 第一板块：活动内容 -->
+        <view class="composer-section">
+          <view class="composer-section-title">活动内容</view>
+          <view class="poster-upload {{activityDraft.poster ? 'has' : ''}}" bindtap="uploadActivityPoster">
+            <image wx:if="{{activityDraft.poster}}" class="poster-upload-img" src="{{activityDraft.poster}}" mode="aspectFill" />
+            <view wx:else class="poster-upload-plus">
+              <text class="poster-upload-plus-icon">＋</text>
+              <text class="poster-upload-hint">添加优质图片更吸引人</text>
+            </view>
+            <view wx:if="{{activityDraft.poster}}" class="poster-upload-edit">＋ 更换图片</view>
+          </view>
+          <view class="form-group">
+            <view class="form-label">标题<text class="req">*</text></view>
+            <input class="form-input title-gold" value="{{activityDraft.title}}" data-field="title" bindinput="updateActivityDraftField" placeholder="比如：周五轻聊天晚餐局" maxlength="20" />
+          </view>
+          <view class="form-group">
+            <view class="form-label">活动介绍</view>
+            <textarea class="form-textarea" value="{{activityDraft.subtitle}}" data-field="subtitle" bindinput="updateActivityDraftField" placeholder="写写这场活动会怎么发生（长按可全选、复制）" maxlength="200" />
+          </view>
         </view>
-        <view class="form-group">
-          <view class="form-label">副标题（一句话介绍）</view>
-          <input class="form-input" value="{{activityDraft.subtitle}}" data-field="subtitle" bindinput="updateActivityDraftField" placeholder="比如：成熟活动 · 少人数 · 想认识靠谱的人" maxlength="30" />
-        </view>
-        <view class="form-group form-row">
-          <view class="form-half">
-            <view class="form-label">日期<text class="req">*</text></view>
-            <picker mode="date" value="{{activityDraft.dateRaw}}" bindchange="pickActivityDate">
-              <view class="form-picker">{{activityDraft.date}} {{activityDraft.weekday}}</view>
+
+        <!-- 第二板块：活动细节 -->
+        <view class="composer-section">
+          <view class="composer-section-title">活动细节</view>
+          <view class="form-group">
+            <view class="form-label">活动分类</view>
+            <picker mode="selector" range="{{activityTagOptions}}" value="{{categoryIndex}}" bindchange="pickActivityCategory">
+              <view class="form-picker">{{activityDraft.category || '请选择活动分类'}} ›</view>
             </picker>
           </view>
-          <view class="form-half">
-            <view class="form-label">开始时间<text class="req">*</text></view>
-            <picker mode="time" value="{{activityDraft.time}}" bindchange="pickActivityTime">
-              <view class="form-picker">{{activityDraft.time}}</view>
-            </picker>
-          </view>
-        </view>
-        <view class="form-group">
-          <view class="form-label">地点<text class="req">*</text></view>
-          <input class="form-input" value="{{activityDraft.location}}" data-field="location" bindinput="updateActivityDraftField" placeholder="比如：KIC / 大学路附近" maxlength="30" />
-        </view>
-        <view class="form-group form-row">
-          <view class="form-half">
-            <view class="form-label">人数</view>
-            <input class="form-input" value="{{activityDraft.people}}" data-field="people" bindinput="updateActivityDraftField" placeholder="6-8人 · 高同频" maxlength="20" />
-          </view>
-          <view class="form-half">
-            <view class="form-label">费用</view>
-            <input class="form-input" value="{{activityDraft.fee}}" data-field="fee" bindinput="updateActivityDraftField" placeholder="¥99 或 免费" maxlength="20" />
-          </view>
-        </view>
-        <view class="form-group">
-          <view class="form-label">活动标签（最多4个）</view>
-          <view class="form-chips">
-            <button wx:for="{{activityTagOptions}}" wx:key="*this" class="form-chip {{activityDraft.tagMap[item] ? 'on' : ''}}" data-tag="{{item}}" bindtap="toggleActivityTag">{{item}}</button>
-          </view>
-        </view>
-        <view class="form-group">
-          <view class="form-label">海报</view>
-          <view class="poster-options">
-            <view wx:for="{{activityPosterOptions}}" wx:key="id" class="poster-opt {{activityDraft.poster === item.src ? 'on' : ''}}" data-src="{{item.src}}" data-name="{{item.name}}" bindtap="pickActivityPoster">
-              <image class="poster-opt-img" src="{{item.src}}" mode="aspectFill" />
-              <text class="poster-opt-name">{{item.name}}</text>
+          <view class="form-group form-row">
+            <view class="form-half">
+              <view class="form-label">活动时间<text class="req">*</text></view>
+              <picker mode="date" value="{{activityDraft.dateRaw}}" bindchange="pickActivityDate">
+                <view class="form-picker">{{activityDraft.date}} {{activityDraft.weekday}}</view>
+              </picker>
             </view>
-            <view class="poster-opt {{activityDraft.posterName === '我的海报' ? 'on' : ''}}" bindtap="uploadActivityPoster">
-              <view class="poster-opt-img poster-opt-upload"><text>＋</text><text>上传</text></view>
-              <text class="poster-opt-name">我的海报</text>
+            <view class="form-half">
+              <view class="form-label">开始时间</view>
+              <picker mode="time" value="{{activityDraft.time}}" bindchange="pickActivityTime">
+                <view class="form-picker">{{activityDraft.time}}</view>
+              </picker>
             </view>
           </view>
-          <image wx:if="{{activityDraft.poster}}" class="poster-preview" src="{{activityDraft.poster}}" mode="aspectFit" />
-        </view>
-        <view class="form-group">
-          <view class="form-label">适合谁</view>
-          <textarea class="form-textarea" value="{{activityDraft.crowd}}" data-field="crowd" bindinput="updateActivityDraftField" placeholder="想认真认识、不想无效社交的人" maxlength="80" />
-        </view>
-        <view class="form-group">
-          <view class="form-label">活动流程</view>
-          <view wx:for="{{activityDraft.schedule}}" wx:key="key" class="schedule-step">
-            <input class="schedule-time" value="{{item.time}}" data-index="{{index}}" data-field="time" bindinput="updateActivityScheduleStep" placeholder="时间" maxlength="5" />
-            <input class="schedule-title" value="{{item.title}}" data-index="{{index}}" data-field="title" bindinput="updateActivityScheduleStep" placeholder="这个环节做什么" maxlength="24" />
-            <button class="schedule-del" data-index="{{index}}" bindtap="removeActivityScheduleStep">×</button>
+          <view class="form-group">
+            <view class="form-label">活动地点<text class="req">*</text></view>
+            <input class="form-input" value="{{activityDraft.location}}" data-field="location" bindinput="updateActivityDraftField" placeholder="比如：KIC / 大学路附近" maxlength="30" />
           </view>
-          <button class="schedule-add" bindtap="addActivityScheduleStep">＋ 加一步</button>
         </view>
-        <view class="form-group">
-          <view class="form-label">宣传语（用户会在活动详情看到）</view>
-          <textarea class="form-textarea" value="{{activityDraft.slogan}}" bindinput="updateActivitySlogan" placeholder="让恰好帮你生成，或自己写" maxlength="120" />
-          <button class="slogan-gen" bindtap="generateActivitySlogan">让恰好生成</button>
+
+        <!-- 第三板块：分组信息 -->
+        <view class="composer-section">
+          <view class="composer-section-title">分组信息</view>
+          <view wx:for="{{activityDraft.groups}}" wx:key="key" class="group-card">
+            <view class="group-head">
+              <text>第{{index + 1}}组报名</text>
+              <button wx:if="{{activityDraft.groups.length > 1}}" class="group-del" data-index="{{index}}" bindtap="removeActivityGroup">×</button>
+            </view>
+            <view class="form-row">
+              <view class="form-half">
+                <view class="form-label">活动人数</view>
+                <input class="form-input" value="{{item.people}}" data-index="{{index}}" data-field="people" bindinput="updateActivityGroup" placeholder="6-8人" maxlength="20" />
+              </view>
+              <view class="form-half">
+                <view class="form-label">活动价格</view>
+                <input class="form-input" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="updateActivityGroup" placeholder="¥99 或 免费" maxlength="20" />
+              </view>
+            </view>
+          </view>
+          <button class="group-add" bindtap="addActivityGroup">＋ 新增分组报名</button>
         </view>
       </view>
     </scroll-view>
     <view class="composer-bottom">
-      <button class="composer-cancel" bindtap="closeActivityComposer">取消</button>
+      <button class="composer-cancel" bindtap="saveActivityDraft">存草稿</button>
       <button class="composer-publish" bindtap="publishActivity">发布活动</button>
     </view>
   </view>
