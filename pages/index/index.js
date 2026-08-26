@@ -824,6 +824,7 @@ Page({
               this.setData({ openid: result.openid })
               getApp().globalData.openid = result.openid
               getApp().globalData.user = result.user || null
+              wx.showToast({ title: "微信登录成功", icon: "success", duration: 2000 })
               goAfterLogin((result.user && result.user.nickname) || "")
             } else {
               fallbackDemo(true)
