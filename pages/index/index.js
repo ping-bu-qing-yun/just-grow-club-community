@@ -286,6 +286,41 @@ const activityPosters = {
 
 const activityFee = { dinner: "¥99", ai: "¥89", walk: "免费", workshop: "¥129", lunch: "¥39" }
 
+// 小CC发布活动：可选海报与标签
+const activityPosterOptions = [
+  { id: "dinner", name: "晚餐", src: "/pages/index/images/posters/poster-dinner.jpg" },
+  { id: "ai", name: "深聊", src: "/pages/index/images/posters/poster-deep.jpg" },
+  { id: "walk", name: "散步", src: "/pages/index/images/posters/poster-walk.jpg" },
+  { id: "workshop", name: "工作坊", src: "/pages/index/images/posters/poster-workshop.jpg" },
+  { id: "lunch", name: "午间", src: "/pages/index/images/posters/poster-lunch.jpg" }
+]
+const activityTagOptions = ["低压力", "少人数", "深聊", "散步", "工作坊", "午间", "同频", "免费"]
+
+function emptyActivityDraft() {
+  return {
+    title: "",
+    subtitle: "",
+    dateRaw: "",
+    date: "",
+    weekday: "",
+    time: "19:30",
+    location: "",
+    people: "",
+    fee: "",
+    tags: [],
+    tagMap: {},
+    crowd: "",
+    poster: "",
+    posterName: "",
+    schedule: [
+      { key: "s1", time: "19:30", title: "到场 · 轻破冰，不做简历式自我介绍" },
+      { key: "s2", time: "20:10", title: "主题环节 · 低压力话题，自由交流" },
+      { key: "s3", time: "21:00", title: "收束 · 写下想继续认识谁、还顾虑什么" }
+    ],
+    slogan: ""
+  }
+}
+
 // 「听你们的」续场去处池：散场后推荐给用户，KIC 步行 10 分钟内。
 // energy: low=有点累 / mid=一般 / high=有能量；style: walk=慢热散步 / deep=深聊 / task=共同任务 / chat=边吃边聊
 // time: night=19:00 后散场 / day=白天散场。perk 为商户权益占位文案，正式上线前需小CC与商户确认。
@@ -441,7 +476,12 @@ Page({
     activeActivityRegistered: false,
     activityGroupJoined: false,
     afterPartySpots: [],
-    filteredActivities: []
+    filteredActivities: [],
+    showActivityComposer: false,
+    publishedActivities: [],
+    activityDraft: emptyActivityDraft(),
+    activityPosterOptions,
+    activityTagOptions
   },
 
   onLoad(options = {}) {
@@ -547,7 +587,8 @@ Page({
       qaExtraAnswered: saved.qaExtraAnswered || {},
       hostForm: saved.hostForm || this.data.hostForm,
       hostSubmitted: Boolean(saved.hostSubmitted),
-      registeredActivities: saved.registeredActivities || []
+      registeredActivities: saved.registeredActivities || [],
+      publishedActivities: saved.publishedActivities || []
     })
     this.setData({
       activeActivity: saved.activeActivity || this.data.activeActivity,
@@ -556,6 +597,7 @@ Page({
       filter: saved.filter || "all",
       filteredActivityFeed: this.filterActivities(saved.filter || "all")
     })
+    this.refreshFeed()
     if (options.activity) {
       this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
     }
@@ -575,8 +617,9 @@ Page({
     return this.data.tabs.includes(view)
   },
 
-  filterActivities(filter) {
-    return filter === "all" ? this.data.activityFeed : this.data.activityFeed.filter(item => item.type === filter)
+  filterActivities(filter, feed) {
+    const source = feed || this.data.activityFeed
+    return filter === "all" ? source : source.filter(item => item.type === filter)
   },
 
   setView(view, options = {}) {
@@ -622,7 +665,7 @@ Page({
     }
     const cards = feed.slice(0, 4).map(item => ({
       id: item.id,
-      poster: activityPosters[item.id] || "",
+      poster: item.poster || activityPosters[item.id] || "",
       dateLabel: dateLabel(item),
       title: item.title,
       location: item.location,
@@ -1140,10 +1183,10 @@ Page({
     const id = e.currentTarget.dataset.id
     const aliases = { night: "ai", manual: "workshop", life: "walk" }
     const found = this.data.activityFeed.find(item => item.id === id || item.id === aliases[id]) || this.data.activityFeed[0]
-    const activeActivity = { ...found, poster: activityPosters[found.id] || "", fee: activityFee[found.id] || "预约" }
+    const activeActivity = { ...found, poster: found.poster || activityPosters[found.id] || "", fee: found.fee || activityFee[found.id] || "预约" }
     const people = (found.people || "").split("·")[0].trim()
     const topic = (found.tags || [])[0] || "自然话题"
-    const matchReason = `这场只有 ${people}，${found.weekday}晚在${found.location}，聊的是${topic}——很适合现在想慢慢认识人的你。`
+    const matchReason = found.slogan || `这场只有 ${people}，${found.weekday}晚在${found.location}，聊的是${topic}——很适合现在想慢慢认识人的你。`
     this.setData({ activeActivity, matchReason, activeActivityRegistered: this.data.registeredActivities.includes(activeActivity.id), activityGroupJoined: false })
     this.refreshAfterParty()
     this.persistDraft()
@@ -1193,6 +1236,7 @@ Page({
       hostForm: this.data.hostForm,
       hostSubmitted: this.data.hostSubmitted,
       registeredActivities: this.data.registeredActivities,
+      publishedActivities: this.data.publishedActivities,
       activeActivity: this.data.activeActivity,
       activityGroupJoined: this.data.activityGroupJoined,
       filter: this.data.filter
@@ -1607,6 +1651,233 @@ Page({
     wx.showToast({ title: "已从页面隐藏", icon: "none" })
   },
 
+  refreshFeed() {
+    const feed = [...(this.data.publishedActivities || []), ...activityFeed]
+    this.setData({
+      activityFeed: feed,
+      filteredActivityFeed: this.filterActivities(this.data.filter, feed)
+    })
+  },
+
+  tomorrowRaw() {
+    const d = new Date(Date.now() + 86400000)
+    const p = (n) => String(n).padStart(2, "0")
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+  },
+
+  formatActivityDate(raw) {
+    const parts = (raw || "").split("-")
+    if (parts.length !== 3) return { date: raw || "", weekday: "" }
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+    const week = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"]
+    return { date: `${Number(parts[1])}/${Number(parts[2])}`, weekday: week[d.getDay()] }
+  },
+
+  openActivityComposer() {
+    const raw = this.tomorrowRaw()
+    const fmt = this.formatActivityDate(raw)
+    this.setData({
+      showActivityComposer: true,
+      activityDraft: {
+        ...emptyActivityDraft(),
+        dateRaw: raw,
+        date: fmt.date,
+        weekday: fmt.weekday
+      }
+    })
+  },
+
+  closeActivityComposer() {
+    this.setData({ showActivityComposer: false })
+  },
+
+  updateActivityDraftField(e) {
+    const field = e.currentTarget.dataset.field
+    if (!field) return
+    this.setData({ [`activityDraft.${field}`]: e.detail.value })
+  },
+
+  pickActivityDate(e) {
+    const raw = e.detail.value
+    const fmt = this.formatActivityDate(raw)
+    this.setData({
+      "activityDraft.dateRaw": raw,
+      "activityDraft.date": fmt.date,
+      "activityDraft.weekday": fmt.weekday
+    })
+  },
+
+  pickActivityTime(e) {
+    this.setData({ "activityDraft.time": e.detail.value })
+  },
+
+  toggleActivityTag(e) {
+    const tag = e.currentTarget.dataset.tag
+    const tags = [...(this.data.activityDraft.tags || [])]
+    const tagMap = { ...(this.data.activityDraft.tagMap || {}) }
+    const i = tags.indexOf(tag)
+    if (i > -1) {
+      tags.splice(i, 1)
+      delete tagMap[tag]
+    } else {
+      if (tags.length >= 4) {
+        wx.showToast({ title: "标签最多选4个", icon: "none" })
+        return
+      }
+      tags.push(tag)
+      tagMap[tag] = true
+    }
+    this.setData({ "activityDraft.tags": tags, "activityDraft.tagMap": tagMap })
+  },
+
+  updateActivityScheduleStep(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const field = e.currentTarget.dataset.field
+    const schedule = this.data.activityDraft.schedule.map((s, i) => i === index ? { ...s, [field]: e.detail.value } : s)
+    this.setData({ "activityDraft.schedule": schedule })
+  },
+
+  addActivityScheduleStep() {
+    const schedule = [...this.data.activityDraft.schedule, { time: "", title: "" }]
+    if (schedule.length > 6) {
+      wx.showToast({ title: "流程最多6步", icon: "none" })
+      return
+    }
+    this.setData({ "activityDraft.schedule": schedule })
+  },
+
+  removeActivityScheduleStep(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const schedule = this.data.activityDraft.schedule.filter((_, i) => i !== index)
+    this.setData({ "activityDraft.schedule": schedule })
+  },
+
+  pickActivityPoster(e) {
+    const src = e.currentTarget.dataset.src
+    const name = e.currentTarget.dataset.name
+    this.setData({ "activityDraft.poster": src, "activityDraft.posterName": name })
+  },
+
+  uploadActivityPoster() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ["image"],
+      sizeType: ["compressed"],
+      success: (res) => {
+        const file = res.tempFiles && res.tempFiles[0]
+        if (!file) return
+        this.saveImageLocal(file.tempFilePath, (path) => {
+          this.setData({ "activityDraft.poster": path, "activityDraft.posterName": "我的海报" })
+        })
+      },
+      fail: (err) => {
+        const msg = (err && err.errMsg) || ""
+        if (msg.indexOf("cancel") > -1) return
+        wx.showToast({ title: "上传失败，请重试", icon: "none" })
+      }
+    })
+  },
+
+  generateActivitySlogan() {
+    const d = this.data.activityDraft
+    const tagLineMap = {
+      "低压力": "一场不用硬撑的见面",
+      "少人数": "小局，认真认识，不凑热闹",
+      "深聊": "把话说到心里，不赶场",
+      "散步": "走着走着，就熟了",
+      "工作坊": "一起练习更靠近的相处",
+      "午间": "一顿午饭的时间，认识几个真实的人",
+      "同频": "只为你和同频的人准备",
+      "免费": "零压力出门，先认识再说"
+    }
+    const tagline = (d.tags || []).map(t => tagLineMap[t]).filter(Boolean)[0] || "少人数、节奏舒服，先认真认识彼此"
+    const title = (d.title || "").trim() || "恰好的一场见面"
+    this.setData({ "activityDraft.slogan": `${title}：${tagline}。人数不多，流程清楚，想被认真认识的人，欢迎来。` })
+  },
+
+  updateActivitySlogan(e) {
+    this.setData({ "activityDraft.slogan": e.detail.value })
+  },
+
+  publishActivity() {
+    const d = this.data.activityDraft
+    const title = (d.title || "").trim()
+    if (!title) {
+      wx.showToast({ title: "先给活动起个标题", icon: "none" })
+      return
+    }
+    if (!d.dateRaw) {
+      wx.showToast({ title: "选一下活动日期", icon: "none" })
+      return
+    }
+    if (!(d.time || "").trim()) {
+      wx.showToast({ title: "填一下开始时间", icon: "none" })
+      return
+    }
+    if (!(d.location || "").trim()) {
+      wx.showToast({ title: "填一下活动地点", icon: "none" })
+      return
+    }
+    const tagTypeMap = {
+      "低压力": "low", "少人数": "low", "晚餐": "low",
+      "深聊": "deep", "价值观": "deep", "同频": "deep",
+      "散步": "walk", "月亮": "walk",
+      "工作坊": "workshop", "练习": "workshop",
+      "午间": "lunch"
+    }
+    const type = (d.tags || []).map(t => tagTypeMap[t]).filter(Boolean)[0] || "low"
+    const schedule = (d.schedule || []).filter(s => (s.time || "").trim() || (s.title || "").trim())
+    const activity = {
+      id: `pub-${Date.now()}`,
+      type,
+      date: d.date,
+      weekday: d.weekday,
+      time: (d.time || "").trim(),
+      title,
+      subtitle: (d.subtitle || "").trim(),
+      tags: d.tags,
+      coverClass: "",
+      coverText: "",
+      poster: d.poster || activityPosterOptions[0].src,
+      people: (d.people || "").trim() || "小局 · 待定",
+      fee: (d.fee || "").trim() || "待定",
+      detail: (d.subtitle || "").trim(),
+      location: (d.location || "").trim(),
+      crowd: (d.crowd || "").trim() || "想认真认识、不想无效社交的人",
+      matchLabel: (d.tags || [])[0] || "恰好场",
+      schedule,
+      slogan: (d.slogan || "").trim() || "",
+      status: "招募中",
+      isCustom: true,
+      createdAt: Date.now()
+    }
+    this.setData({
+      publishedActivities: [activity, ...(this.data.publishedActivities || [])],
+      showActivityComposer: false
+    })
+    this.refreshFeed()
+    this.persistDraft()
+    wx.showToast({ title: "活动已发布", icon: "success" })
+  },
+
+  deletePublishedActivity(e) {
+    const id = e.currentTarget.dataset.id
+    wx.showModal({
+      title: "下架这场活动？",
+      content: "下架后用户将看不到它，已报名记录保留。",
+      confirmText: "下架",
+      confirmColor: "#d97757",
+      success: (res) => {
+        if (!res.confirm) return
+        const publishedActivities = (this.data.publishedActivities || []).filter(a => a.id !== id)
+        this.setData({ publishedActivities })
+        this.refreshFeed()
+        this.persistDraft()
+        wx.showToast({ title: "已下架", icon: "none" })
+      }
+    })
+  },
+
   registerActivity() {
     const activityId = this.data.activeActivity.id
     if (this.data.registeredActivities.includes(activityId)) {
@@ -1815,7 +2086,7 @@ Page({
       const hay = `${item.title}${(item.tags || []).join("")}${item.location}${item.subtitle}`
       const searchOk = !search || hay.includes(search)
       return themeOk && distOk && searchOk
-    }).map(item => ({ ...item, poster: activityPosters[item.id] || "" }))
+    }).map(item => ({ ...item, poster: item.poster || activityPosters[item.id] || "" }))
     this.setData({ exploreList: list })
   },
 
