@@ -44,14 +44,14 @@
 - [ ] 数据层加开关：`featureFlags: { socialSquare: false }`
 - [ ] `tabViews` 改为 `["home", "explore", "mine"]`
 - [ ] 每日一问 `submitHomeNeed`：只保存 `myNeed / myNeedQuestion / needAsked`（私有），不再写入 `communityNeeds`、不再生成公开需求卡
-- [ ] 删除或空置不再使用的函数：`switchNeedSort`、`toggleNeedResonance`、`toggleNeedSave`、`openDemandDetail`、`closeDemandDetail`、`toggleDemandComments`、`addDemandComment`、`openDemandActivity`、`openNeedComposer`、`cancelNeedComposer`、`pickNeedTopic`、`flipTopicToFree`、`flipTopicToAsk`、`updateNeedTitle`、`updateNeedDraft`、`toggleNeedFrag`、`addNeedTag`、`addNeedTagManual`、`uploadCover`、`aiGenerateCover`、`publishNeed`、`refreshNeedTags`、`markDemandResolved`、`hideDemand`、`matchNeedActivity`
+- [x] 不再使用的函数保留但全部无调用点（不执行、不影响运行）：`switchNeedSort`、`toggleNeedResonance`、`toggleNeedSave`、`openDemandDetail`、`closeDemandDetail`、`toggleDemandComments`、`addDemandComment`、`openDemandActivity`、`openNeedComposer`、`cancelNeedComposer`、`pickNeedTopic`、`flipTopicToFree`、`flipTopicToAsk`、`updateNeedTitle`、`updateNeedDraft`、`toggleNeedFrag`、`addNeedTag`、`addNeedTagManual`、`uploadCover`、`aiGenerateCover`、`publishNeed`、`refreshNeedTags`、`markDemandResolved`、`hideDemand`、`matchNeedActivity`（恢复时直接复用）
 - [ ] `refreshMine`：去掉 `myNeedCount / savedNeedCount` 依赖，保留参加活动数
 - [ ] `mergeBehaviorTags`：只保留"考虑一下"原因和活动反馈回流；共鸣/收藏/发布不再调用
 - [ ] `back()`：去掉 `showDemandDetail` / `pendingDemandId` 分支
 - [ ] 持久化（`persistDraft` / 恢复）：去掉 `communityNeeds`、`resonatedNeedIds`、`savedNeedIds`、`demandComments`、`myNeedDraft`、`myNeedTitle` 等公开需求字段；保留 `myNeed` 私有表达；旧缓存读取时自动忽略多余字段（不报错）
 
 ### 3. 演示数据（index.js 顶部常量）
-- [ ] `defaultCommunityNeeds`、`needCommentsPool`、`demoComments`、`needKeywordTags`、`needTopics`、`coverPool`（仅需求卡封面用）可整体移除或保留但不再引用
+- [x] `defaultCommunityNeeds`、`needCommentsPool`、`demoComments`、`needKeywordTags`、`needTopics`、`coverPool` 已移除（恢复时按本清单重新加回）
 - [ ] `baseCards` / `replacementCards` 中 `kind: "demand"` 的推荐卡移除（当前未渲染，但避免将来误用）
 
 ### 4. 配套改动
@@ -63,7 +63,7 @@
 ## 四、影响与取舍（提前说明）
 
 1. **失去公开"被看见"**：共鸣、评论、收藏、需求广场展示全部消失，这是产品现在最亮的卖点之一。保留的是"对小CC表达"，更接近"专属需求单"。
-2. **将来可恢复**：办完营业执照后，把 `featureFlags.socialSquare` 打开并接入数据库，需求广场可以原样回来（数据结构和函数都留着）。
+2. **将来可恢复**：办完营业执照后，把 `featureFlags.socialSquare` 打开、按本清单加回演示常量和页面块，再接入数据库，需求广场可以恢复（相关函数已保留）。
 3. **每日一问保留**：作为私密的"需求表达"入口，回答存本地，将来入库后小CC工作台可见。
 4. **活动推荐不受影响**：专属页和发现页仍按画像推活动，报名流程照旧。
 

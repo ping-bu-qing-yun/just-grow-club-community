@@ -5600,6 +5600,10 @@ button::after {
   flex-direction: column;
 }
 
+.profile-promos button.promo-full {
+  grid-column: 1 / -1;
+}
+
 .profile-promos button.orange {
   background: linear-gradient(145deg, #fff 0% 48%, #fff4ef 100%);
   border-color: #f0d9cc;

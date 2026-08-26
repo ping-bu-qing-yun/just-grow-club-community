@@ -310,10 +310,8 @@
           <view class="voice-a">你回答：{{myNeed}}</view>
         </view>
       </view>
-      <view class="voice-echo">还有 6 人和你一样，小CC正在为你找。</view>
       <view class="voice-actions">
         <button class="voice-btn ghost" bindtap="editMyNeed">补充一下</button>
-        <button class="voice-btn main" bindtap="go" data-view="square">去需求广场看看</button>
       </view>
     </view>
     <view class="home-end-space"></view>
@@ -441,41 +439,6 @@
     </view>
   </scroll-view>
 
-    <scroll-view wx:elif="{{view === 'square'}}" scroll-y class="screen with-tab needs-page">
-    <view class="needs-hero">
-      <text>需求广场</text>
-      <view class="needs-hero-title">先被看见，再慢慢靠近</view>
-      <view class="needs-hero-desc">需求，是你想遇见谁。说出你的关系所想，被同频的人接住。</view>
-    </view>
-
-    <block>
-      <view class="needs-sort">
-        <button class="{{needSort === 'latest' ? 'on' : ''}}" data-sort="latest" bindtap="switchNeedSort">最新</button>
-        <button class="{{needSort === 'hot' ? 'on' : ''}}" data-sort="hot" bindtap="switchNeedSort">最共鸣</button>
-      </view>
-      <view class="needs-list">
-        <view wx:for="{{displayedNeeds}}" wx:key="id" class="need-card-row" data-id="{{item.id}}" bindtap="openDemandDetail">
-          <image wx:if="{{item.image}}" class="need-card-row-img" src="{{item.image}}" mode="aspectFill" />
-          <view wx:else class="need-card-row-img need-card-row-img-empty"></view>
-          <view class="need-card-row-body">
-            <view class="need-card-row-title">{{item.title}}</view>
-            <view class="need-card-row-copy">{{item.question ? '小CC问：' + item.question : item.copy}}</view>
-            <view class="need-card-row-tags">
-              <text wx:for="{{item.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
-            </view>
-            <view class="need-card-row-acts">
-              <button class="{{resonatedNeedIds[item.id] ? 'is-active' : ''}}" data-id="{{item.id}}" catchtap="toggleNeedResonance">{{resonatedNeedIds[item.id] ? '已共鸣' : '我也有'}} {{item.resonance + (resonatedNeedIds[item.id] ? 1 : 0)}}</button>
-              <button data-id="{{item.id}}" catchtap="openDemandDetail">评论 {{item.commentsCount}}</button>
-              <button class="{{savedNeedIds[item.id] ? 'is-active' : ''}}" data-id="{{item.id}}" catchtap="toggleNeedSave">{{savedNeedIds[item.id] ? '已收藏' : '收藏'}}</button>
-            </view>
-          </view>
-        </view>
-      </view>
-    </block>
-
-    <view class="need-fab" bindtap="openNeedComposer" hover-class="need-fab-hover"><text class="need-fab-plus">+</text></view>
-  </scroll-view>
-
     <scroll-view wx:elif="{{view === 'mine'}}" scroll-y class="screen with-tab club-profile">
     <view class="profile-cover"></view>
     <view class="profile-identity">
@@ -494,176 +457,22 @@
       <view class="pp-hint">每次回答和活动反馈，都会让推荐更贴合你。</view>
     </view>
     <view class="profile-promos">
-      <button bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
-      <button class="orange" bindtap="go" data-view="savedNeeds"><text class="promo-title">需求收藏</text><text class="promo-sub">查看收藏的需求</text></button>
+      <button class="promo-full" bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
     </view>
     <view class="profile-stats">
       <view><text class="stat-num">{{registeredActivities.length}}</text><text class="stat-label">参与活动</text></view>
-      <view><text class="stat-num">{{demandHistory.length}}</text><text class="stat-label">公开需求</text></view>
-      <view><text class="stat-num">{{savedNeedCount}}</text><text class="stat-label">需求收藏</text></view>
     </view>
     <view class="club-profile-section">
       <view class="section-title">我的记录</view>
       <button bindtap="go" data-view="profile"><text>我的画像</text><text>根据回答和活动反馈持续更新</text><text class="row-arrow">›</text></button>
       <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
       <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
-      <button bindtap="go" data-view="square"><text>我的需求</text><text>{{myNeedCount}} 张需求卡</text><text class="row-arrow">›</text></button>
     </view>
   </scroll-view>
-
-  <scroll-view wx:elif="{{view === 'savedNeeds'}}" scroll-y class="screen with-tab saved-needs-page">
-    <view class="subpage-header">
-      <button class="subpage-back" bindtap="back">←</button>
-      <text>我收藏的需求</text>
-    </view>
-    <view wx:if="{{!savedNeedsList.length}}" class="saved-empty">
-      <text>还没有收藏的需求</text>
-      <button class="ghost-btn wide" bindtap="go" data-view="square">去需求广场看看</button>
-    </view>
-    <view wx:for="{{savedNeedsList}}" wx:key="id" class="saved-card" data-id="{{item.id}}" bindtap="openDemandDetail">
-      <image wx:if="{{item.image}}" class="saved-card-img" src="{{item.image}}" mode="aspectFill" />
-      <view class="saved-card-body">
-        <view class="saved-card-title">{{item.title}}</view>
-        <view class="saved-card-copy">{{item.copy}}</view>
-        <view class="club-tags">
-          <text wx:for="{{item.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
-        </view>
-        <view class="saved-card-foot">{{item.resonance + (resonatedNeedIds[item.id] ? 1 : 0)}} 人共鸣 · {{item.commentsCount}} 条评论</view>
-      </view>
-    </view>
-  </scroll-view>
-
-  <view wx:if="{{showDemandDetail}}" class="need-detail-page">
-    <scroll-view scroll-y class="need-detail-scroll">
-      <view class="need-detail-media">
-        <image wx:if="{{activeDemand.image}}" class="need-detail-media-img" src="{{activeDemand.image}}" mode="aspectFill" />
-        <view wx:else class="need-detail-media-fallback"></view>
-        <button class="need-detail-back" bindtap="closeDemandDetail"><text class="need-detail-back-icon">‹</text></button>
-      </view>
-      <view class="need-detail-content">
-        <small>{{activeDemand.author}} · {{activeDemand.subtitle || 'TA 在恰好说出自己的需求'}}</small>
-        <view class="need-detail-topic">
-          <view class="need-detail-topic-label">{{activeDemand.topic || activeDemand.question ? '小CC问' : '大家正在说'}}</view>
-          <view class="need-detail-topic-text">{{activeDemand.topic || activeDemand.question || '这张需求，正在被认真的朋友们看见'}}</view>
-        </view>
-        <view class="need-detail-title">{{activeDemand.title}}</view>
-        <view class="need-detail-copy">{{activeDemand.answer || activeDemand.detail || activeDemand.copy}}</view>
-        <view class="club-tags need-detail-tags">
-          <text wx:for="{{activeDemand.tags}}" wx:key="*this" class="need-tag">{{item}}</text>
-        </view>
-        <view class="need-detail-response">
-          <view class="need-detail-response-head">
-            <view class="need-detail-response-title">这张需求正在发生什么</view>
-            <text class="{{activeDemand.response ? 'is-active' : 'is-waiting'}}">{{activeDemand.response ? '有人接住' : '还在等回应'}}</text>
-          </view>
-          <view class="need-detail-response-stats">
-            <view><b>{{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</b><small>人共鸣</small></view>
-            <view><b>{{activeDemand.commentsCount}}</b><small>条评论</small></view>
-            <view><b>{{activeDemand.response ? 1 : 0}}</b><small>场回应</small></view>
-          </view>
-          <view wx:if="{{activeDemand.responseActivity}}" class="need-detail-response-link" bindtap="openDemandActivity">
-            <text>有活动回应了 · {{activeDemand.response}}</text>
-            <button>查看</button>
-          </view>
-          <view wx:else class="need-detail-empty">
-            <text class="need-detail-empty-title">还没有活动回应</text>
-            <text class="need-detail-empty-desc">收藏这张需求，之后有合适的活动，我们会通知你</text>
-          </view>
-        </view>
-        <view class="need-detail-comments">
-          <view class="need-detail-comments-head">
-            <view class="need-detail-comments-title">大家怎么说</view>
-            <text>{{activeDemand.commentsCount}} 条</text>
-          </view>
-          <view wx:if="{{!activeDemand.comments.length}}" class="need-detail-comments-empty">还没有评论</view>
-          <view wx:else class="need-detail-comments-list">
-            <view wx:for="{{demandVisibleComments}}" wx:key="text" class="need-detail-comment-item">
-              <image wx:if="{{item.avatar}}" class="need-detail-comment-avatar" src="{{item.avatar}}" mode="aspectFill" />
-              <view wx:else class="need-detail-comment-avatar need-detail-comment-avatar-initial">{{item.initial || '恰'}}</view>
-              <view class="need-detail-comment-copy">
-                <view class="need-detail-comment-meta">
-                  <text class="need-detail-comment-author">{{item.author || '恰好用户'}}</text>
-                  <text wx:if="{{item.time}}" class="need-detail-comment-time">{{item.time}}</text>
-                </view>
-                <view class="need-detail-comment-text">{{item.text || item}}</view>
-              </view>
-            </view>
-          </view>
-          <button wx:if="{{activeDemand.commentsCount > 5}}" class="need-detail-comments-toggle" bindtap="toggleDemandComments">{{demandCommentsExpanded ? '▲ 收起评论' : '💬 展开全部评论'}}</button>
-          <view class="need-detail-composer">
-            <textarea class="need-detail-composer-input" value="{{demandComment}}" bindinput="updateDemandComment" bindkeyboardheightchange="onDemandKeyboardChange" cursor-spacing="24" maxlength="300" placeholder="说点什么…" />
-            <view class="need-detail-composer-foot">
-              <button class="need-detail-composer-send" bindtap="addDemandComment">
-                <image wx:if="{{paperPlaneSrc}}" class="send-plane-icon" src="{{paperPlaneSrc}}" mode="aspectFit" />
-                <text wx:else>✈</text>
-              </button>
-            </view>
-          </view>
-        </view>
-      </view>
-    </scroll-view>
-    <view class="need-detail-actions" style="bottom: {{demandKeyboardHeight}}px">
-      <button class="{{resonatedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedResonance">{{resonatedNeedIds[activeDemand.id] ? '已共鸣' : '我也有'}} {{activeDemand.resonance + (resonatedNeedIds[activeDemand.id] ? 1 : 0)}}</button>
-      <button class="{{savedNeedIds[activeDemand.id] ? 'is-active' : ''}}" data-id="{{activeDemand.id}}" bindtap="toggleNeedSave">{{savedNeedIds[activeDemand.id] ? '已收藏' : '收藏'}}</button>
-    </view>
-  </view>
-
-  <view wx:if="{{showNeedComposer}}" class="publish-page">
-    <view class="publish-top">
-      <button class="publish-close" bindtap="cancelNeedComposer">‹ 返回</button>
-      <text>发布需求卡</text>
-    </view>
-    <scroll-view scroll-y class="publish-scroll" style="padding-bottom: {{needKeyboardHeight + 90}}px">
-      <view class="publish-body">
-        <view class="publish-topic-wrap">
-          <view class="publish-topic {{needTopicMode === 'free' ? 'is-flipped' : ''}}">
-            <view class="publish-topic-face publish-topic-front">
-              <view class="publish-topic-head">
-                <view class="publish-topic-cat"><i style="background: {{needTopicColor}}"></i>{{needTopicCat}}</view>
-                <button class="publish-topic-switch" bindtap="pickNeedTopic">换一个 ↻</button>
-              </view>
-              <view class="publish-topic-text">{{needTopic}}</view>
-              <view class="publish-topic-sub">先回答这个话题，恰好会帮你整理成需求卡</view>
-              <button class="publish-topic-own" bindtap="flipTopicToFree">自己发起</button>
-            </view>
-            <view class="publish-topic-face publish-topic-back">
-              <view class="publish-topic-head">
-                <view class="publish-topic-cat"><i style="background: #8a867c"></i>自己发起</view>
-              </view>
-              <view class="publish-topic-text">写下你想遇见什么、想被怎样认识</view>
-              <view class="publish-topic-sub">不回答问题，自由表达你的需求</view>
-              <button class="publish-topic-own" bindtap="flipTopicToAsk">小CC提问</button>
-            </view>
-          </view>
-        </view>
-        <input class="publish-title" value="{{myNeedTitle}}" bindinput="updateNeedTitle" maxlength="14" placeholder="给你的回答起个标题（最多14字）" />
-        <textarea class="publish-content" value="{{myNeedDraft}}" bindinput="updateNeedDraft" bindkeyboardheightchange="onNeedKeyboardChange" cursor-spacing="24" maxlength="200" placeholder="{{needTopicMode === 'ask' ? '围绕这个话题说点什么…' : '写下你想遇见的人、想一起做的事…'}}" />
-        <view class="publish-count">{{myNeedDraft.length}}/200</view>
-        <view class="publish-tags">
-          <button wx:for="{{needTagOptions}}" wx:key="*this" class="publish-tag {{selectedNeedFragMap[item] ? 'on' : ''}}" data-frag="{{item}}" bindtap="toggleNeedFrag">{{item}}</button>
-        </view>
-        <view class="publish-addtag"><text>#</text><input value="{{needManualTag}}" bindinput="updateNeedManualTag" bindconfirm="addNeedTag" placeholder="添加话题" maxlength="8" /><button class="publish-addtag-btn" bindtap="addNeedTagManual">添加</button></view>
-        <view class="publish-cover-row">
-          <view class="publish-cover" bindtap="uploadCover">
-            <image wx:if="{{needCoverPreview}}" class="publish-cover-img" src="{{needCoverPreview}}" mode="aspectFill" />
-            <view wx:else class="publish-cover-empty">
-              <text class="publish-cover-plus">＋</text>
-              <text class="publish-cover-hint">点击上传照片</text>
-            </view>
-          </view>
-          <button class="publish-gen-btn" catchtap="aiGenerateCover">让恰好生成</button>
-        </view>
-      </view>
-    </scroll-view>
-    <view class="publish-bottom" style="bottom: {{needKeyboardHeight}}px">
-      <button class="publish-bottom-btn {{canPublishNeed ? 'on' : ''}}" bindtap="publishNeed">发布需求卡</button>
-    </view>
-  </view>
 
   <view wx:if="{{showTab}}" class="tab-bar">
     <button class="tab-item {{view === 'home' ? 'active' : ''}}" bindtap="go" data-view="home">专属</button>
     <button class="tab-item {{view === 'explore' ? 'active' : ''}}" bindtap="go" data-view="explore">发现</button>
-    <button class="tab-item {{view === 'square' ? 'active' : ''}}" bindtap="go" data-view="square">需求</button>
     <button class="tab-item {{view === 'mine' ? 'active' : ''}}" bindtap="go" data-view="mine">我的</button>
   </view>
 
