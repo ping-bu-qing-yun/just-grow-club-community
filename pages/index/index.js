@@ -352,6 +352,23 @@ const homeQuestions = [
 ]
 const todayHomeQuestion = homeQuestions[Math.floor(Date.now() / 86400000) % homeQuestions.length]
 
+// 小CC的来信：多维度话题，来自需求卡提问体系（哲学 / 情感 / 自我探知 / 生活感悟）
+const letterTopics = [
+  { cat: "哲学", color: "#8b7fb8", q: "如果人生是一本书，你希望现在翻到哪一章？" },
+  { cat: "哲学", color: "#8b7fb8", q: "你觉得「自由」对你来说，意味着什么？" },
+  { cat: "哲学", color: "#8b7fb8", q: "你相信人和人之间，真的有「同频」这件事吗？" },
+  { cat: "情感", color: "#d98a8a", q: "你上一次觉得「被人接住」，是什么时候？" },
+  { cat: "情感", color: "#d98a8a", q: "有没有一个人，让你想起时心里会变软？" },
+  { cat: "情感", color: "#d98a8a", q: "你觉得一段关系里，最珍贵的是什么？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "最近，你对自己有什么新的发现？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "如果完全不考虑别人怎么看，你最想成为什么样的人？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "你最近一次为自己骄傲，是因为什么？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "最近有没有一件小事，让你觉得生活还不错？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "如果明天完全自由，你会怎么过？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "你希望生活里多点什么，少点什么？" }
+]
+const todayLetterTopic = letterTopics[Math.floor(Date.now() / 86400000) % letterTopics.length]
+
 const recorderManager = wx.getRecorderManager()
 let recordTimer = null
 let innerAudioContext = null
@@ -391,13 +408,12 @@ Page({
     homeTags: [],
     homeCards: [],
     posterIndex: 0,
-    homeQuestion: todayHomeQuestion.q,
-    homeQuestionOpts: todayHomeQuestion.opts,
-    myNeedSel: "",
-    myNeedOther: "",
-    myNeed: "",
-    myNeedQuestion: "",
-    needAsked: false,
+    letterTopic: todayLetterTopic,
+    letterMode: "ask",
+    letterDraft: "",
+    letterMyTopic: "",
+    letterDone: false,
+    letterSaved: { q: "", cat: "", color: "#7fae7f", answer: "", mode: "ask" },
     genderOptions: ["女生", "男生", "先不答"],
     educationOptions: ["高中及以下", "大专", "本科", "硕士", "博士", "其他"],
     basicInfo: {
@@ -563,11 +579,12 @@ Page({
       relAnswers,
       relIndex: saved.relIndex || 0,
       relDone: Boolean(saved.relDone),
-      myNeedSel: saved.myNeedSel || "",
-      myNeedOther: saved.myNeedOther || "",
-      myNeed: saved.myNeed || "",
-      myNeedQuestion: saved.myNeedQuestion || "",
-      needAsked: Boolean(saved.needAsked),
+      letterTopic: saved.letterTopic || todayLetterTopic,
+      letterMode: saved.letterMode || "ask",
+      letterDraft: saved.letterDraft || "",
+      letterMyTopic: saved.letterMyTopic || "",
+      letterDone: Boolean(saved.letterDone),
+      letterSaved: saved.letterSaved || { q: "", cat: "", color: "#7fae7f", answer: "", mode: "ask" },
       behaviorTags: saved.behaviorTags || [],
       dislikedActivityIds: saved.dislikedActivityIds || {},
       considerReasons: saved.considerReasons || [],
@@ -708,30 +725,64 @@ Page({
     this.setView("welcome", { push: false, resetHistory: true })
   },
 
-  toggleNeedOption(e) {
-    this.setData({ myNeedSel: e.currentTarget.dataset.val })
+  switchHomeLetter() {
+    const others = letterTopics.filter(t => t.q !== this.data.letterTopic.q)
+    const next = others[Math.floor(Math.random() * others.length)]
+    this.setData({ letterTopic: next, letterDraft: "", letterMyTopic: "", letterMode: "ask" })
   },
 
-  updateNeedOther(e) {
-    this.setData({ myNeedOther: e.detail.value })
+  toggleLetterSource() {
+    this.setData({ letterMode: this.data.letterMode === "ask" ? "free" : "ask" })
   },
 
-  submitHomeNeed() {
-    const sel = this.data.myNeedSel
-    const other = (this.data.myNeedOther || "").trim()
-    const content = sel && other ? sel + "，" + other : sel || other
-    if (!content) {
-      wx.showToast({ title: "先选一个，或写下来", icon: "none" })
+  updateLetterDraft(e) {
+    this.setData({ letterDraft: e.detail.value })
+  },
+
+  updateLetterMyTopic(e) {
+    this.setData({ letterMyTopic: e.detail.value })
+  },
+
+  submitHomeLetter() {
+    const mode = this.data.letterMode
+    const topic = this.data.letterTopic
+    const q = mode === "free" ? (this.data.letterMyTopic || "").trim() : topic.q
+    const answer = (this.data.letterDraft || "").trim()
+    if (mode === "free" && !q) {
+      wx.showToast({ title: "先写下你想聊的话题", icon: "none" })
       return
     }
-    const q = this.data.homeQuestion
-    this.setData({ myNeed: content, myNeedQuestion: q, needAsked: true })
+    if (!answer) {
+      wx.showToast({ title: "写几句回信，小CC才能更懂你", icon: "none" })
+      return
+    }
+    this.setData({
+      letterSaved: {
+        q,
+        cat: mode === "free" ? "我发起的话题" : topic.cat,
+        color: mode === "free" ? "#d97757" : topic.color,
+        answer,
+        mode
+      },
+      letterMode: "done",
+      letterDone: true
+    })
     this.persistDraft()
-    wx.showToast({ title: "收到，小CC记下了", icon: "success" })
+    wx.showToast({ title: "回信收到，小CC记下了", icon: "success" })
   },
 
-  editMyNeed() {
-    this.setData({ needAsked: false, myNeedSel: "", myNeedOther: "" })
+  editHomeLetter() {
+    const saved = this.data.letterSaved || {}
+    this.setData({
+      letterMode: saved.mode === "free" ? "free" : "ask",
+      letterDraft: saved.answer || "",
+      letterMyTopic: saved.mode === "free" ? (saved.q || "") : this.data.letterMyTopic
+    })
+  },
+
+  newHomeLetter() {
+    this.switchHomeLetter()
+    this.setData({ letterDone: false, letterSaved: { q: "", cat: "", color: "#7fae7f", answer: "", mode: "ask" } })
   },
 
   go(e) {
@@ -1263,11 +1314,12 @@ Page({
       relAnswers: this.data.relAnswers,
       relIndex: this.data.relIndex,
       relDone: this.data.relDone,
-      myNeedSel: this.data.myNeedSel,
-      myNeedOther: this.data.myNeedOther,
-      myNeed: this.data.myNeed,
-      myNeedQuestion: this.data.myNeedQuestion,
-      needAsked: this.data.needAsked,
+      letterTopic: this.data.letterTopic,
+      letterMode: this.data.letterMode,
+      letterDraft: this.data.letterDraft,
+      letterMyTopic: this.data.letterMyTopic,
+      letterDone: this.data.letterDone,
+      letterSaved: this.data.letterSaved,
       behaviorTags: this.data.behaviorTags,
       dislikedActivityIds: this.data.dislikedActivityIds,
       considerReasons: this.data.considerReasons,

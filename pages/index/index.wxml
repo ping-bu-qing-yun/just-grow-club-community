@@ -287,32 +287,38 @@
       </swiper>
     </view>
 
-    <view wx:if="{{!needAsked}}" class="need-ask">
-      <view class="need-ask-head">
-        <image class="need-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
-        <view>
-          <view class="need-ask-name">{{basicInfo.name || '你'}}，问你一个真实的</view>
-          <view class="need-ask-q">{{homeQuestion}}</view>
+    <view class="home-letter" wx:if="{{letterMode !== 'done'}}">
+      <view class="letter-envelope">
+        <view class="letter-kicker">
+          <text class="letter-dot" style="background: {{letterTopic.color}}"></text>
+          <text>{{letterMode === 'free' ? '你自己发起的话题' : letterTopic.cat}}</text>
+          <text class="letter-seal">见字如面</text>
         </view>
+        <image class="letter-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
+        <view class="letter-head">小CC的来信</view>
+        <view wx:if="{{letterMode === 'ask'}}" class="letter-q">{{letterTopic.q}}</view>
+        <input wx:else class="letter-topic-input" value="{{letterMyTopic}}" bindinput="updateLetterMyTopic" cursor-spacing="20" maxlength="30" placeholder="写下你想聊的话题" />
+        <textarea class="letter-answer" value="{{letterDraft}}" bindinput="updateLetterDraft" cursor-spacing="20" maxlength="200" placeholder="{{letterMode === 'free' ? '围绕你自己的话题，说几句真实感受…' : '回信给小CC，写几句此刻的真实感受…'}}" />
+        <view class="letter-count">{{letterDraft.length}}/200</view>
+        <view class="letter-actions">
+          <button class="letter-btn ghost" bindtap="toggleLetterSource">{{letterMode === 'ask' ? '我也有个话题' : '回到小CC的来信'}}</button>
+          <button class="letter-btn main" bindtap="submitHomeLetter">{{letterMode === 'free' ? '把话题交给小CC' : '把回信交给小CC'}}</button>
+        </view>
+        <view wx:if="{{letterMode === 'ask'}}" class="letter-switch" bindtap="switchHomeLetter">换一个话题 ↻</view>
       </view>
-      <view class="need-opts">
-        <button wx:for="{{homeQuestionOpts}}" wx:key="*this" class="need-opt {{myNeedSel === item ? 'active' : ''}}" data-val="{{item}}" bindtap="toggleNeedOption">{{item}}</button>
-      </view>
-      <input class="need-other" value="{{myNeedOther}}" data-field="myNeedOther" bindinput="updateNeedOther" cursor-spacing="20" placeholder="其他，写下来（比如：周末下午，有人一起逛公园）" />
-      <button class="primary-btn wide" bindtap="submitHomeNeed">告诉小CC</button>
     </view>
 
-    <view wx:else class="need-recommend voice">
-      <view class="voice-top">
-        <image class="voice-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
-        <view>
-          <view class="voice-label">你的声音</view>
-          <view class="voice-q">小CC问你："{{myNeedQuestion}}"</view>
-          <view class="voice-a">你回答：{{myNeed}}</view>
+    <view wx:else class="home-letter done">
+      <view class="letter-envelope done">
+        <view class="letter-seal-big">✓</view>
+        <view class="letter-head">你的声音，小CC收到了</view>
+        <view class="letter-done-q">{{letterSaved.q}}</view>
+        <view class="letter-done-a">“{{letterSaved.answer}}”</view>
+        <view class="letter-echo">这些表达会慢慢长成你的关系画像，也会帮小CC为你找到更合适的见面。</view>
+        <view class="letter-actions">
+          <button class="letter-btn ghost" bindtap="editHomeLetter">补充一下</button>
+          <button class="letter-btn main" bindtap="newHomeLetter">再写一封</button>
         </view>
-      </view>
-      <view class="voice-actions">
-        <button class="voice-btn ghost" bindtap="editMyNeed">补充一下</button>
       </view>
     </view>
     <view class="home-end-space"></view>
@@ -469,7 +475,6 @@
       <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
       <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
       <button bindtap="openActivityComposer"><text>发布活动</text><text>小CC发起一场恰好活动</text><text class="row-arrow">›</text></button>
-      <button bindtap="logoutUser"><text>退出当前账号</text><text>重新用微信登录</text><text class="row-arrow">›</text></button>
     </view>
     <view wx:if="{{publishedActivities.length}}" class="club-profile-section">
       <view class="section-title">我发布的活动</view>
@@ -480,6 +485,9 @@
         </view>
         <button class="host-activity-del" data-id="{{item.id}}" catchtap="deletePublishedActivity">下架</button>
       </view>
+    </view>
+    <view class="mine-logout">
+      <button class="logout-btn" bindtap="logoutUser">退出当前账号</button>
     </view>
   </scroll-view>
 
