@@ -2028,7 +2028,7 @@ Page({
       confirmColor: "#b65a37",
       success: (res) => {
         if (!res.confirm) return
-        this.setData({ loggedIn: false, viewHistory: [] })
+        this.setData({ loggedIn: false, openid: "", viewHistory: [] })
         this.persistDraft()
         this.setView("welcome", { push: false, resetHistory: true })
       }

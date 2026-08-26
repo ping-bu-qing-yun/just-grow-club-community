@@ -469,6 +469,7 @@
       <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
       <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
       <button bindtap="openActivityComposer"><text>发布活动</text><text>小CC发起一场恰好活动</text><text class="row-arrow">›</text></button>
+      <button bindtap="logoutUser"><text>退出当前账号</text><text>重新用微信登录</text><text class="row-arrow">›</text></button>
     </view>
     <view wx:if="{{publishedActivities.length}}" class="club-profile-section">
       <view class="section-title">我发布的活动</view>
