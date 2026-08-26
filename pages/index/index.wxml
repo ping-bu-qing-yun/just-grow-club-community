@@ -152,15 +152,15 @@
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'basicInfo'}}" scroll-y class="screen">
-    <view class="avatar-center" bindtap="chooseAvatar">
+    <button class="avatar-center" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
       <view class="avatar-circle">
         <image wx:if="{{avatarUrl}}" src="{{avatarUrl}}" mode="aspectFill" class="avatar-image" />
         <text wx:else>＋</text>
       </view>
-      <view class="avatar-hint">{{avatarUrl ? '点击更换头像' : '点击上传头像（选填）'}}</view>
-    </view>
+      <view class="avatar-hint">{{avatarUrl ? '点击更换头像' : '选择微信头像（选填）'}}</view>
+    </button>
     <view class="basic-info-card">
-      <view class="soft-field full"><text>昵称<i>*</i></text><input value="{{basicInfo.name}}" data-field="name" bindinput="updateBasicField" cursor-spacing="20" placeholder="比如：小鱼" /></view>
+      <view class="soft-field full"><text>昵称<i>*</i></text><input type="nickname" value="{{basicInfo.name}}" data-field="name" bindinput="updateBasicField" cursor-spacing="20" placeholder="比如：小鱼" /></view>
       <view class="soft-field full">
         <text>性别<i>*</i></text>
         <picker mode="selector" range="{{genderOptions}}" data-field="gender" bindchange="updateBasicSelector">

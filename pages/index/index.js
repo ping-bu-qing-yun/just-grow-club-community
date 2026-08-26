@@ -368,6 +368,7 @@ Page({
     canGoBack: false,
     loggedIn: false,
     accountName: "小Z",
+    openid: "",
     authMode: "wechat",
     phoneNumber: "",
     verificationCode: "",
@@ -548,6 +549,7 @@ Page({
       filteredActivities: this.data.activities,
       loggedIn: Boolean(saved.loggedIn),
       accountName: saved.accountName || "小Z",
+      openid: saved.openid || "",
       authMode: saved.authMode || "wechat",
       phoneNumber: saved.phoneNumber || "",
       verificationCode: saved.verificationCode || "",
@@ -780,10 +782,10 @@ Page({
       wx.showToast({ title: "请先填写手机号", icon: "none" })
       return
     }
-    const finishLogin = () => {
+    const goAfterLogin = (nickname) => {
       const saved = wx.getStorageSync("qiahaoDraft") || {}
       const hasProfile = Boolean(saved.basicInfo && saved.basicInfo.name) || Boolean(saved.entryDone) || Boolean(saved.relDone) || Boolean(saved.qaBasicDone)
-      this.setData({ loggedIn: true, accountName: "小Z" })
+      this.setData({ loggedIn: true, accountName: nickname || "恰好朋友" })
       this.persistDraft()
       if (hasProfile) {
         this.enterHome()
@@ -791,11 +793,53 @@ Page({
         this.setView("lightQa")
       }
     }
-    if (this.data.authMode === "wechat" && typeof wx.login === "function") {
-      wx.login({ success: finishLogin, fail: finishLogin })
+    const fallbackDemo = (silent) => {
+      if (!silent) wx.showToast({ title: "云登录未就绪，暂用演示模式", icon: "none" })
+      goAfterLogin("小Z")
+    }
+    if (this.data.authMode === "phone") {
+      goAfterLogin("小Z")
       return
     }
-    finishLogin()
+    // 真实微信登录：wx.login 拿 code → 云函数 login 换 openid
+    if (typeof wx.login !== "function" || !wx.cloud || typeof wx.cloud.callFunction !== "function") {
+      fallbackDemo(true)
+      return
+    }
+    wx.showLoading({ title: "正在登录…", mask: true })
+    wx.login({
+      success: (res) => {
+        if (!res.code) {
+          wx.hideLoading()
+          fallbackDemo(true)
+          return
+        }
+        wx.cloud.callFunction({
+          name: "login",
+          data: { code: res.code },
+          success: (r) => {
+            wx.hideLoading()
+            const result = r && r.result
+            if (result && result.ok && result.openid) {
+              this.setData({ openid: result.openid })
+              getApp().globalData.openid = result.openid
+              getApp().globalData.user = result.user || null
+              goAfterLogin((result.user && result.user.nickname) || "")
+            } else {
+              fallbackDemo(true)
+            }
+          },
+          fail: () => {
+            wx.hideLoading()
+            fallbackDemo(false)
+          }
+        })
+      },
+      fail: () => {
+        wx.hideLoading()
+        fallbackDemo(false)
+      }
+    })
   },
 
   back() {
@@ -1202,6 +1246,7 @@ Page({
       basicInfo: this.data.basicInfo,
       loggedIn: this.data.loggedIn,
       accountName: this.data.accountName,
+      openid: this.data.openid,
       authMode: this.data.authMode,
       phoneNumber: this.data.phoneNumber,
       verificationCode: this.data.verificationCode,
@@ -2008,6 +2053,15 @@ Page({
     this.setData({ hostSubmitted: true })
     this.persistDraft()
     wx.showModal({ title: "已提交给小CC", content: "活动会先进入审核，审核通过后将展示关联需求标签。", showCancel: false, confirmText: "好的" })
+  },
+
+  onChooseAvatar(e) {
+    const url = e.detail && e.detail.avatarUrl
+    if (!url) return
+    this.saveImageLocal(url, (path) => {
+      this.setData({ avatarUrl: path })
+      this.persistDraft()
+    })
   },
 
   chooseAvatar() {
