@@ -41,7 +41,7 @@
       <view class="faith-item">先立体识人，而后心生欢喜</view>
       <view class="faith-item">接住不同情感需求场景</view>
     </view>
-    <button class="primary-btn wide letter-next" bindtap="go" data-view="lightQa">开始吧 →</button>
+    <button class="primary-btn wide letter-next" bindtap="go" data-view="auth">开始吧 →</button>
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'auth'}}" scroll-y class="screen auth-screen">

@@ -507,7 +507,7 @@ Page({
       q12: rawRel.q12 && typeof rawRel.q12 === "object" ? rawRel.q12 : {}
     }
     this.introTimer = setTimeout(() => {
-      if (this.data.loggedIn) {
+      if (this.data.loggedIn && this.data.openid) {
         this.enterHome()
       } else if (!options.activity) {
         this.setView("welcome", { push: false, resetHistory: true })
