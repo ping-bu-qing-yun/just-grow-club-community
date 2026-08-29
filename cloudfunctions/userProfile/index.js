@@ -87,7 +87,10 @@ exports.main = async (event = {}) => {
   if (!action) return { ok: false, code: "INVALID_ACTION", msg: "不支持的资料操作" }
 
   // 身份只能来自微信云环境，任何客户端身份参数都直接拒绝。
-  if (containsForbiddenIdentity(event)) {
+  // 注意：真机调用时平台会向 event 自动注入 userInfo（含 openId）等系统字段，
+  // 这不是客户端可控数据，必须先剥离，否则会把系统注入误判为越权。
+  const { userInfo, ...clientEvent } = event
+  if (containsForbiddenIdentity(clientEvent)) {
     return { ok: false, code: "IDENTITY_NOT_ALLOWED", msg: "身份参数不被允许" }
   }
 

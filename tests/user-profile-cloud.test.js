@@ -75,6 +75,27 @@ function loadCloudFunction() {
   }
 }
 
+test("平台自动注入的 userInfo（含 openId）不触发身份拒绝，客户端伪造的身份仍然被拒", async () => {
+  const harness = loadCloudFunction()
+  // 真机上 wx.cloud.callFunction 会向 event 注入 userInfo 系统字段，不应误判为越权。
+  const injected = await harness.main({
+    action: "get",
+    userInfo: { appId: "wx-app", openId: "openid-a" }
+  })
+  assert.equal(injected.ok, true)
+
+  const injectedSave = await harness.main({
+    action: "save",
+    userInfo: { appId: "wx-app", openId: "openid-a" },
+    profile: { basicInfo: { name: "系统注入不应拦截" } }
+  })
+  assert.equal(injectedSave.ok, true)
+
+  // 客户端自己传的 openid（无论放在哪一层）仍然必须被拒绝。
+  const forged = await harness.main({ action: "save", openid: "openid-b", profile: { basicInfo: { name: "越权" } } })
+  assert.equal(forged.code, "IDENTITY_NOT_ALLOWED")
+})
+
 test("资料云函数拒绝指定身份，并只返回调用者自己的资料", async () => {
   const harness = loadCloudFunction()
   const rejected = await harness.main({ action: "save", openid: "openid-b", profile: { basicInfo: { name: "越权" } } })
