@@ -675,6 +675,7 @@ Page({
               getApp().globalData.user = result.user || null
               this.persistDraft({ skipSync: true })
               this.restoreProfileFromCloud().then(() => done(true))
+              this.syncRegistrationsFromCloud()
             } else {
               done(false)
             }
@@ -950,6 +951,7 @@ Page({
               getApp().globalData.user = result.user || null
               wx.showToast({ title: "微信登录成功", icon: "success", duration: 2000 })
               goAfterLogin((result.user && result.user.nickname) || "", true)
+              this.syncRegistrationsFromCloud()
             } else {
               wx.showToast({ title: (result && result.msg) || "微信登录异常", icon: "none" })
               fallbackDemo(true)
@@ -2258,14 +2260,70 @@ Page({
   },
 
   registerActivity() {
-    const activityId = this.data.activeActivity.id
-    if (this.data.registeredActivities.includes(activityId)) {
+    const activity = this.data.activeActivity || {}
+    const activityId = activity.id
+    if (!activityId || this.data.registeredActivities.includes(activityId)) {
       wx.showToast({ title: "你已经报名过这场活动", icon: "none" })
       return
     }
     this.setData({ registeredActivities: [...this.data.registeredActivities, activityId], activeActivityRegistered: true })
     this.persistDraft()
+    // 报名数据同步上云：云端成功才算链路真正跑通；失败时保留本地并提示。
+    this.uploadRegistration(activity)
     wx.showModal({ title: "报名意愿已记录", content: "小CC会在活动成行后通知你确认具体席位。", showCancel: false, confirmText: "知道了" })
+  },
+
+  uploadRegistration(activity) {
+    if (!wx.cloud || typeof wx.cloud.callFunction !== "function") {
+      wx.showToast({ title: "报名已记录在本机（云端不可用）", icon: "none" })
+      return
+    }
+    wx.cloud.callFunction({
+      name: "activityData",
+      data: {
+        action: "register",
+        activityId: String(activity.id || ""),
+        title: String(activity.title || "").slice(0, 60)
+      },
+      success: (r) => {
+        const result = r && r.result
+        if (!result || !result.ok) {
+          wx.showToast({ title: (result && result.msg) || "报名已记录在本机，云端同步失败", icon: "none", duration: 3000 })
+        }
+      },
+      fail: () => {
+        wx.showToast({ title: "网络不佳，报名已保留在本机", icon: "none", duration: 3000 })
+      }
+    })
+  },
+
+  // 从云端恢复报名记录（换机/清缓存/多设备时以云端为准并集本地）。
+  syncRegistrationsFromCloud() {
+    if (!wx.cloud || typeof wx.cloud.callFunction !== "function") return Promise.resolve(false)
+    return new Promise((resolve) => {
+      wx.cloud.callFunction({
+        name: "activityData",
+        data: { action: "listMine" },
+        success: (r) => {
+          const result = r && r.result
+          if (!result || !result.ok) {
+            resolve(false)
+            return
+          }
+          const cloudIds = (result.items || []).map((item) => item.activityId).filter(Boolean)
+          const merged = Array.from(new Set([...(this.data.registeredActivities || []), ...cloudIds]))
+          if (merged.length !== (this.data.registeredActivities || []).length) {
+            this.setData({
+              registeredActivities: merged,
+              activeActivityRegistered: Boolean(this.data.activeActivity && merged.includes(this.data.activeActivity.id))
+            })
+            this.persistDraft({ skipSync: true })
+          }
+          resolve(true)
+        },
+        fail: () => resolve(false)
+      })
+    })
   },
 
   openActivityGroup() {

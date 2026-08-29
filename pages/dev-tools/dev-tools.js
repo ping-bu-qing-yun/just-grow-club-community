@@ -30,6 +30,7 @@ Page({
 
     const login = await this.callFunction("login", { silent: true })
     const profile = await this.callFunction("userProfile", { action: "get" })
+    const registrations = await this.callFunction("activityData", { action: "listMine" })
     const checks = [
       {
         name: "微信身份",
@@ -42,6 +43,13 @@ Page({
         detail: profile && profile.ok
           ? (profile.existing ? "本人资料已找到" : "本人尚无云端资料")
           : "资料云函数未就绪"
+      },
+      {
+        name: "报名数据链路",
+        passed: Boolean(registrations && registrations.ok),
+        detail: registrations && registrations.ok
+          ? `云端报名记录 ${registrations.count || 0} 条`
+          : "报名云函数未就绪"
       },
       {
         name: "隐私返回",
