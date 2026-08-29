@@ -1,4 +1,5 @@
 const config = require("./config.js")
+const { getDevLaunchConfig, isLaunchConfigActive } = require("./utils/devLaunchConfig.js")
 
 App({
   globalData: {
@@ -12,6 +13,10 @@ App({
         env: config.cloudEnv || undefined,
         traceUser: true
       })
+    }
+    const devLaunch = getDevLaunchConfig()
+    if (isLaunchConfigActive(devLaunch) && typeof wx.reLaunch === "function") {
+      setTimeout(() => wx.reLaunch({ url: devLaunch.path }), devLaunch.waitMs)
     }
   }
 })

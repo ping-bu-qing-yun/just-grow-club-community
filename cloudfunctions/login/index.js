@@ -1,96 +1,113 @@
-// 登录云函数：把 wx.login 的 code 换成真实用户身份（openid），并保存/更新用户档案
+// 登录云函数：身份只取 cloud.getWXContext()，并把历史重复 users 记录收敛为一条。
+const crypto = require("crypto")
 const cloud = require("wx-server-sdk")
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
+const USERS = "users"
 
-exports.main = async (event, context) => {
-  const { OPENID, APPID, UNIONID } = cloud.getWXContext()
-  console.log("[login] 收到调用", JSON.stringify({ OPENID: OPENID || "", APPID: APPID || "", silent: Boolean(event && event.silent) }))
+function canonicalUserId(openid) {
+  return "wx_" + crypto.createHash("sha256").update(String(openid || "")).digest("hex").slice(0, 28)
+}
 
-  if (!OPENID) {
-    console.error("[login] 缺少 openid")
-    return { ok: false, msg: "no openid" }
+function timeValue(value) {
+  if (!value) return 0
+  const date = value instanceof Date ? value : new Date(value)
+  const time = date.getTime()
+  return Number.isFinite(time) ? time : 0
+}
+
+function newestRecord(records) {
+  return records.slice().sort((a, b) => timeValue(b.updatedAt) - timeValue(a.updatedAt))[0] || null
+}
+
+async function ensureUsersCollection() {
+  try {
+    await db.createCollection(USERS)
+  } catch (error) {
+    // 集合已存在时会抛错，忽略即可。
   }
+}
 
-  // 静默模式：小程序冷启动时探测身份，只查询、不创建用户记录
-  // 返回 existing = true 表示这个 openid 之前登录过（users 集合里有档案）
-  if (event && event.silent) {
+async function removeLegacyRecords(records, canonicalId) {
+  const legacy = records.filter((record) => record._id && record._id !== canonicalId)
+  await Promise.all(legacy.map(async (record) => {
     try {
-      const res = await db.collection("users").where({ _openid: OPENID }).limit(1).get()
-      const user = res.data && res.data[0]
-      console.log("[login] 静默探测:", user ? "已注册用户" : "新用户")
-      if (user) {
-        return {
-          ok: true,
-          openid: OPENID,
-          existing: true,
-          user: { _id: user._id, openid: OPENID, nickname: user.nickname || "", avatar: user.avatar || "" }
-        }
-      }
-      return { ok: true, openid: OPENID, existing: false, user: null }
-    } catch (e) {
-      // 集合不存在或查询失败：视为新用户，走欢迎流程
-      console.log("[login] 静默探测失败（按新用户处理）:", (e && e.message) || e)
-      return { ok: true, openid: OPENID, existing: false, user: null }
+      await db.collection(USERS).doc(record._id).remove()
+    } catch (error) {
+      console.warn("[login] duplicate cleanup failed")
     }
-  }
+  }))
+}
 
-  // 集合不存在时自动创建（首次部署后会执行一次）
-  try {
-    await db.createCollection("users")
-    console.log("[login] users 集合已创建")
-  } catch (e) {
-    console.log("[login] users 集合创建跳过:", (e && e.message) || e)
-  }
+async function findOrCreateUser(openid, createIfMissing) {
+  const users = db.collection(USERS)
+  const canonicalId = canonicalUserId(openid)
+  const result = await users.where({ _openid: openid }).limit(100).get()
+  const records = Array.isArray(result.data) ? result.data : []
+  let user = records.find((record) => record._id === canonicalId) || null
+  const latest = newestRecord(records)
 
-  const users = db.collection("users")
-  const now = new Date()
-  let user = null
-
-  try {
-    const res = await users.where({ _openid: OPENID }).limit(1).get()
-    user = res.data && res.data[0]
-    console.log("[login] 查询到用户:", user ? user._id : "无")
-  } catch (e) {
-    console.log("[login] 查询失败，走新增流程:", (e && e.message) || e)
-  }
+  if (!user && !latest && !createIfMissing) return null
 
   if (!user) {
-    const doc = {
-      _openid: OPENID,
-      nickname: "",
-      avatar: "",
-      createdAt: now,
-      updatedAt: now
-    }
+    const now = new Date()
+    const seed = latest || {}
     try {
-      const add = await users.add({ data: doc })
-      user = { _id: add._id, ...doc }
-      console.log("[login] 新用户已写入:", add._id)
-    } catch (e) {
-      console.error("[login] 写入用户失败:", e)
-      return { ok: false, msg: "add user failed: " + ((e && e.message) || e) }
+      await users.add({
+        data: {
+          _id: canonicalId,
+          _openid: openid,
+          nickname: seed.nickname || "",
+          avatar: seed.avatar || "",
+          profile: seed.profile && typeof seed.profile === "object" ? seed.profile : null,
+          visibility: "private",
+          profileSchemaVersion: Number(seed.profileSchemaVersion) || 1,
+          createdAt: seed.createdAt || now,
+          updatedAt: seed.updatedAt || now
+        }
+      })
+    } catch (error) {
+      // 同时到达的请求可能已创建同一确定性 _id；只在确认仍不存在时抛出。
+      try {
+        await users.doc(canonicalId).get()
+      } catch (getError) {
+        throw error
+      }
     }
-  } else {
-    try {
-      await users.doc(user._id).update({ data: { updatedAt: now } })
-    } catch (e) {
-      console.log("[login] 更新时间失败:", (e && e.message) || e)
-    }
+  } else if (createIfMissing) {
+    await users.doc(canonicalId).update({ data: { updatedAt: new Date(), visibility: "private" } })
   }
 
-  console.log("[login] 登录完成", JSON.stringify({ appid: APPID, openid: OPENID, userId: user._id }))
-  return {
-    ok: true,
-    appid: APPID,
-    openid: OPENID,
-    user: {
-      _id: user._id,
+  await removeLegacyRecords(records, canonicalId)
+  const current = await users.doc(canonicalId).get()
+  user = current && current.data ? current.data : null
+  return user
+}
+
+exports.main = async (event = {}) => {
+  const { OPENID } = cloud.getWXContext()
+  if (!OPENID) return { ok: false, code: "UNAUTHENTICATED", msg: "请重新登录后再试" }
+
+  try {
+    await ensureUsersCollection()
+    const user = await findOrCreateUser(OPENID, !event.silent)
+    if (!user) return { ok: true, openid: OPENID, existing: false, user: null }
+
+    return {
+      ok: true,
       openid: OPENID,
-      nickname: user.nickname || "",
-      avatar: user.avatar || ""
+      existing: true,
+      user: {
+        _id: user._id,
+        openid: OPENID,
+        nickname: user.nickname || "",
+        avatar: user.avatar || ""
+      }
     }
+  } catch (error) {
+    console.error("[login] request failed", error && error.code ? error.code : "UNKNOWN")
+    return { ok: false, code: "LOGIN_FAILED", msg: "登录服务暂时不可用，请稍后重试" }
   }
 }

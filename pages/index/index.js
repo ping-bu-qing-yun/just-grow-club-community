@@ -105,6 +105,7 @@ const qaTiers = {
 
 const entryQuestions = require("./entry-questions.js")
 const relationshipQuestions = require("./relationship-questions.js")
+const profileSync = require("../../utils/profile-sync.js")
 
 const viewTitles = {
   wxTouch: "微信触达",
@@ -570,6 +571,10 @@ Page({
       verificationCode: saved.verificationCode || "",
       basicInfo: saved.basicInfo || this.data.basicInfo,
       profileDetails: saved.profileDetails || this.data.profileDetails,
+      profileTitle: saved.profileTitle || this.data.profileTitle,
+      profileDims: saved.profileDims || this.data.profileDims,
+      profilePills: saved.profilePills || this.data.profilePills,
+      profileInsight: saved.profileInsight || this.data.profileInsight,
       mineTab: saved.mineTab || "profile",
       avatarUrl: saved.avatarUrl || "",
       entryAnswers,
@@ -615,11 +620,14 @@ Page({
       filter: saved.filter || "all",
       filteredActivityFeed: this.filterActivities(saved.filter || "all")
     })
+    this.lastProfileFingerprint = profileSync.fingerprint(this.data)
     this.refreshFeed()
     if (options.activity) {
       this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
     } else if (isReturning) {
       this.enterHome()
+      // 本地 openid 只用于快速判断返回路径；真实身份仍由云函数上下文重新确认。
+      this.silentLogin(() => {})
     } else {
       // 本地缓存没有登录态：先静默探测云端身份（不影响开场动画的观感）
       // 已在 users 集合里的用户（换手机、清缓存、重扫码）直接进专属页
@@ -635,7 +643,7 @@ Page({
     }
   },
 
-  // 静默登录：拿 openid 去云端查有没有注册过，不弹任何 UI
+  // 静默登录：由云函数上下文确认当前微信身份，不信任本地 openid。
   silentLogin(callback) {
     const done = (known) => {
       if (typeof callback === "function") callback(known)
@@ -652,7 +660,7 @@ Page({
         }
         wx.cloud.callFunction({
           name: "login",
-          data: { code: res.code, silent: true },
+          data: { silent: true },
           success: (r) => {
             const result = r && r.result
             if (result && result.ok && result.existing && result.openid) {
@@ -665,26 +673,35 @@ Page({
               })
               getApp().globalData.openid = result.openid
               getApp().globalData.user = result.user || null
-              this.persistDraft()
-              done(true)
+              this.persistDraft({ skipSync: true })
+              this.restoreProfileFromCloud().then(() => done(true))
             } else {
               done(false)
             }
           },
-          fail: () => done(false)
+          fail: () => {
+            this.showProfileSyncFailure("云端登录失败，已使用本机缓存")
+            done(false)
+          }
         })
       },
-      fail: () => done(false)
+      fail: () => {
+        this.showProfileSyncFailure("云端登录失败，已使用本机缓存")
+        done(false)
+      }
     })
   },
 
   onHide() {
     this.persistDraft()
+    const saved = wx.getStorageSync("qiahaoDraft") || {}
+    if (saved._profileSyncPending) this.syncProfileToCloud({ quiet: true })
   },
 
   onUnload() {
     clearInterval(recordTimer)
     clearTimeout(this.introTimer)
+    clearTimeout(this.profileSyncTimer)
     if (innerAudioContext) innerAudioContext.destroy()
   },
 
@@ -889,26 +906,25 @@ Page({
       wx.showToast({ title: "请先填写手机号", icon: "none" })
       return
     }
-    const goAfterLogin = (nickname) => {
-      const saved = wx.getStorageSync("qiahaoDraft") || {}
-      const hasProfile = Boolean(saved.basicInfo && saved.basicInfo.name) || Boolean(saved.entryDone) || Boolean(saved.relDone) || Boolean(saved.qaBasicDone)
+    const goAfterLogin = (nickname, restoreCloud) => {
       this.setData({ loggedIn: true, accountName: nickname || "恰好朋友" })
-      this.persistDraft()
-      if (hasProfile) {
-        this.enterHome()
-      } else {
-        this.setView("lightQa")
+      this.persistDraft({ skipSync: true })
+      const finish = () => {
+        if (profileSync.hasMeaningfulProfile(this.data)) this.enterHome()
+        else this.setView("lightQa")
       }
+      if (restoreCloud) this.restoreProfileFromCloud({ showLoading: true, showFeedback: true }).then(finish)
+      else finish()
     }
     const fallbackDemo = (silent) => {
       if (!silent) wx.showToast({ title: "云登录未就绪，暂用演示模式", icon: "none" })
-      goAfterLogin("小Z")
+      goAfterLogin("小Z", false)
     }
     if (this.data.authMode === "phone") {
-      goAfterLogin("小Z")
+      goAfterLogin("小Z", false)
       return
     }
-    // 真实微信登录：wx.login 拿 code → 云函数 login 换 openid
+    // 真实微信登录：wx.login 确认可用会话；openid 只由云函数上下文取得。
     if (typeof wx.login !== "function" || !wx.cloud || typeof wx.cloud.callFunction !== "function") {
       fallbackDemo(true)
       return
@@ -924,7 +940,7 @@ Page({
         }
         wx.cloud.callFunction({
           name: "login",
-          data: { code: res.code },
+          data: {},
           success: (r) => {
             wx.hideLoading()
             const result = r && r.result
@@ -933,15 +949,14 @@ Page({
               getApp().globalData.openid = result.openid
               getApp().globalData.user = result.user || null
               wx.showToast({ title: "微信登录成功", icon: "success", duration: 2000 })
-              goAfterLogin((result.user && result.user.nickname) || "")
+              goAfterLogin((result.user && result.user.nickname) || "", true)
             } else {
               wx.showToast({ title: (result && result.msg) || "微信登录异常", icon: "none" })
               fallbackDemo(true)
             }
           },
-          fail: (err) => {
+          fail: () => {
             wx.hideLoading()
-            console.log("[login] 云函数调用失败", err)
             fallbackDemo(false)
           }
         })
@@ -1091,7 +1106,9 @@ Page({
       return
     }
     this.generateProfile()
+    this.persistDraft()
     this.setView("profile")
+    this.syncProfileToCloud({ showLoading: true, successMessage: "资料已同步" })
   },
 
   updateBasicField(e) {
@@ -1115,7 +1132,7 @@ Page({
 
   saveProfileDetails() {
     this.persistDraft()
-    wx.showToast({ title: "画像资料已更新", icon: "success" })
+    this.syncProfileToCloud({ showLoading: true, successMessage: "画像资料已更新" })
   },
 
   resetQa() {
@@ -1352,7 +1369,142 @@ Page({
     this.setView("activityDetail")
   },
 
-  persistDraft() {
+  showProfileSyncFailure(message) {
+    const now = Date.now()
+    if (this.lastProfileSyncNoticeAt && now - this.lastProfileSyncNoticeAt < 15000) return
+    this.lastProfileSyncNoticeAt = now
+    wx.showToast({ title: message || "云端同步失败，内容已保留在本机", icon: "none", duration: 3000 })
+  },
+
+  restoreProfileFromCloud(options = {}) {
+    return new Promise((resolve) => {
+      if (!this.data.openid || !wx.cloud || typeof wx.cloud.callFunction !== "function") {
+        this.showProfileSyncFailure("云端恢复不可用，已使用本机缓存")
+        resolve(false)
+        return
+      }
+      if (options.showLoading) wx.showLoading({ title: "正在恢复资料…", mask: true })
+      wx.cloud.callFunction({
+        name: "userProfile",
+        data: { action: "get" },
+        success: (response) => {
+          const result = response && response.result
+          if (!result || !result.ok) {
+            if (options.showLoading) wx.hideLoading()
+            this.showProfileSyncFailure((result && result.msg) || "云端恢复失败，已使用本机缓存")
+            resolve(false)
+            return
+          }
+
+          const localDraft = wx.getStorageSync("qiahaoDraft") || {}
+          const localProfile = profileSync.pickProfile(localDraft)
+          const cloudProfile = result.profile && typeof result.profile === "object" ? result.profile : null
+          const preferLocal = Boolean(localDraft._profileSyncPending)
+          const merged = preferLocal
+            ? profileSync.mergeProfiles(localProfile, cloudProfile || {})
+            : profileSync.mergeProfiles(cloudProfile || {}, localProfile)
+          const mergedFingerprint = profileSync.fingerprint(merged)
+          const cloudFingerprint = profileSync.fingerprint(cloudProfile || {})
+          const cloudComparableFingerprint = profileSync.fingerprint(profileSync.buildCloudProfile(merged))
+          const needsUpload = profileSync.hasMeaningfulProfile(merged) && (!cloudProfile || cloudComparableFingerprint !== cloudFingerprint)
+          const dataPatch = { ...merged }
+          if (merged.basicInfo && merged.basicInfo.name) dataPatch.accountName = merged.basicInfo.name
+
+          this.setData(dataPatch, () => {
+            this.lastProfileFingerprint = mergedFingerprint
+            this.persistDraft({
+              skipSync: true,
+              syncPending: needsUpload,
+              syncedAt: needsUpload ? localDraft._profileSyncedAt : Date.now(),
+              cloudUpdatedAt: Number(result.updatedAt) || 0
+            })
+            this.refreshFeed()
+            if (this.data.view === "home") {
+              this.refreshRecommendations()
+              this.prepareHome()
+            }
+            if (options.showLoading) wx.hideLoading()
+            if (needsUpload) this.syncProfileToCloud({
+              quiet: !options.showFeedback,
+              successMessage: options.showFeedback ? "资料已同步" : ""
+            })
+            else if (options.showFeedback) wx.showToast({ title: "资料已恢复", icon: "success" })
+            resolve(true)
+          })
+        },
+        fail: () => {
+          if (options.showLoading) wx.hideLoading()
+          this.showProfileSyncFailure("云端恢复失败，已使用本机缓存")
+          resolve(false)
+        }
+      })
+    })
+  },
+
+  queueProfileSync() {
+    clearTimeout(this.profileSyncTimer)
+    this.profileSyncTimer = setTimeout(() => this.syncProfileToCloud(), 900)
+  },
+
+  syncProfileToCloud(options = {}) {
+    clearTimeout(this.profileSyncTimer)
+    if (!this.data.loggedIn || !this.data.openid) {
+      if (options.successMessage) wx.showToast({ title: "已保存在本机", icon: "success" })
+      return Promise.resolve(false)
+    }
+    if (!wx.cloud || typeof wx.cloud.callFunction !== "function") {
+      if (!options.quiet) this.showProfileSyncFailure()
+      return Promise.resolve(false)
+    }
+
+    const sentFingerprint = profileSync.fingerprint(this.data)
+    const cloudProfile = profileSync.buildCloudProfile(this.data)
+    if (options.showLoading) wx.showLoading({ title: "正在同步资料…", mask: true })
+
+    return new Promise((resolve) => {
+      wx.cloud.callFunction({
+        name: "userProfile",
+        data: { action: "save", profile: cloudProfile },
+        success: (response) => {
+          const result = response && response.result
+          if (!result || !result.ok) {
+            if (options.showLoading) wx.hideLoading()
+            this.persistDraft({ skipSync: true, syncPending: true })
+            if (!options.quiet) this.showProfileSyncFailure((result && result.msg) || "云端同步失败，内容已保留在本机")
+            resolve(false)
+            return
+          }
+
+          const changedWhileSaving = profileSync.fingerprint(this.data) !== sentFingerprint
+          this.persistDraft({
+            skipSync: true,
+            syncPending: changedWhileSaving,
+            syncedAt: Date.now(),
+            cloudUpdatedAt: Number(result.updatedAt) || Date.now()
+          })
+          if (options.showLoading) wx.hideLoading()
+          if (options.successMessage) wx.showToast({ title: options.successMessage, icon: "success" })
+          if (changedWhileSaving) this.queueProfileSync()
+          resolve(true)
+        },
+        fail: () => {
+          if (options.showLoading) wx.hideLoading()
+          this.persistDraft({ skipSync: true, syncPending: true })
+          if (!options.quiet) this.showProfileSyncFailure()
+          resolve(false)
+        }
+      })
+    })
+  },
+
+  persistDraft(options = {}) {
+    const previous = wx.getStorageSync("qiahaoDraft") || {}
+    const currentFingerprint = profileSync.fingerprint(this.data)
+    const profileChanged = Boolean(this.lastProfileFingerprint) && currentFingerprint !== this.lastProfileFingerprint
+    const syncPending = typeof options.syncPending === "boolean"
+      ? options.syncPending
+      : Boolean(previous._profileSyncPending || profileChanged)
+    const profileUpdatedAt = profileChanged ? Date.now() : (Number(previous._profileUpdatedAt) || 0)
     wx.setStorageSync("qiahaoDraft", {
       basicInfo: this.data.basicInfo,
       loggedIn: this.data.loggedIn,
@@ -1400,8 +1552,20 @@ Page({
       publishedActivities: this.data.publishedActivities,
       activeActivity: this.data.activeActivity,
       activityGroupJoined: this.data.activityGroupJoined,
-      filter: this.data.filter
+      filter: this.data.filter,
+      profileTitle: this.data.profileTitle,
+      profileDims: this.data.profileDims,
+      profilePills: this.data.profilePills,
+      profileInsight: this.data.profileInsight,
+      _profileSchemaVersion: profileSync.PROFILE_SCHEMA_VERSION,
+      _profileFingerprint: currentFingerprint,
+      _profileUpdatedAt: profileUpdatedAt,
+      _profileSyncedAt: Number(options.syncedAt) || Number(previous._profileSyncedAt) || 0,
+      _profileCloudUpdatedAt: Number(options.cloudUpdatedAt) || Number(previous._profileCloudUpdatedAt) || 0,
+      _profileSyncPending: syncPending
     })
+    this.lastProfileFingerprint = currentFingerprint
+    if (profileChanged && !options.skipSync && this.data.loggedIn && this.data.openid) this.queueProfileSync()
   },
 
   generateProfile() {

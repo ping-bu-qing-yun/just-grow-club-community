@@ -1,0 +1,97 @@
+page {
+  min-height: 100%;
+  background: #f7f3eb;
+  color: #2f302a;
+}
+
+.diagnostics-page {
+  padding: 32rpx 28rpx calc(48rpx + env(safe-area-inset-bottom));
+}
+
+.diagnostics-card {
+  margin-bottom: 24rpx;
+  padding: 32rpx;
+  border: 1rpx solid rgba(74, 69, 56, 0.12);
+  border-radius: 28rpx;
+  background: #fffdf8;
+  box-shadow: 0 12rpx 32rpx rgba(79, 68, 45, 0.06);
+}
+
+.diagnostics-title,
+.diagnostics-caption,
+.diagnostics-name,
+.diagnostics-detail {
+  display: block;
+}
+
+.diagnostics-title {
+  font-size: 38rpx;
+  font-weight: 650;
+}
+
+.diagnostics-caption {
+  margin-top: 12rpx;
+  color: #7c776c;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.diagnostics-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 84rpx;
+  margin-top: 28rpx;
+  border-radius: 42rpx;
+  background: #596a50;
+  color: #ffffff;
+  font-size: 28rpx;
+}
+
+.diagnostics-button::after {
+  border: 0;
+}
+
+.diagnostics-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid rgba(74, 69, 56, 0.1);
+}
+
+.diagnostics-row:last-child {
+  border-bottom: 0;
+}
+
+.diagnostics-status {
+  flex: none;
+  width: 20rpx;
+  height: 20rpx;
+  margin: 10rpx 20rpx 0 0;
+  border-radius: 50%;
+}
+
+.diagnostics-status.is-pass {
+  background: #5d8b62;
+}
+
+.diagnostics-status.is-fail {
+  background: #b65a47;
+}
+
+.diagnostics-copy {
+  min-width: 0;
+}
+
+.diagnostics-name {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.diagnostics-detail {
+  margin-top: 8rpx;
+  color: #7c776c;
+  font-size: 24rpx;
+  line-height: 1.5;
+  word-break: break-all;
+}

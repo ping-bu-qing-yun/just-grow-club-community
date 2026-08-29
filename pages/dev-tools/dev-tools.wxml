@@ -1,0 +1,19 @@
+<view class="diagnostics-page">
+  <view class="diagnostics-card">
+    <text class="diagnostics-title">云端专项验收</text>
+    <text class="diagnostics-caption">只检查当前微信账号，不展示 openid 或资料正文。</text>
+    <button class="diagnostics-button" loading="{{running}}" disabled="{{running}}" bindtap="runChecks">
+      {{running ? '检查中…' : '重新检查'}}
+    </button>
+  </view>
+
+  <view class="diagnostics-card" wx:if="{{finished}}">
+    <view class="diagnostics-row" wx:for="{{checks}}" wx:key="name">
+      <view class="diagnostics-status {{item.passed ? 'is-pass' : 'is-fail'}}"></view>
+      <view class="diagnostics-copy">
+        <text class="diagnostics-name">{{item.name}}</text>
+        <text class="diagnostics-detail">{{item.detail}}</text>
+      </view>
+    </view>
+  </view>
+</view>

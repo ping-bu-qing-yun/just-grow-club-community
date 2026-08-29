@@ -28,6 +28,18 @@
         "value": ".pnpm-store"
       },
       {
+        "type": "folder",
+        "value": "tests"
+      },
+      {
+        "type": "folder",
+        "value": "scripts"
+      },
+      {
+        "type": "folder",
+        "value": "tmp"
+      },
+      {
         "type": "suffix",
         "value": "zip"
       },
@@ -58,6 +70,18 @@
       {
         "type": "file",
         "value": "AGENTS.md"
+      },
+      {
+        "type": "file",
+        "value": "ACCEPTANCE_CRITERIA.md"
+      },
+      {
+        "type": "file",
+        "value": "package.json"
+      },
+      {
+        "type": "file",
+        "value": "utils/devAutomationConfig.js"
       },
       {
         "type": "file",
@@ -120,7 +144,18 @@
   "libVersion": "3.8.0",
   "appid": "wxbbac26f6c800f503",
   "projectname": "qiahao-miniprogram",
-  "condition": {},
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "id": -1,
+          "name": "dev-tools-autorun",
+          "pathName": "pages/dev-tools/dev-tools",
+          "query": "autorun=1&capture=1&testType=all"
+        }
+      ]
+    }
+  },
   "miniprogramRoot": "./",
   "simulatorPluginLibVersion": {},
   "editorSetting": {}

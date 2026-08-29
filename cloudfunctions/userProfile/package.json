@@ -1,0 +1,9 @@
+{
+  "name": "user-profile",
+  "version": "1.0.0",
+  "description": "恰好俱乐部本人资料安全读写云函数",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
