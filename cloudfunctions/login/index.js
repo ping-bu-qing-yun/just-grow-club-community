@@ -7,11 +7,34 @@ const db = cloud.database()
 
 exports.main = async (event, context) => {
   const { OPENID, APPID, UNIONID } = cloud.getWXContext()
-  console.log("[login] 收到调用", JSON.stringify({ OPENID: OPENID || "", APPID: APPID || "" }))
+  console.log("[login] 收到调用", JSON.stringify({ OPENID: OPENID || "", APPID: APPID || "", silent: Boolean(event && event.silent) }))
 
   if (!OPENID) {
     console.error("[login] 缺少 openid")
     return { ok: false, msg: "no openid" }
+  }
+
+  // 静默模式：小程序冷启动时探测身份，只查询、不创建用户记录
+  // 返回 existing = true 表示这个 openid 之前登录过（users 集合里有档案）
+  if (event && event.silent) {
+    try {
+      const res = await db.collection("users").where({ _openid: OPENID }).limit(1).get()
+      const user = res.data && res.data[0]
+      console.log("[login] 静默探测:", user ? "已注册用户" : "新用户")
+      if (user) {
+        return {
+          ok: true,
+          openid: OPENID,
+          existing: true,
+          user: { _id: user._id, openid: OPENID, nickname: user.nickname || "", avatar: user.avatar || "" }
+        }
+      }
+      return { ok: true, openid: OPENID, existing: false, user: null }
+    } catch (e) {
+      // 集合不存在或查询失败：视为新用户，走欢迎流程
+      console.log("[login] 静默探测失败（按新用户处理）:", (e && e.message) || e)
+      return { ok: true, openid: OPENID, existing: false, user: null }
+    }
   }
 
   // 集合不存在时自动创建（首次部署后会执行一次）

@@ -621,10 +621,61 @@ Page({
     } else if (isReturning) {
       this.enterHome()
     } else {
-      this.introTimer = setTimeout(() => {
-        this.setView("welcome", { push: false, resetHistory: true })
-      }, 1400)
+      // 本地缓存没有登录态：先静默探测云端身份（不影响开场动画的观感）
+      // 已在 users 集合里的用户（换手机、清缓存、重扫码）直接进专属页
+      this.silentLogin((known) => {
+        if (known) {
+          this.enterHome()
+        } else {
+          this.introTimer = setTimeout(() => {
+            this.setView("welcome", { push: false, resetHistory: true })
+          }, 1400)
+        }
+      })
     }
+  },
+
+  // 静默登录：拿 openid 去云端查有没有注册过，不弹任何 UI
+  silentLogin(callback) {
+    const done = (known) => {
+      if (typeof callback === "function") callback(known)
+    }
+    if (typeof wx.login !== "function" || !wx.cloud || typeof wx.cloud.callFunction !== "function") {
+      done(false)
+      return
+    }
+    wx.login({
+      success: (res) => {
+        if (!res.code) {
+          done(false)
+          return
+        }
+        wx.cloud.callFunction({
+          name: "login",
+          data: { code: res.code, silent: true },
+          success: (r) => {
+            const result = r && r.result
+            if (result && result.ok && result.existing && result.openid) {
+              // 云端确认是已注册用户：恢复登录态并落回本地缓存
+              this.setData({
+                loggedIn: true,
+                openid: result.openid,
+                accountName: (result.user && result.user.nickname) || this.data.accountName,
+                avatarUrl: (result.user && result.user.avatar) || this.data.avatarUrl
+              })
+              getApp().globalData.openid = result.openid
+              getApp().globalData.user = result.user || null
+              this.persistDraft()
+              done(true)
+            } else {
+              done(false)
+            }
+          },
+          fail: () => done(false)
+        })
+      },
+      fail: () => done(false)
+    })
   },
 
   onHide() {
