@@ -1,8 +1,4 @@
-// 报名数据云函数：报名记录写入 registrations 集合，身份只取 cloud.getWXContext()。
-// 设计要点：
-// 1. 幂等：_id = 调用者确定性 ID + 活动 ID，重复报名不会产生第二条记录；
-// 2. 隔离：任何人只能写/读/取消自己的报名记录；
-// 3. 安全：客户端传入的字符串字段做长度与类型清洗，不接受对象/数组。
+// 活动报名云函数：身份只取 cloud.getWXContext()，容量与报名人数由云端统一判断。
 const crypto = require("crypto")
 const cloud = require("wx-server-sdk")
 
@@ -11,6 +7,13 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const REGISTRATIONS = "registrations"
 const MAX_LIST = 200
+const STATIC_CAPACITIES = Object.freeze({
+  dinner: 8,
+  ai: 6,
+  walk: 12,
+  workshop: 10,
+  lunch: 4
+})
 
 function canonicalUserId(openid) {
   return "wx_" + crypto.createHash("sha256").update(String(openid || "")).digest("hex").slice(0, 28)
@@ -21,11 +24,43 @@ function cleanText(value, maxLength) {
   return value.trim().slice(0, maxLength)
 }
 
+function cleanCapacity(value) {
+  const capacity = Number(value)
+  if (!Number.isInteger(capacity) || capacity < 1) return 0
+  return Math.min(capacity, 200)
+}
+
 async function ensureRegistrationsCollection() {
   try {
     await db.createCollection(REGISTRATIONS)
   } catch (error) {
     // 集合已存在时会抛错，忽略即可。
+  }
+}
+
+async function activityRecords(activityId) {
+  const result = await db.collection(REGISTRATIONS)
+    .where({ activityId, status: "registered" })
+    .limit(MAX_LIST)
+    .get()
+  return Array.isArray(result.data) ? result.data : []
+}
+
+function resolveCapacity(activityId, requestedCapacity, records) {
+  if (STATIC_CAPACITIES[activityId]) return STATIC_CAPACITIES[activityId]
+  const stored = (records || []).map((record) => cleanCapacity(record.capacity)).find(Boolean)
+  return stored || cleanCapacity(requestedCapacity)
+}
+
+async function availability(activityId, requestedCapacity) {
+  const records = await activityRecords(activityId)
+  const capacity = resolveCapacity(activityId, requestedCapacity, records)
+  const registeredCount = records.length
+  return {
+    capacity,
+    registeredCount,
+    remaining: capacity ? Math.max(0, capacity - registeredCount) : 0,
+    isFull: Boolean(capacity && registeredCount >= capacity)
   }
 }
 
@@ -38,12 +73,19 @@ async function listMine(openid) {
       activityId: record.activityId,
       title: record.title || "",
       status: record.status || "registered",
+      dateRaw: record.dateRaw || "",
+      date: record.date || "",
+      weekday: record.weekday || "",
+      time: record.time || "",
+      location: record.location || "",
+      capacity: cleanCapacity(record.capacity),
       createdAt: record.createdAt && record.createdAt instanceof Date ? record.createdAt.getTime() : 0
     }))
 }
 
 exports.main = async (event = {}) => {
-  const action = event.action === "register" || event.action === "listMine" || event.action === "cancel" ? event.action : ""
+  const allowedActions = ["register", "listMine", "cancel", "availability"]
+  const action = allowedActions.includes(event.action) ? event.action : ""
   if (!action) return { ok: false, code: "INVALID_ACTION", msg: "不支持的报名操作" }
 
   const { OPENID } = cloud.getWXContext()
@@ -53,13 +95,34 @@ exports.main = async (event = {}) => {
     await ensureRegistrationsCollection()
     const userId = canonicalUserId(OPENID)
     const activityId = cleanText(event.activityId, 80)
-    if ((action === "register" || action === "cancel") && !activityId) {
+    if (action !== "listMine" && !activityId) {
       return { ok: false, code: "INVALID_ACTIVITY", msg: "缺少活动信息" }
+    }
+
+    if (action === "availability") {
+      const current = await availability(activityId, event.capacity)
+      return { ok: true, activityId, ...current }
     }
 
     if (action === "register") {
       const now = new Date()
       const docId = `${userId}_${activityId}`
+      try {
+        await db.collection(REGISTRATIONS).doc(docId).get()
+        const current = await availability(activityId, event.capacity)
+        return { ok: true, registered: true, activityId, ...current }
+      } catch (error) {
+        // 本人尚未报名，继续做容量判断。
+      }
+
+      const current = await availability(activityId, event.capacity)
+      if (!current.capacity) {
+        return { ok: false, code: "CAPACITY_REQUIRED", msg: "活动尚未设置报名人数" }
+      }
+      if (current.isFull) {
+        return { ok: false, code: "ACTIVITY_FULL", msg: "活动已满员", activityId, ...current }
+      }
+
       try {
         await db.collection(REGISTRATIONS).add({
           data: {
@@ -68,20 +131,27 @@ exports.main = async (event = {}) => {
             _openid: OPENID,
             activityId,
             title: cleanText(event.title, 120),
+            dateRaw: cleanText(event.dateRaw, 10),
+            date: cleanText(event.date, 16),
+            weekday: cleanText(event.weekday, 8),
+            time: cleanText(event.time, 10),
+            location: cleanText(event.location, 120),
+            capacity: current.capacity,
             status: "registered",
             createdAt: now,
             updatedAt: now
           }
         })
       } catch (error) {
-        // 同时到达的请求可能已写入同一确定性 _id；只有确实不存在时才抛错。
+        // 同一用户重复点击时确定性 _id 保证只有一条记录。
         try {
           await db.collection(REGISTRATIONS).doc(docId).get()
         } catch (getError) {
           throw error
         }
       }
-      return { ok: true, registered: true, activityId }
+      const updated = await availability(activityId, current.capacity)
+      return { ok: true, registered: true, activityId, ...updated }
     }
 
     if (action === "cancel") {
@@ -91,7 +161,8 @@ exports.main = async (event = {}) => {
       } catch (error) {
         // 记录不存在时视为已取消。
       }
-      return { ok: true, registered: false, activityId }
+      const current = await availability(activityId, event.capacity)
+      return { ok: true, registered: false, activityId, ...current }
     }
 
     const items = await listMine(OPENID)

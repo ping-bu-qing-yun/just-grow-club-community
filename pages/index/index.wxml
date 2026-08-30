@@ -260,16 +260,16 @@
           <text class="letter-seal">见字如面</text>
         </view>
         <image class="letter-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
-        <view class="letter-head">今天，认真回答一个问题</view>
+        <view class="letter-head">小CC的来信</view>
         <view wx:if="{{letterMode === 'ask'}}" class="letter-q">{{letterTopic.q}}</view>
         <input wx:else class="letter-topic-input" value="{{letterMyTopic}}" bindinput="updateLetterMyTopic" cursor-spacing="20" maxlength="30" placeholder="写下你想聊的话题" />
         <textarea class="letter-answer" value="{{letterDraft}}" bindinput="updateLetterDraft" cursor-spacing="20" maxlength="200" placeholder="{{letterMode === 'free' ? '围绕你自己的话题，说几句真实感受…' : '回信给小CC，写几句此刻的真实感受…'}}" />
         <view class="letter-count">{{letterDraft.length}}/200</view>
         <view class="letter-actions">
-          <button class="letter-btn ghost" bindtap="toggleLetterSource">{{letterMode === 'ask' ? '写自己的问题' : '回到今日问题'}}</button>
-          <button class="letter-btn main" bindtap="submitHomeLetter">提交给小CC</button>
+          <button class="letter-btn ghost" bindtap="toggleLetterSource">{{letterMode === 'ask' ? '我也有个话题' : '回到小CC的来信'}}</button>
+          <button class="letter-btn main" bindtap="submitHomeLetter">{{letterMode === 'free' ? '把话题交给小CC' : '把回信交给小CC'}}</button>
         </view>
-        <button wx:if="{{letterMode === 'ask'}}" class="letter-switch" bindtap="switchHomeLetter">换一个问题</button>
+        <view wx:if="{{letterMode === 'ask'}}" class="letter-switch" bindtap="switchHomeLetter">换一个话题 ↻</view>
       </view>
     </view>
 
@@ -279,10 +279,10 @@
         <view class="letter-head">你的声音，小CC收到了</view>
         <view class="letter-done-q">{{letterSaved.q}}</view>
         <view class="letter-done-a">“{{letterSaved.answer}}”</view>
-        <view class="letter-echo">这段表达会更新你的画像，也会帮助小CC改进活动推荐。</view>
+        <view class="letter-echo">这些表达会慢慢长成你的关系画像，也会帮小CC为你找到更合适的见面。</view>
         <view class="letter-actions">
           <button class="letter-btn ghost" bindtap="editHomeLetter">补充一下</button>
-          <button class="letter-btn main" bindtap="newHomeLetter">回答新问题</button>
+          <button class="letter-btn main" bindtap="newHomeLetter">再写一封</button>
         </view>
       </view>
     </view>
@@ -295,7 +295,7 @@
       <view class="poster-wrap">
         <image wx:if="{{activeActivity.poster}}" class="detail-poster" src="{{activeActivity.poster}}" mode="aspectFit" />
         <view wx:else class="detail-poster-fallback {{activeActivity.coverClass}}">{{activeActivity.coverText}}</view>
-        <button class="share-chip" open-type="share">分享海报＋信息</button>
+        <button wx:if="{{!activeActivityPast}}" class="share-chip" open-type="share">分享海报＋信息</button>
       </view>
 
       <view class="info-card">
@@ -306,6 +306,10 @@
           <view class="fact"><text class="fact-label">地点</text><text class="fact-value">{{activeActivity.location}}</text></view>
           <view class="fact"><text class="fact-label">人数</text><text class="fact-value">{{activeActivity.people}}</text></view>
           <view class="fact"><text class="fact-label">费用</text><text class="fact-value">{{activeActivity.fee}}</text></view>
+        </view>
+        <view wx:if="{{activeActivityCapacity && !activeActivityPast}}" class="capacity-status {{activeActivityFull ? 'is-full' : ''}}">
+          <text>{{availabilityLoading ? '正在确认名额…' : '已报名 ' + activeActivityRegisteredCount + ' / ' + activeActivityCapacity}}</text>
+          <text wx:if="{{!availabilityLoading}}">{{activeActivityFull ? '已满员' : '还剩 ' + activeActivityRemaining + ' 个名额'}}</text>
         </view>
       </view>
 
@@ -335,16 +339,36 @@
         <view class="block-body safety">第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。</view>
       </view>
 
-      <view class="detail-links">
-        <button class="detail-link" bindtap="openActivityGroup">{{activityGroupJoined ? '已加入活动群' : '活动群聊'}}</button>
+      <view wx:if="{{afterPartySpots.length && !activeActivityPast}}" class="block">
+        <view class="block-title">听你们的 <text class="block-title-note">散场后，还想一起去哪？</text></view>
+        <view class="after-note">根据你今晚的状态挑了 3 个续场灵感，距离与营业情况请出发前再次确认。</view>
+        <view wx:for="{{afterPartySpots}}" wx:key="id" class="after-spot">
+          <view class="after-spot-head">
+            <text class="after-cat">{{item.cat}}</text>
+            <text class="after-name">{{item.name}}</text>
+            <text class="after-walk">{{item.walk}}</text>
+          </view>
+          <view class="after-why">{{item.why}}</view>
+          <view class="after-tags">
+            <text wx:for="{{item.vibe}}" wx:for-item="v" wx:key="*this" class="after-tag">{{v}}</text>
+          </view>
+        </view>
+        <view class="after-actions">
+          <button class="after-btn line" bindtap="refreshAfterParty">换一批</button>
+          <button class="after-btn solid" bindtap="copyAfterPartyIdeas">复制这三个</button>
+        </view>
+      </view>
+
+      <view wx:if="{{!activeActivityPast}}" class="detail-links">
         <button class="detail-link warn" data-id="{{activeActivity.id}}" bindtap="dismissCard">不喜欢这类</button>
       </view>
     </scroll-view>
 
-    <view class="detail-bar">
-      <button class="bar-btn main" disabled="{{registrationSubmitting}}" bindtap="registerActivity">{{registrationSubmitting ? '提交中…' : activeActivityRegistrationPending ? '已保存，待同步' : activeActivityRegistered ? '取消报名意向' : '提交报名意向'}}</button>
+    <view wx:if="{{!activeActivityPast}}" class="detail-bar">
+      <button class="bar-btn main" disabled="{{registrationSubmitting || availabilityLoading || (activeActivityFull && !activeActivityRegistered)}}" bindtap="registerActivity">{{registrationSubmitting ? '提交中…' : availabilityLoading ? '正在确认名额…' : activeActivityRegistrationPending ? '已保存，待同步' : activeActivityRegistered ? '取消报名意向' : activeActivityFull ? '已满员' : '提交报名意向'}}</button>
       <button class="bar-btn ghost" bindtap="openReason">我还有顾虑</button>
     </view>
+    <view wx:else class="detail-bar history-ended"><button class="bar-btn ended" disabled>活动已结束</button></view>
   </view>
 
     <scroll-view wx:elif="{{view === 'explore'}}" scroll-y class="screen with-tab explore-page">
@@ -388,6 +412,35 @@
     </view>
   </scroll-view>
 
+  <scroll-view wx:elif="{{view === 'activityHistory'}}" scroll-y class="screen activity-history-page">
+    <view class="history-summary">
+      <view><text>{{currentActivityHistory.length}}</text><text>报名意向</text></view>
+      <view><text>{{pastActivityHistory.length}}</text><text>过去参与</text></view>
+    </view>
+    <view class="history-tabs">
+      <button class="{{activityHistoryTab === 'past' ? 'active' : ''}}" data-tab="past" bindtap="setActivityHistoryTab">过去参与</button>
+      <button class="{{activityHistoryTab === 'current' ? 'active' : ''}}" data-tab="current" bindtap="setActivityHistoryTab">报名意向</button>
+    </view>
+    <view class="history-list">
+      <button wx:for="{{activityHistoryTab === 'past' ? pastActivityHistory : currentActivityHistory}}" wx:key="activityId" class="history-card" data-id="{{item.activityId}}" bindtap="openHistoryActivity">
+        <image wx:if="{{item.poster}}" src="{{item.poster}}" mode="aspectFill" />
+        <view wx:else class="history-cover {{item.coverClass}}">{{item.coverText || '恰好'}}</view>
+        <view class="history-info">
+          <text class="history-date">{{item.date}} {{item.weekday}} {{item.time}}</text>
+          <text class="history-title">{{item.title}}</text>
+          <text class="history-location">{{item.location || '活动地点待确认'}}</text>
+          <text class="history-status {{item.status}}">{{item.status === 'pending' ? '待同步' : activityHistoryTab === 'past' ? '已结束' : '报名意向已提交'}}</text>
+        </view>
+        <text class="row-arrow">›</text>
+      </button>
+    </view>
+    <view wx:if="{{activityHistoryTab === 'past' ? !pastActivityHistory.length : !currentActivityHistory.length}}" class="history-empty">
+      <view class="history-empty-title">{{activityHistoryTab === 'past' ? '还没有过去参与的活动' : '还没有报名意向'}}</view>
+      <view class="history-empty-desc">{{activityHistoryTab === 'past' ? '完成一次活动后，记录会保留在这里。' : '先找一场你愿意参加的见面。'}}</view>
+      <button bindtap="exploreFromHistory">去发现活动</button>
+    </view>
+  </scroll-view>
+
     <scroll-view wx:elif="{{view === 'mine'}}" scroll-y class="screen with-tab club-profile">
     <view class="profile-cover"></view>
     <view class="profile-identity">
@@ -403,13 +456,13 @@
       <button class="promo-full" bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
     </view>
     <view class="profile-stats">
-      <view><text class="stat-num">{{registeredActivities.length}}</text><text class="stat-label">参与活动</text></view>
+      <button class="profile-stat-button" bindtap="openActivityHistory"><text class="stat-num">{{registeredActivities.length}}</text><text class="stat-label">参与活动</text></button>
     </view>
     <view class="club-profile-section">
       <view class="section-title">我的记录</view>
       <button bindtap="go" data-view="profile"><text>我的画像</text><text>根据回答和活动反馈持续更新</text><text class="row-arrow">›</text></button>
-      <button wx:if="{{registeredActivities.length}}" bindtap="showRegistrationSummary"><text>报名意向</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
-      <button wx:if="{{hostToolsEnabled}}" bindtap="openActivityComposer"><text>发起活动</text><text>主理人工具</text><text class="row-arrow">›</text></button>
+      <button bindtap="openActivityHistory"><text>参与活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
+      <button wx:if="{{hostToolsEnabled}}" bindtap="openActivityComposer"><text>发布活动</text><text>发起一场恰好见面</text><text class="row-arrow">›</text></button>
     </view>
     <view wx:if="{{publishedActivities.length}}" class="club-profile-section">
       <view class="section-title">我发布的活动</view>
@@ -494,8 +547,8 @@
             </view>
             <view class="form-row">
               <view class="form-half">
-                <view class="form-label">活动人数</view>
-                <input class="form-input" value="{{item.people}}" data-index="{{index}}" data-field="people" bindinput="updateActivityGroup" placeholder="6-8人" maxlength="20" />
+                <view class="form-label">报名人数上限<text class="req">*</text></view>
+                <input class="form-input" type="number" value="{{item.people}}" data-index="{{index}}" data-field="people" bindinput="updateActivityGroup" placeholder="比如：8" maxlength="3" />
               </view>
               <view class="form-half">
                 <view class="form-label">活动价格</view>

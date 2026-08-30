@@ -117,6 +117,7 @@ const viewTitles = {
   auth: "登录恰好",
   home: "恰好是你",
   activityDetail: "活动详情",
+  activityHistory: "参与活动",
   explore: "发现活动",
   mine: "我的",
   accountSettings: "账号与隐私",
@@ -124,7 +125,7 @@ const viewTitles = {
 }
 
 // 路线A：个人主体 + 工具-预约/报名，隐藏公开需求广场（UGC）
-const featureFlags = { socialSquare: false, hostTools: false }
+const featureFlags = { socialSquare: false, hostTools: true }
 const tabViews = featureFlags.socialSquare ? ["home", "explore", "square", "mine"] : ["home", "explore", "mine"]
 
 const baseCards = [
@@ -174,6 +175,7 @@ const activityFeed = [
     coverClass: "cover-night",
     coverText: "晚餐局",
     people: "6-8人",
+    capacity: 8,
     detail: "流程清楚的小桌轻餐，适合第一次低压力见面。",
     location: "KIC / 大学路附近",
     crowd: "想认真认识一个人、不想快速交换条件的人",
@@ -197,6 +199,7 @@ const activityFeed = [
     coverClass: "cover-ai",
     coverText: "深谈",
     people: "6人 · 正在准备",
+    capacity: 6,
     detail: "围绕三个真实关系问题，先听彼此，再决定要不要靠近。",
     location: "大学路合作空间",
     crowd: "喜欢慢聊、愿意分享真实想法的人",
@@ -220,6 +223,7 @@ const activityFeed = [
     coverClass: "cover-walk",
     coverText: "月亮",
     people: "5人成行 · 免费",
+    capacity: 12,
     detail: "城市散步，5人成行，走到哪聊到哪。",
     location: "江湾体育场出发",
     crowd: "想慢慢认识、不喜欢室内局的人",
@@ -243,6 +247,7 @@ const activityFeed = [
     coverClass: "cover-workshop",
     coverText: "工作坊",
     people: "10人 · 报名中",
+    capacity: 10,
     detail: "用一份关系说明书，练习说出自己的靠近方式。",
     location: "大学路",
     crowd: "对关系有困惑、愿意认真练习表达的人",
@@ -266,6 +271,7 @@ const activityFeed = [
     coverClass: "cover-lunch",
     coverText: "午间",
     people: "4人 · 正在准备",
+    capacity: 4,
     detail: "一小时，一顿饭的时间，认识附近的人。",
     location: "静安寺附近",
     crowd: "工作日想轻松认识附近人的上班族",
@@ -329,6 +335,18 @@ function emptyActivityDraft() {
   }
 }
 
+// 「听你们的」续场灵感池：不展示未经确认的商户折扣或权益。
+const afterPartySpots = [
+  { id: "yakitori", cat: "深夜食堂", name: "大学路炭火烧鸟", walk: "步行 8 分钟", vibe: ["烟火气", "适合继续聊"], energy: ["low", "mid"], style: ["chat", "walk"], time: ["night"], line: "坐下慢慢吃，话题也会自然延续。" },
+  { id: "catcoffee", cat: "猫咖", name: "大学路猫咖", walk: "步行 6 分钟", vibe: ["安静", "低压力"], energy: ["low"], style: ["walk", "deep"], time: ["night"], line: "不想一直说话也没关系，可以先一起待一会儿。" },
+  { id: "cinema", cat: "夜间电影", name: "五角场影院", walk: "步行 12 分钟", vibe: ["不用硬聊", "散场有话题"], energy: ["low", "mid"], style: ["deep", "chat"], time: ["night"], line: "看完电影，散场路上正好聊聊刚才的感受。" },
+  { id: "nightrun", cat: "夜跑散步", name: "江湾体育场夜跑道", walk: "步行 5 分钟", vibe: ["轻运动", "并肩走"], energy: ["mid", "high"], style: ["walk", "task"], time: ["night"], line: "并肩走一段，比面对面坐着更松弛。" },
+  { id: "boardgame", cat: "桌游", name: "大学路桌游吧", walk: "步行 8 分钟", vibe: ["有游戏", "不怕冷场"], energy: ["mid", "high"], style: ["task", "chat"], time: ["night"], line: "用一局小游戏延续今晚，不必重新找话题。" },
+  { id: "coffee", cat: "咖啡馆", name: "大学路咖啡馆", walk: "步行 6 分钟", vibe: ["安静", "继续聊"], energy: ["low", "mid"], style: ["deep", "chat"], time: ["day"], line: "意犹未尽的话，可以换个地方继续坐一会儿。" },
+  { id: "picnic", cat: "草坪野餐", name: "江湾草坪", walk: "步行 5 分钟", vibe: ["阳光", "轻松"], energy: ["low", "mid"], style: ["walk"], time: ["day"], line: "坐在草坪上晒晒太阳，想聊再聊。" },
+  { id: "gallery", cat: "看展", name: "大学路美术馆", walk: "步行 9 分钟", vibe: ["有共同话题", "不着急"], energy: ["low", "mid"], style: ["deep", "walk"], time: ["day"], line: "看展不用一直说话，想到什么再分享。" }
+]
+
 const homeQuestions = [
   { q: "你上一次觉得“要是有人一起就好了”，是在哪里？", opts: ["下班路上", "一个人吃饭", "好看的晚霞", "想去的地方没人陪"] },
   { q: "周末下午，你更愿意怎么过？", opts: ["出门走走", "在家发呆", "约人吃饭", "尝试新东西"] },
@@ -340,16 +358,20 @@ const homeQuestions = [
 ]
 const todayHomeQuestion = homeQuestions[Math.floor(Date.now() / 86400000) % homeQuestions.length]
 
-// 小CC的来信：只保留能帮助用户实践关系的具体问题。
+// 小CC的来信：恢复原有的多维度话题与首页卡片内容。
 const letterTopics = [
-  { cat: "靠近", color: "#8b7fb8", q: "最近一次想靠近一个人却停住了，是什么让你停下？" },
-  { cat: "表达", color: "#d98a8a", q: "有什么需要，你常希望对方懂，却很少直接说出口？" },
-  { cat: "倾听", color: "#6f9fc0", q: "别人怎样回应，会让你觉得自己真的被听见了？" },
-  { cat: "边界", color: "#7fae7f", q: "哪种拒绝方式，会让你仍然感到被尊重？" },
-  { cat: "冲突", color: "#d98a8a", q: "有分歧时，你希望彼此先做什么，而不是急着做什么？" },
-  { cat: "修复", color: "#6f9fc0", q: "关系出现误会后，什么行动会让你愿意重新靠近？" },
-  { cat: "选择", color: "#8b7fb8", q: "认识一个人时，你最想慢下来确认什么？" },
-  { cat: "日常", color: "#7fae7f", q: "什么样的普通一天，会让你觉得两个人在一起生活？" }
+  { cat: "哲学", color: "#8b7fb8", q: "如果人生是一本书，你希望现在翻到哪一章？" },
+  { cat: "哲学", color: "#8b7fb8", q: "你觉得「自由」对你来说，意味着什么？" },
+  { cat: "哲学", color: "#8b7fb8", q: "你相信人和人之间，真的有「同频」这件事吗？" },
+  { cat: "情感", color: "#d98a8a", q: "你上一次觉得「被人接住」，是什么时候？" },
+  { cat: "情感", color: "#d98a8a", q: "有没有一个人，让你想起时心里会变软？" },
+  { cat: "情感", color: "#d98a8a", q: "你觉得一段关系里，最珍贵的是什么？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "最近，你对自己有什么新的发现？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "如果完全不考虑别人怎么看，你最想成为什么样的人？" },
+  { cat: "自我探知", color: "#6f9fc0", q: "你最近一次为自己骄傲，是因为什么？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "最近有没有一件小事，让你觉得生活还不错？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "如果明天完全自由，你会怎么过？" },
+  { cat: "生活感悟", color: "#7fae7f", q: "你希望生活里多点什么，少点什么？" }
 ]
 const todayLetterTopic = letterTopics[Math.floor(Date.now() / 86400000) % letterTopics.length]
 
@@ -468,12 +490,22 @@ Page({
     exploreDist: "all",
     exploreList: [],
     activeActivity: initialActivityFeed[0],
+    activeActivityPast: false,
     matchReason: "",
     activeActivityRegistered: false,
     activeActivityRegistrationPending: false,
+    activeActivityCapacity: initialActivityFeed[0].capacity || 0,
+    activeActivityRegisteredCount: 0,
+    activeActivityRemaining: initialActivityFeed[0].capacity || 0,
+    activeActivityFull: false,
+    availabilityLoading: false,
     registrationSubmitting: false,
     pendingRegistrationIds: [],
-    activityGroupJoined: false,
+    registrationRecords: [],
+    activityHistoryTab: "past",
+    currentActivityHistory: [],
+    pastActivityHistory: [],
+    afterPartySpots: [],
     filteredActivities: [],
     showActivityComposer: false,
     publishedActivities: [],
@@ -588,13 +620,17 @@ Page({
       pendingRegistrationIds: Array.isArray(saved.pendingRegistrationIds)
         ? saved.pendingRegistrationIds
         : (saved.registeredActivities || []),
+      registrationRecords: Array.isArray(saved.registrationRecords) ? saved.registrationRecords : [],
       publishedActivities: saved.publishedActivities || []
     })
+    const restoredActivity = saved.activeActivity || this.data.activeActivity
+    const restoredCapacity = activityUtils.parseActivityCapacity(restoredActivity.capacity || restoredActivity.people)
     this.setData({
-      activeActivity: saved.activeActivity || this.data.activeActivity,
+      activeActivity: restoredActivity,
       activeActivityRegistered: Boolean(saved.registeredActivities && saved.activeActivity && saved.registeredActivities.includes(saved.activeActivity.id)),
       activeActivityRegistrationPending: Boolean(saved.activeActivity && this.data.pendingRegistrationIds.includes(saved.activeActivity.id)),
-      activityGroupJoined: Boolean(saved.activityGroupJoined),
+      activeActivityCapacity: restoredCapacity,
+      activeActivityRemaining: restoredCapacity,
       filter: saved.filter || "all",
       filteredActivityFeed: this.filterActivities(saved.filter || "all")
     })
@@ -877,18 +913,79 @@ Page({
     wx.showToast({ title: e.currentTarget.dataset.text || "功能开发中，先看看这里吧", icon: "none" })
   },
 
-  showRegistrationSummary() {
-    const titles = this.data.registeredActivities.map((id) => {
-      const activity = this.data.activityFeed.find((item) => item.id === id)
-      const pending = this.data.pendingRegistrationIds.includes(id) ? "（待同步）" : ""
-      return activity ? `${activity.title}${pending}` : `活动 ${id}${pending}`
+  refreshActivityHistory() {
+    const history = activityUtils.buildActivityHistory(
+      this.data.registeredActivities,
+      this.data.registrationRecords,
+      this.data.activityFeed,
+      this.data.pendingRegistrationIds
+    )
+    this.setData({
+      currentActivityHistory: history.current,
+      pastActivityHistory: history.past
     })
-    wx.showModal({
-      title: "我的报名意向",
-      content: titles.length ? titles.join("\n") : "还没有报名意向。",
-      showCancel: false,
-      confirmText: "知道了"
+  },
+
+  openActivityHistory() {
+    this.refreshActivityHistory()
+    this.setData({ activityHistoryTab: "past" })
+    this.setView("activityHistory")
+  },
+
+  setActivityHistoryTab(e) {
+    this.setData({ activityHistoryTab: e.currentTarget.dataset.tab === "current" ? "current" : "past" })
+  },
+
+  openHistoryActivity(e) {
+    const activityId = e.currentTarget.dataset.id
+    const isPast = this.data.activityHistoryTab === "past"
+    const source = isPast ? this.data.pastActivityHistory : this.data.currentActivityHistory
+    const record = source.find((item) => item.activityId === activityId)
+    if (!record) return
+    const liveActivity = this.data.activityFeed.find((item) => item.id === activityId)
+    if (!isPast && liveActivity) {
+      this.openActivity({ currentTarget: { dataset: { id: activityId } } })
+      return
+    }
+    const capacity = activityUtils.parseActivityCapacity(record.capacity || record.people)
+    const activeActivity = {
+      ...record,
+      id: activityId,
+      title: record.title || (isPast ? "过去参与的活动" : "已报名的活动"),
+      subtitle: record.subtitle || (isPast ? "过去参与" : "报名意向已提交"),
+      people: capacity ? `${capacity}人` : "",
+      capacity,
+      fee: record.fee || "",
+      crowd: record.crowd || (isPast ? "这是一场已经结束的活动。" : "活动详情将由小CC继续确认。"),
+      detail: record.detail || "",
+      schedule: record.schedule || []
+    }
+    const pending = this.data.pendingRegistrationIds.includes(activityId)
+    this.setData({
+      activeActivity,
+      activeActivityPast: isPast,
+      activeActivityRegistered: true,
+      activeActivityRegistrationPending: !isPast && pending,
+      activeActivityCapacity: capacity,
+      activeActivityRegisteredCount: 0,
+      activeActivityRemaining: isPast ? 0 : capacity,
+      activeActivityFull: false,
+      availabilityLoading: !isPast,
+      matchReason: isPast
+        ? "这场活动已经结束，记录保留在你的参与清单中。"
+        : "报名记录已从云端恢复，活动详情以小CC后续确认为准。",
+      afterPartySpots: []
     })
+    if (!isPast) {
+      this.refreshAfterParty()
+      this.loadActivityAvailability(activeActivity)
+    }
+    this.setView("activityDetail")
+  },
+
+  exploreFromHistory() {
+    this.computeExplore()
+    this.setView("explore", { push: false, resetHistory: true })
   },
 
   loginUser() {
@@ -1343,13 +1440,21 @@ Page({
     const people = (found.people || "").split("·")[0].trim()
     const topic = (found.tags || [])[0] || "自然话题"
     const matchReason = found.slogan || `这场约 ${people}，${found.weekday}在${found.location}，主题是${topic}。它与你当前的活动偏好相近。`
+    const capacity = activityUtils.parseActivityCapacity(activeActivity.capacity || activeActivity.people)
     this.setData({
       activeActivity,
+      activeActivityPast: false,
       matchReason,
       activeActivityRegistered: this.data.registeredActivities.includes(activeActivity.id),
       activeActivityRegistrationPending: this.data.pendingRegistrationIds.includes(activeActivity.id),
-      activityGroupJoined: false
+      activeActivityCapacity: capacity,
+      activeActivityRegisteredCount: 0,
+      activeActivityRemaining: capacity,
+      activeActivityFull: false,
+      availabilityLoading: true
     })
+    this.refreshAfterParty()
+    this.loadActivityAvailability(activeActivity)
     this.persistDraft()
     this.setView("activityDetail")
   },
@@ -1532,9 +1637,9 @@ Page({
       hostSubmitted: this.data.hostSubmitted,
       registeredActivities: this.data.registeredActivities,
       pendingRegistrationIds: this.data.pendingRegistrationIds,
+      registrationRecords: this.data.registrationRecords,
       publishedActivities: this.data.publishedActivities,
       activeActivity: this.data.activeActivity,
-      activityGroupJoined: this.data.activityGroupJoined,
       filter: this.data.filter,
       profileTitle: this.data.profileTitle,
       profileDims: this.data.profileDims,
@@ -2185,6 +2290,11 @@ Page({
     const type = typeMap[category] || "low"
     const groups = (d.groups || []).filter(g => (g.people || "").trim() || (g.price || "").trim())
     const firstGroup = groups[0] || {}
+    const capacity = groups.reduce((total, group) => total + activityUtils.parseActivityCapacity(group.people), 0)
+    if (!capacity) {
+      wx.showToast({ title: "请设置报名人数上限", icon: "none" })
+      return
+    }
     const schedule = (d.schedule || []).filter(s => (s.time || "").trim() || (s.title || "").trim())
     const activity = {
       id: `pub-${Date.now()}`,
@@ -2199,7 +2309,8 @@ Page({
       coverClass: "",
       coverText: "",
       poster: d.poster || activityPosterOptions[0].src,
-      people: (firstGroup.people || "").trim() || "小局 · 待定",
+      people: `${capacity}人`,
+      capacity,
       fee: (firstGroup.price || "").trim() || "待定",
       groups,
       detail: (d.subtitle || "").trim(),
@@ -2249,21 +2360,47 @@ Page({
       this.confirmCancelRegistration(activity)
       return
     }
+    if (this.data.activeActivityFull) {
+      wx.showToast({ title: "活动已满员", icon: "none" })
+      return
+    }
     this.setData({ registrationSubmitting: true })
     wx.showLoading({ title: "正在提交意向…", mask: true })
     this.requestRegistration("register", activity).then((result) => {
       wx.hideLoading()
+      if (!result.ok && result.code === "ACTIVITY_FULL") {
+        this.setData({
+          registrationSubmitting: false,
+          activeActivityRegisteredCount: Number(result.registeredCount) || this.data.activeActivityCapacity,
+          activeActivityRemaining: 0,
+          activeActivityFull: true
+        })
+        wx.showToast({ title: "活动已满员", icon: "none" })
+        return
+      }
+      if (!result.ok && result.code === "CAPACITY_REQUIRED") {
+        this.setData({ registrationSubmitting: false })
+        wx.showToast({ title: "活动尚未设置报名人数", icon: "none" })
+        return
+      }
       const registeredActivities = Array.from(new Set([...this.data.registeredActivities, activityId]))
       const pendingRegistrationIds = result.ok
         ? this.data.pendingRegistrationIds.filter((id) => id !== activityId)
         : Array.from(new Set([...this.data.pendingRegistrationIds, activityId]))
+      const record = this.activityRegistrationRecord(activity, result.ok ? "registered" : "pending")
+      const registrationRecords = [record, ...this.data.registrationRecords.filter((item) => item.activityId !== activityId)]
       this.setData({
         registrationSubmitting: false,
         registeredActivities,
         pendingRegistrationIds,
+        registrationRecords,
         activeActivityRegistered: true,
-        activeActivityRegistrationPending: !result.ok
+        activeActivityRegistrationPending: !result.ok,
+        activeActivityRegisteredCount: result.ok ? Number(result.registeredCount) || this.data.activeActivityRegisteredCount + 1 : this.data.activeActivityRegisteredCount,
+        activeActivityRemaining: result.ok ? Math.max(0, Number(result.remaining) || 0) : this.data.activeActivityRemaining,
+        activeActivityFull: result.ok ? Boolean(result.isFull) : false
       })
+      this.refreshActivityHistory()
       this.persistDraft()
       if (!result.ok) {
         wx.showToast({ title: "已保存到本机，联网后继续同步", icon: "none", duration: 3000 })
@@ -2303,6 +2440,7 @@ Page({
             return
           }
           this.removeLocalRegistration(activityId)
+          this.updateActiveAvailability(result)
           wx.showToast({ title: "报名意向已取消", icon: "success" })
         })
       }
@@ -2313,11 +2451,51 @@ Page({
     this.setData({
       registeredActivities: this.data.registeredActivities.filter((id) => id !== activityId),
       pendingRegistrationIds: this.data.pendingRegistrationIds.filter((id) => id !== activityId),
+      registrationRecords: this.data.registrationRecords.filter((item) => item.activityId !== activityId),
       activeActivityRegistered: false,
-      activeActivityRegistrationPending: false,
-      activityGroupJoined: false
+      activeActivityRegistrationPending: false
     })
+    this.refreshActivityHistory()
     this.persistDraft()
+  },
+
+  activityRegistrationRecord(activity, status) {
+    return {
+      activityId: activity.id,
+      title: activity.title || "活动记录",
+      dateRaw: activity.dateRaw || "",
+      date: activity.date || "",
+      weekday: activity.weekday || "",
+      time: activity.time || "",
+      location: activity.location || "",
+      capacity: activityUtils.parseActivityCapacity(activity.capacity || activity.people),
+      status,
+      createdAt: Date.now()
+    }
+  },
+
+  updateActiveAvailability(result) {
+    if (!result || !result.ok) return
+    this.setData({
+      activeActivityCapacity: Number(result.capacity) || this.data.activeActivityCapacity,
+      activeActivityRegisteredCount: Number(result.registeredCount) || 0,
+      activeActivityRemaining: Math.max(0, Number(result.remaining) || 0),
+      activeActivityFull: Boolean(result.isFull),
+      availabilityLoading: false
+    })
+  },
+
+  loadActivityAvailability(activity = this.data.activeActivity) {
+    if (!activity || !activity.id || !wx.cloud || typeof wx.cloud.callFunction !== "function") {
+      this.setData({ availabilityLoading: false })
+      return Promise.resolve(false)
+    }
+    return this.requestRegistration("availability", activity).then((result) => {
+      this.setData({ availabilityLoading: false })
+      if (!result.ok) return false
+      this.updateActiveAvailability(result)
+      return true
+    })
   },
 
   requestRegistration(action, activity) {
@@ -2331,11 +2509,17 @@ Page({
         data: {
           action,
           activityId: String(activity.id || ""),
-          title: String(activity.title || "").slice(0, 60)
+          title: String(activity.title || "").slice(0, 60),
+          dateRaw: String(activity.dateRaw || ""),
+          date: String(activity.date || ""),
+          weekday: String(activity.weekday || ""),
+          time: String(activity.time || ""),
+          location: String(activity.location || "").slice(0, 60),
+          capacity: activityUtils.parseActivityCapacity(activity.capacity || activity.people)
         },
         success: (response) => {
           const result = response && response.result
-          resolve(result && result.ok ? { ok: true } : { ok: false, code: result && result.code })
+          resolve(result && typeof result === "object" ? result : { ok: false, code: "INVALID_RESPONSE" })
         },
         fail: () => resolve({ ok: false, code: "NETWORK_FAILED" })
       })
@@ -2358,12 +2542,16 @@ Page({
           const cloudIds = (result.items || []).map((item) => item.activityId).filter(Boolean)
           const pendingRegistrationIds = this.data.pendingRegistrationIds.filter((id) => !cloudIds.includes(id))
           const merged = Array.from(new Set([...cloudIds, ...pendingRegistrationIds]))
+          const pendingRecords = this.data.registrationRecords.filter((item) => pendingRegistrationIds.includes(item.activityId))
+          const registrationRecords = [...(result.items || []), ...pendingRecords]
           this.setData({
             registeredActivities: merged,
             pendingRegistrationIds,
+            registrationRecords,
             activeActivityRegistered: Boolean(this.data.activeActivity && merged.includes(this.data.activeActivity.id)),
             activeActivityRegistrationPending: Boolean(this.data.activeActivity && pendingRegistrationIds.includes(this.data.activeActivity.id))
           })
+          this.refreshActivityHistory()
           this.persistDraft({ skipSync: true })
           resolve(true)
         },
@@ -2377,27 +2565,77 @@ Page({
     if (!pendingIds.length) return Promise.resolve(true)
     return Promise.all(pendingIds.map((activityId) => {
       const activity = this.data.activityFeed.find((item) => item.id === activityId) || { id: activityId, title: "" }
-      return this.requestRegistration("register", activity).then((result) => result.ok ? activityId : "")
-    })).then((syncedIds) => {
-      const synced = syncedIds.filter(Boolean)
-      if (!synced.length) return false
-      const pendingRegistrationIds = this.data.pendingRegistrationIds.filter((id) => !synced.includes(id))
+      return this.requestRegistration("register", activity).then((result) => ({ activityId, result }))
+    })).then((responses) => {
+      const synced = responses.filter((item) => item.result.ok).map((item) => item.activityId)
+      const full = responses.filter((item) => item.result.code === "ACTIVITY_FULL").map((item) => item.activityId)
+      if (!synced.length && !full.length) return false
+      const resolvedIds = [...synced, ...full]
+      const pendingRegistrationIds = this.data.pendingRegistrationIds.filter((id) => !resolvedIds.includes(id))
+      const registeredActivities = this.data.registeredActivities.filter((id) => !full.includes(id))
+      const registrationRecords = this.data.registrationRecords
+        .filter((item) => !full.includes(item.activityId))
+        .map((item) => synced.includes(item.activityId) ? { ...item, status: "registered" } : item)
       this.setData({
+        registeredActivities,
         pendingRegistrationIds,
+        registrationRecords,
+        activeActivityRegistered: Boolean(this.data.activeActivity && registeredActivities.includes(this.data.activeActivity.id)),
+        activeActivityFull: Boolean(this.data.activeActivity && full.includes(this.data.activeActivity.id)) || this.data.activeActivityFull,
         activeActivityRegistrationPending: Boolean(this.data.activeActivity && pendingRegistrationIds.includes(this.data.activeActivity.id))
       })
+      this.refreshActivityHistory()
       this.persistDraft({ skipSync: true })
+      if (full.length) {
+        wx.showToast({ title: "有活动已满员，报名意向已移除", icon: "none", duration: 3000 })
+      }
       return pendingRegistrationIds.length === 0
     })
   },
 
-  openActivityGroup() {
-    if (!this.data.activeActivityRegistered || this.data.activeActivityRegistrationPending) {
-      wx.showToast({ title: "报名意向同步后开放活动群", icon: "none" })
-      return
+  refreshAfterParty() {
+    this.setData({ afterPartySpots: this.pickAfterPartySpots() })
+  },
+
+  pickAfterPartySpots() {
+    const entry = this.data.entryAnswers || {}
+    const q6 = Object.keys(entry.q6 || {})
+    let energy = "mid"
+    if (q6.includes("2")) energy = "low"
+    else if (q6.includes("0")) energy = "high"
+
+    const rel = this.data.relAnswers || {}
+    const relText = (qid) => {
+      const question = relationshipQuestions.find((item) => item.id === qid)
+      if (!question) return ""
+      return Object.keys(rel[qid] || {}).map((index) => (question.options[Number(index)] || {}).text || "").join("")
     }
-    this.setData({ activityGroupJoined: true })
-    wx.showModal({ title: "活动群聊", content: "活动成行后，小CC会把你加入本场活动群。", showCancel: false, confirmText: "知道了" })
+    const r7 = relText("q7")
+    const r8 = relText("q8")
+    let style = "chat"
+    if (r7.includes("慢") || r8.includes("慢") || r8.includes("被动")) style = "walk"
+    else if (r7.includes("规则") || r7.includes("兴趣")) style = "task"
+    else if (r7.includes("深")) style = "deep"
+
+    const activity = this.data.activeActivity || {}
+    const lastTime = (activity.schedule && activity.schedule.length ? activity.schedule[activity.schedule.length - 1].time : activity.time) || ""
+    const hour = parseInt(String(lastTime).split(":")[0], 10)
+    const period = Number.isFinite(hour) && hour >= 19 ? "night" : "day"
+    const prefix = energy === "low" ? "如果今晚想轻松一点，" : energy === "high" ? "如果散场后还有能量，" : "如果散场后还不想马上回家，"
+    const scored = afterPartySpots
+      .filter((spot) => spot.time.includes(period))
+      .map((spot) => ({ ...spot, score: (spot.energy.includes(energy) ? 2 : 0) + (spot.style.includes(style) ? 2 : 0) + Math.random() }))
+      .sort((a, b) => b.score - a.score)
+    return scored.slice(0, 3).map((spot) => ({ ...spot, why: prefix + spot.line }))
+  },
+
+  copyAfterPartyIdeas() {
+    const lines = this.data.afterPartySpots.map((spot) => `${spot.name}（${spot.walk}）`)
+    if (!lines.length) return
+    wx.setClipboardData({
+      data: `${lines.join("\n")}\n出发前请再次确认营业时间和现场情况。`,
+      success: () => wx.showToast({ title: "三个去处已复制", icon: "success" })
+    })
   },
 
   openAccountSettings() {
@@ -2545,6 +2783,7 @@ Page({
   },
 
   refreshMine() {
+    this.refreshActivityHistory()
   },
 
   updateExploreSearch(e) {

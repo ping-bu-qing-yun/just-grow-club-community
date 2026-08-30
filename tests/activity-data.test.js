@@ -12,7 +12,9 @@ function loadCloudFunction() {
         limit() {
           return {
             async get() {
-              return { data: [...records.values()].filter((record) => record._openid === query._openid) }
+              return {
+                data: [...records.values()].filter((record) => Object.keys(query).every((key) => record[key] === query[key]))
+              }
             }
           }
         }
@@ -74,7 +76,7 @@ function loadCloudFunction() {
 test("报名写入 registrations 集合并按本人隔离读取", async () => {
   const harness = loadCloudFunction()
 
-  const registered = await harness.main({ action: "register", activityId: "act-1", title: "周五晚桌游局" })
+  const registered = await harness.main({ action: "register", activityId: "act-1", title: "周五晚桌游局", capacity: 8 })
   assert.equal(registered.ok, true)
   assert.equal(registered.registered, true)
   assert.equal(harness.records.size, 1)
@@ -90,23 +92,41 @@ test("报名写入 registrations 集合并按本人隔离读取", async () => {
   assert.equal(others.count, 0)
 })
 
+test("客户端指定他人 openid 不会改变报名归属", async () => {
+  const harness = loadCloudFunction()
+  await harness.main({
+    action: "register",
+    activityId: "act-secure",
+    title: "身份隔离测试",
+    capacity: 4,
+    openid: "openid-victim",
+    _openid: "openid-victim"
+  })
+  const stored = [...harness.records.values()][0]
+  assert.equal(stored._openid, "openid-a")
+
+  harness.setOpenid("openid-victim")
+  const victim = await harness.main({ action: "listMine" })
+  assert.equal(victim.count, 0)
+})
+
 test("重复报名幂等：同一用户同一活动只有一条记录", async () => {
   const harness = loadCloudFunction()
-  await harness.main({ action: "register", activityId: "act-1", title: "散步局" })
-  const again = await harness.main({ action: "register", activityId: "act-1", title: "散步局" })
+  await harness.main({ action: "register", activityId: "act-1", title: "散步局", capacity: 8 })
+  const again = await harness.main({ action: "register", activityId: "act-1", title: "散步局", capacity: 8 })
   assert.equal(again.ok, true)
   assert.equal(harness.records.size, 1)
 
   // 同一用户另一场活动是独立记录
-  await harness.main({ action: "register", activityId: "act-2", title: "深聊局" })
+  await harness.main({ action: "register", activityId: "act-2", title: "深聊局", capacity: 6 })
   assert.equal(harness.records.size, 2)
 })
 
 test("取消报名后可重新报名，他人记录不受影响", async () => {
   const harness = loadCloudFunction()
-  await harness.main({ action: "register", activityId: "act-1", title: "A局" })
+  await harness.main({ action: "register", activityId: "act-1", title: "A局", capacity: 2 })
   harness.setOpenid("openid-b")
-  await harness.main({ action: "register", activityId: "act-1", title: "A局" })
+  await harness.main({ action: "register", activityId: "act-1", title: "A局", capacity: 2 })
   assert.equal(harness.records.size, 2)
 
   harness.setOpenid("openid-a")
@@ -115,7 +135,7 @@ test("取消报名后可重新报名，他人记录不受影响", async () => {
   assert.equal(harness.records.size, 1)
 
   // 取消后再报名成功
-  const re = await harness.main({ action: "register", activityId: "act-1", title: "A局" })
+  const re = await harness.main({ action: "register", activityId: "act-1", title: "A局", capacity: 2 })
   assert.equal(re.ok, true)
   assert.equal(harness.records.size, 2)
 })
@@ -132,4 +152,37 @@ test("非法 action 与缺失活动 ID 被拒绝，不写库", async () => {
   const weird = await harness.main({ action: "register", activityId: { hack: 1 } })
   assert.equal(weird.code, "INVALID_ACTIVITY")
   assert.equal(harness.records.size, 0)
+})
+
+test("达到活动人数上限后拒绝继续报名，取消后释放名额", async () => {
+  const harness = loadCloudFunction()
+  await harness.main({ action: "register", activityId: "pub-capacity", title: "两人小桌", capacity: 2 })
+  harness.setOpenid("openid-b")
+  const second = await harness.main({ action: "register", activityId: "pub-capacity", title: "两人小桌", capacity: 2 })
+  assert.equal(second.ok, true)
+  assert.equal(second.isFull, true)
+  assert.equal(second.registeredCount, 2)
+
+  harness.setOpenid("openid-c")
+  const full = await harness.main({ action: "register", activityId: "pub-capacity", title: "两人小桌", capacity: 2 })
+  assert.equal(full.ok, false)
+  assert.equal(full.code, "ACTIVITY_FULL")
+  assert.equal(harness.records.size, 2)
+
+  harness.setOpenid("openid-a")
+  await harness.main({ action: "cancel", activityId: "pub-capacity", capacity: 2 })
+  harness.setOpenid("openid-c")
+  const reopened = await harness.main({ action: "register", activityId: "pub-capacity", title: "两人小桌", capacity: 2 })
+  assert.equal(reopened.ok, true)
+  assert.equal(harness.records.size, 2)
+})
+
+test("availability 返回云端真实人数，不接受静态活动的伪造上限", async () => {
+  const harness = loadCloudFunction()
+  await harness.main({ action: "register", activityId: "dinner", title: "晚餐局", capacity: 1 })
+  const result = await harness.main({ action: "availability", activityId: "dinner", capacity: 1 })
+  assert.equal(result.ok, true)
+  assert.equal(result.capacity, 8)
+  assert.equal(result.registeredCount, 1)
+  assert.equal(result.isFull, false)
 })

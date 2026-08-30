@@ -1,6 +1,6 @@
 const test = require("node:test")
 const assert = require("node:assert/strict")
-const { filterExploreActivities, rollActivityDates } = require("../utils/activity-utils")
+const { buildActivityHistory, filterExploreActivities, parseActivityCapacity, rollActivityDates } = require("../utils/activity-utils")
 
 test("演示活动滚动到未来最近一次对应星期，不展示过期日期", () => {
   const now = new Date(2026, 7, 29, 22, 0)
@@ -38,4 +38,28 @@ test("主题、距离和搜索可以组合筛选", () => {
     distanceMap: { a: 2, b: 4 }
   })
   assert.deepEqual(result.map((item) => item.id), ["b"])
+})
+
+test("活动人数支持纯数字和区间文本，并取报名上限", () => {
+  assert.equal(parseActivityCapacity(8), 8)
+  assert.equal(parseActivityCapacity("6-8人"), 8)
+  assert.equal(parseActivityCapacity(""), 0)
+})
+
+test("参与活动按未来报名和过去参与拆分，并保留待同步状态", () => {
+  const now = new Date(2026, 7, 30, 12, 0)
+  const result = buildActivityHistory(
+    ["future", "past"],
+    [{ activityId: "past", title: "过去的小桌", dateRaw: "2026-08-20", time: "19:00", status: "registered" }],
+    [
+      { id: "future", title: "未来散步", dateRaw: "2026-09-05", time: "19:00" },
+      { id: "past", title: "过去活动" }
+    ],
+    ["future"],
+    now
+  )
+  assert.equal(result.current.length, 1)
+  assert.equal(result.current[0].status, "pending")
+  assert.equal(result.past.length, 1)
+  assert.equal(result.past[0].title, "过去的小桌")
 })
