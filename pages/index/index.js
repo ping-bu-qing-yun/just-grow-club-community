@@ -2433,6 +2433,7 @@ Page({
     const activity = {
       id: `pub-${Date.now()}`,
       type,
+      dateRaw: d.dateRaw,
       date: d.date,
       weekday: d.weekday,
       time: (d.time || "").trim(),

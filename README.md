@@ -26,6 +26,8 @@ https://github.com/ping-bu-qing-yun/just-grow-club-community
 - 本地运行：解压源码 ZIP 后，直接打开 `index.html`，或在目录中启动任意静态文件服务后访问 `index.html`。
 - 数据说明：当前演示数据、用户画像、活动提案、运营工作台内容都内置在前端源码中；用户操作状态保存在浏览器本地，不需要额外数据库。
 
+> **两种形态**：本仓库同时包含①网页版静态 Demo（即上方在线体验链接，数据内置、无后端，用于公开演示）和②微信小程序版（`app.js` / `pages/index/` / `cloudfunctions/`，含云函数与云数据库，用于真机完整体验）。本 README 的"运行方式"主要针对网页版 Demo；小程序版的导入、AppID、真机预览与约定见 `AGENTS.md`。
+
 ## 我从谁开始创作
 
 这个作品从“小CC”开始。

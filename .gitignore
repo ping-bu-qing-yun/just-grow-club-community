@@ -7,3 +7,5 @@ data/
 .server-dist/
 qiahao-club-source-*.zip
 *.log
+
+tmp/
