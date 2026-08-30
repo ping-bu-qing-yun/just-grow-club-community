@@ -509,6 +509,11 @@ Page({
     filteredActivities: [],
     showActivityComposer: false,
     publishedActivities: [],
+    publicActivities: [],
+    activityCatalogLoading: false,
+    activityPublishing: false,
+    composerKeyboardHeight: 0,
+    composerScrollIntoView: "",
     activityDraft: emptyActivityDraft(),
     categoryIndex: 0,
     activityPosterOptions,
@@ -636,13 +641,20 @@ Page({
     })
     this.lastProfileFingerprint = profileSync.fingerprint(this.data)
     this.refreshFeed()
+    const publicActivitiesReady = this.loadPublicActivities()
     if (options.activity) {
-      this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
+      publicActivitiesReady.then(() => {
+        this.openActivity({ currentTarget: { dataset: { id: options.activity } } })
+      })
     } else if (isReturning) {
-      this.continueAfterLogin()
-      // 本地 openid 只用于快速判断返回路径；真实身份仍由云函数上下文重新确认。
+      // 老用户先完成云端身份确认和资料恢复，再决定落到哪个页面，避免短暂重复进入注册问答。
       this.silentLogin((known) => {
-        if (known) this.continueAfterLogin()
+        if (known) {
+          this.continueAfterLogin()
+          return
+        }
+        // 云端暂时不可用时保留本机缓存作为兜底，不把老用户卡在开场页。
+        this.continueAfterLogin()
       })
     } else {
       // 本地缓存没有登录态：先静默探测云端身份（不影响开场动画的观感）
@@ -709,6 +721,7 @@ Page({
   },
 
   onHide() {
+    if (this.data.showActivityComposer) this.cacheActivityDraft()
     this.persistDraft()
     const saved = wx.getStorageSync("qiahaoDraft") || {}
     if (saved._profileSyncPending) this.syncProfileToCloud({ quiet: true })
@@ -718,6 +731,7 @@ Page({
     clearInterval(recordTimer)
     clearTimeout(this.introTimer)
     clearTimeout(this.profileSyncTimer)
+    clearTimeout(this.activityDraftSaveTimer)
     if (innerAudioContext) innerAudioContext.destroy()
   },
 
@@ -1435,7 +1449,13 @@ Page({
   openActivity(e) {
     const id = e.currentTarget.dataset.id
     const aliases = { night: "ai", manual: "workshop", life: "walk" }
-    const found = this.data.activityFeed.find(item => item.id === id || item.id === aliases[id]) || this.data.activityFeed[0]
+    const found = this.data.activityFeed.find(item => item.id === id || item.id === aliases[id])
+    if (!found) {
+      wx.showToast({ title: "活动已下架或暂时无法加载", icon: "none" })
+      this.computeExplore()
+      this.setView("explore", { push: false, resetHistory: true })
+      return
+    }
     const activeActivity = { ...found, poster: found.poster || activityPosters[found.id] || "", fee: found.fee || activityFee[found.id] || "预约" }
     const people = (found.people || "").split("·")[0].trim()
     const topic = (found.tags || [])[0] || "自然话题"
@@ -2065,10 +2085,55 @@ Page({
   },
 
   refreshFeed() {
-    const feed = [...(this.data.publishedActivities || []), ...activityUtils.rollActivityDates(activityFeed)]
+    const sources = [
+      ...(this.data.publicActivities || []),
+      ...(this.data.publishedActivities || []).filter((item) => item && item.visibility === "public"),
+      ...activityUtils.rollActivityDates(activityFeed)
+    ]
+    const seen = new Set()
+    const feed = sources.filter((item) => {
+      if (!item || !item.id || seen.has(item.id)) return false
+      seen.add(item.id)
+      return true
+    })
     this.setData({
       activityFeed: feed,
       filteredActivityFeed: this.filterActivities(this.data.filter, feed)
+    })
+    if (this.data.view === "explore") this.computeExplore()
+    if (this.data.view === "home") this.prepareHome()
+  },
+
+  loadPublicActivities(options = {}) {
+    if (!wx.cloud || typeof wx.cloud.callFunction !== "function") return Promise.resolve(false)
+    this.setData({ activityCatalogLoading: true })
+    return new Promise((resolve) => {
+      wx.cloud.callFunction({
+        name: "activityCatalog",
+        data: { action: "listPublic" },
+        success: (response) => {
+          const result = response && response.result
+          if (!result || !result.ok) {
+            this.setData({ activityCatalogLoading: false })
+            if (options.showFeedback) wx.showToast({ title: (result && result.msg) || "公开活动加载失败，请重试", icon: "none" })
+            resolve(false)
+            return
+          }
+          this.setData({
+            activityCatalogLoading: false,
+            publicActivities: Array.isArray(result.items) ? result.items : [],
+            publishedActivities: Array.isArray(result.mine) ? result.mine : []
+          })
+          this.refreshFeed()
+          this.persistDraft({ skipSync: true })
+          resolve(true)
+        },
+        fail: () => {
+          this.setData({ activityCatalogLoading: false })
+          if (options.showFeedback) wx.showToast({ title: "公开活动加载失败，请检查网络", icon: "none" })
+          resolve(false)
+        }
+      })
     })
   },
 
@@ -2096,6 +2161,8 @@ Page({
     this.setData({
       showActivityComposer: true,
       activityDraft: draft,
+      composerKeyboardHeight: 0,
+      composerScrollIntoView: "",
       categoryIndex: Math.max(0, activityTagOptions.indexOf(draft.category || ""))
     })
     if (hasDraft) {
@@ -2104,13 +2171,27 @@ Page({
   },
 
   closeActivityComposer() {
-    this.setData({ showActivityComposer: false })
+    this.cacheActivityDraft()
+    this.setData({ showActivityComposer: false, composerKeyboardHeight: 0, composerScrollIntoView: "" })
+  },
+
+  focusActivityField(e) {
+    const anchor = e.currentTarget.dataset.anchor
+    if (!anchor) return
+    this.setData({ composerScrollIntoView: "" }, () => {
+      this.setData({ composerScrollIntoView: anchor })
+    })
+  },
+
+  onActivityKeyboardHeightChange(e) {
+    const height = Math.max(0, Number(e.detail && e.detail.height) || 0)
+    if (height !== this.data.composerKeyboardHeight) this.setData({ composerKeyboardHeight: height })
   },
 
   updateActivityDraftField(e) {
     const field = e.currentTarget.dataset.field
     if (!field) return
-    this.setData({ [`activityDraft.${field}`]: e.detail.value })
+    this.setData({ [`activityDraft.${field}`]: e.detail.value }, () => this.queueActivityDraftSave())
   },
 
   pickActivityDate(e) {
@@ -2120,11 +2201,11 @@ Page({
       "activityDraft.dateRaw": raw,
       "activityDraft.date": fmt.date,
       "activityDraft.weekday": fmt.weekday
-    })
+    }, () => this.queueActivityDraftSave())
   },
 
   pickActivityTime(e) {
-    this.setData({ "activityDraft.time": e.detail.value })
+    this.setData({ "activityDraft.time": e.detail.value }, () => this.queueActivityDraftSave())
   },
 
   pickActivityCategory(e) {
@@ -2136,14 +2217,14 @@ Page({
       "activityDraft.category": category,
       "activityDraft.tags": tags,
       "activityDraft.tagMap": tagMap
-    })
+    }, () => this.queueActivityDraftSave())
   },
 
   updateActivityGroup(e) {
     const index = Number(e.currentTarget.dataset.index)
     const field = e.currentTarget.dataset.field
     const groups = this.data.activityDraft.groups.map((g, i) => i === index ? { ...g, [field]: e.detail.value } : g)
-    this.setData({ "activityDraft.groups": groups })
+    this.setData({ "activityDraft.groups": groups }, () => this.queueActivityDraftSave())
   },
 
   addActivityGroup() {
@@ -2170,6 +2251,20 @@ Page({
     }
     wx.setStorageSync("qiahaoActivityDraft", d)
     wx.showToast({ title: "草稿已保存", icon: "success" })
+  },
+
+  cacheActivityDraft() {
+    const draft = this.data.activityDraft || {}
+    const hasContent = Boolean(
+      draft.title || draft.subtitle || draft.location || draft.category ||
+      (draft.groups || []).some((group) => group.people || group.price)
+    )
+    if (hasContent) wx.setStorageSync("qiahaoActivityDraft", draft)
+  },
+
+  queueActivityDraftSave() {
+    clearTimeout(this.activityDraftSaveTimer)
+    this.activityDraftSaveTimer = setTimeout(() => this.cacheActivityDraft(), 500)
   },
 
   toggleActivityTag(e) {
@@ -2260,7 +2355,46 @@ Page({
     this.setData({ "activityDraft.slogan": e.detail.value })
   },
 
+  ensurePublicActivityPoster(poster) {
+    const source = String(poster || "")
+    if (!source) return Promise.resolve(activityPosterOptions[0].src)
+    if (/^(\/pages\/|cloud:\/\/|https:\/\/)/.test(source)) return Promise.resolve(source)
+    if (!wx.cloud || typeof wx.cloud.uploadFile !== "function") {
+      return Promise.reject(new Error("CLOUD_UPLOAD_UNAVAILABLE"))
+    }
+    const extensionMatch = source.match(/\.([a-zA-Z0-9]{2,5})(?:\?|$)/)
+    const extension = extensionMatch ? extensionMatch[1].toLowerCase() : "jpg"
+    const cloudPath = `public-activities/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${extension}`
+    return new Promise((resolve, reject) => {
+      wx.cloud.uploadFile({
+        cloudPath,
+        filePath: source,
+        success: (result) => result && result.fileID ? resolve(result.fileID) : reject(new Error("INVALID_FILE_ID")),
+        fail: reject
+      })
+    })
+  },
+
+  requestActivityCatalog(action, data = {}) {
+    return new Promise((resolve) => {
+      if (!wx.cloud || typeof wx.cloud.callFunction !== "function") {
+        resolve({ ok: false, code: "CLOUD_UNAVAILABLE", msg: "活动库暂时不可用" })
+        return
+      }
+      wx.cloud.callFunction({
+        name: "activityCatalog",
+        data: { action, ...data },
+        success: (response) => {
+          const result = response && response.result
+          resolve(result && typeof result === "object" ? result : { ok: false, msg: "活动库返回异常" })
+        },
+        fail: () => resolve({ ok: false, code: "NETWORK_FAILED", msg: "网络连接失败，内容已保留" })
+      })
+    })
+  },
+
   publishActivity() {
+    if (this.data.activityPublishing) return
     const d = this.data.activityDraft
     const title = (d.title || "").trim()
     if (!title) {
@@ -2321,16 +2455,40 @@ Page({
       slogan: (d.slogan || "").trim() || "",
       status: "招募中",
       isCustom: true,
+      visibility: "public",
       createdAt: Date.now()
     }
-    this.setData({
-      publishedActivities: [activity, ...(this.data.publishedActivities || [])],
-      showActivityComposer: false
+    clearTimeout(this.activityDraftSaveTimer)
+    wx.setStorageSync("qiahaoActivityDraft", d)
+    this.setData({ activityPublishing: true })
+    wx.showLoading({ title: "正在发布活动…", mask: true })
+    this.ensurePublicActivityPoster(activity.poster).then((poster) => {
+      return this.requestActivityCatalog("publish", { activity: { ...activity, poster } })
+    }).then((result) => {
+      wx.hideLoading()
+      if (!result || !result.ok || !result.item) {
+        this.setData({ activityPublishing: false })
+        wx.showToast({ title: (result && result.msg) || "发布失败，内容已保留", icon: "none", duration: 3000 })
+        return
+      }
+      const item = result.item
+      this.setData({
+        activityPublishing: false,
+        showActivityComposer: false,
+        composerKeyboardHeight: 0,
+        publicActivities: [item, ...(this.data.publicActivities || []).filter((activityItem) => activityItem.id !== item.id)],
+        publishedActivities: [item, ...(this.data.publishedActivities || []).filter((activityItem) => activityItem.id !== item.id)]
+      })
+      this.refreshFeed()
+      this.persistDraft({ skipSync: true })
+      clearTimeout(this.activityDraftSaveTimer)
+      wx.removeStorageSync("qiahaoActivityDraft")
+      wx.showToast({ title: "已发布到公开活动库", icon: "success", duration: 2500 })
+    }).catch(() => {
+      wx.hideLoading()
+      this.setData({ activityPublishing: false })
+      wx.showToast({ title: "封面上传失败，内容已保留", icon: "none", duration: 3000 })
     })
-    this.refreshFeed()
-    this.persistDraft()
-    wx.removeStorageSync("qiahaoActivityDraft")
-    wx.showToast({ title: "已保存到本机，仅自己可见", icon: "none", duration: 3000 })
   },
 
   deletePublishedActivity(e) {
@@ -2342,11 +2500,29 @@ Page({
       confirmColor: "#d97757",
       success: (res) => {
         if (!res.confirm) return
-        const publishedActivities = (this.data.publishedActivities || []).filter(a => a.id !== id)
-        this.setData({ publishedActivities })
-        this.refreshFeed()
-        this.persistDraft()
-        wx.showToast({ title: "已下架", icon: "none" })
+        const removeFromView = () => {
+          this.setData({
+            publishedActivities: (this.data.publishedActivities || []).filter((item) => item.id !== id),
+            publicActivities: (this.data.publicActivities || []).filter((item) => item.id !== id)
+          })
+          this.refreshFeed()
+          this.persistDraft({ skipSync: true })
+        }
+        if (!String(id || "").startsWith("act_")) {
+          removeFromView()
+          wx.showToast({ title: "本机旧活动已移除", icon: "none" })
+          return
+        }
+        wx.showLoading({ title: "正在下架…", mask: true })
+        this.requestActivityCatalog("unpublish", { activityId: id }).then((result) => {
+          wx.hideLoading()
+          if (!result.ok) {
+            wx.showToast({ title: result.msg || "下架失败，请重试", icon: "none" })
+            return
+          }
+          removeFromView()
+          wx.showToast({ title: "活动已从公开活动库下架", icon: "success" })
+        })
       }
     })
   },
@@ -2381,6 +2557,11 @@ Page({
       if (!result.ok && result.code === "CAPACITY_REQUIRED") {
         this.setData({ registrationSubmitting: false })
         wx.showToast({ title: "活动尚未设置报名人数", icon: "none" })
+        return
+      }
+      if (!result.ok && result.code === "ACTIVITY_UNAVAILABLE") {
+        this.setData({ registrationSubmitting: false })
+        wx.showToast({ title: "活动已下架，暂时不能报名", icon: "none" })
         return
       }
       const registeredActivities = Array.from(new Set([...this.data.registeredActivities, activityId]))

@@ -4,9 +4,10 @@ const Module = require("node:module")
 
 function loadCloudFunction() {
   const records = new Map()
+  const catalogRecords = new Map()
   let currentOpenid = "openid-a"
 
-  const collection = {
+  const registrationCollection = {
     where(query) {
       return {
         limit() {
@@ -39,6 +40,17 @@ function loadCloudFunction() {
     }
   }
 
+  const activityCollection = {
+    doc(id) {
+      return {
+        async get() {
+          if (!catalogRecords.has(id)) throw new Error("not found")
+          return { data: catalogRecords.get(id) }
+        }
+      }
+    }
+  }
+
   const fakeCloud = {
     DYNAMIC_CURRENT_ENV: "test",
     init() {},
@@ -46,8 +58,9 @@ function loadCloudFunction() {
       return {
         async createCollection() {},
         collection(name) {
-          assert.equal(name, "registrations")
-          return collection
+          if (name === "registrations") return registrationCollection
+          if (name === "activities") return activityCollection
+          throw new Error(`unexpected collection: ${name}`)
         }
       }
     },
@@ -69,6 +82,7 @@ function loadCloudFunction() {
   return {
     main: cloudFunction.main,
     records,
+    catalogRecords,
     setOpenid(openid) { currentOpenid = openid }
   }
 }
@@ -185,4 +199,31 @@ test("availability 返回云端真实人数，不接受静态活动的伪造上�
   assert.equal(result.capacity, 8)
   assert.equal(result.registeredCount, 1)
   assert.equal(result.isFull, false)
+})
+
+test("公开活动人数上限以 activities 云端记录为准", async () => {
+  const harness = loadCloudFunction()
+  harness.catalogRecords.set("act_public", {
+    _id: "act_public",
+    status: "published",
+    visibility: "public",
+    capacity: 3
+  })
+  const result = await harness.main({ action: "register", activityId: "act_public", title: "公开活动", capacity: 99 })
+  assert.equal(result.ok, true)
+  assert.equal(result.capacity, 3)
+})
+
+test("公开活动下架后不能通过客户端人数参数继续报名", async () => {
+  const harness = loadCloudFunction()
+  harness.catalogRecords.set("act_closed", {
+    _id: "act_closed",
+    status: "unpublished",
+    visibility: "public",
+    capacity: 3
+  })
+  const result = await harness.main({ action: "register", activityId: "act_closed", title: "已下架活动", capacity: 99 })
+  assert.equal(result.ok, false)
+  assert.equal(result.code, "ACTIVITY_UNAVAILABLE")
+  assert.equal(harness.records.size, 0)
 })

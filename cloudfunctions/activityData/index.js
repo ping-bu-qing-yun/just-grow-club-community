@@ -6,6 +6,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const db = cloud.database()
 const REGISTRATIONS = "registrations"
+const ACTIVITIES = "activities"
 const MAX_LIST = 200
 const STATIC_CAPACITIES = Object.freeze({
   dinner: 8,
@@ -46,21 +47,39 @@ async function activityRecords(activityId) {
   return Array.isArray(result.data) ? result.data : []
 }
 
-function resolveCapacity(activityId, requestedCapacity, records) {
-  if (STATIC_CAPACITIES[activityId]) return STATIC_CAPACITIES[activityId]
+async function catalogCapacity(activityId) {
+  if (!String(activityId || "").startsWith("act_")) return null
+  try {
+    const result = await db.collection(ACTIVITIES).doc(activityId).get()
+    const activity = result && result.data
+    if (!activity || activity.status !== "published" || activity.visibility !== "public") {
+      return { capacity: 0, unavailable: true }
+    }
+    return { capacity: cleanCapacity(activity.capacity), unavailable: false }
+  } catch (error) {
+    return { capacity: 0, unavailable: true }
+  }
+}
+
+async function resolveCapacity(activityId, requestedCapacity, records) {
+  if (STATIC_CAPACITIES[activityId]) return { capacity: STATIC_CAPACITIES[activityId], unavailable: false }
+  const published = await catalogCapacity(activityId)
+  if (published) return published
   const stored = (records || []).map((record) => cleanCapacity(record.capacity)).find(Boolean)
-  return stored || cleanCapacity(requestedCapacity)
+  return { capacity: stored || cleanCapacity(requestedCapacity), unavailable: false }
 }
 
 async function availability(activityId, requestedCapacity) {
   const records = await activityRecords(activityId)
-  const capacity = resolveCapacity(activityId, requestedCapacity, records)
+  const resolved = await resolveCapacity(activityId, requestedCapacity, records)
+  const capacity = resolved.capacity
   const registeredCount = records.length
   return {
     capacity,
     registeredCount,
     remaining: capacity ? Math.max(0, capacity - registeredCount) : 0,
-    isFull: Boolean(capacity && registeredCount >= capacity)
+    isFull: Boolean(capacity && registeredCount >= capacity),
+    unavailable: Boolean(resolved.unavailable)
   }
 }
 
@@ -116,6 +135,9 @@ exports.main = async (event = {}) => {
       }
 
       const current = await availability(activityId, event.capacity)
+      if (current.unavailable) {
+        return { ok: false, code: "ACTIVITY_UNAVAILABLE", msg: "活动已下架或不存在", activityId, ...current }
+      }
       if (!current.capacity) {
         return { ok: false, code: "CAPACITY_REQUIRED", msg: "活动尚未设置报名人数" }
       }

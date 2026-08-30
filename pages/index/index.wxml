@@ -479,13 +479,13 @@
     </view>
   </scroll-view>
 
-  <view wx:if="{{showActivityComposer}}" class="activity-composer">
+  <view wx:if="{{showActivityComposer}}" class="activity-composer" style="bottom: {{composerKeyboardHeight}}px">
     <view class="composer-top">
       <button class="composer-back" bindtap="closeActivityComposer">‹ 返回</button>
       <text>发布活动</text>
       <view class="composer-top-placeholder"></view>
     </view>
-    <scroll-view scroll-y class="composer-scroll">
+    <scroll-view scroll-y enhanced enable-flex class="composer-scroll" scroll-into-view="{{composerScrollIntoView}}">
       <view class="composer-body">
         <!-- 第一板块：活动内容 -->
         <view class="composer-section">
@@ -494,17 +494,18 @@
             <image wx:if="{{activityDraft.poster}}" class="poster-upload-img" src="{{activityDraft.poster}}" mode="aspectFill" />
             <view wx:else class="poster-upload-plus">
               <text class="poster-upload-plus-icon">＋</text>
-              <text class="poster-upload-hint">添加优质图片更吸引人</text>
+              <text class="poster-upload-hint">添加活动封面</text>
             </view>
             <view wx:if="{{activityDraft.poster}}" class="poster-upload-edit">＋ 更换图片</view>
           </view>
-          <view class="form-group">
-            <view class="form-label">标题<text class="req">*</text></view>
-            <input class="form-input title-gold" value="{{activityDraft.title}}" data-field="title" bindinput="updateActivityDraftField" placeholder="比如：周五轻聊天晚餐局" maxlength="20" />
+          <view class="poster-public-note">封面会随活动公开展示，请不要上传私人照片或敏感信息。</view>
+          <view class="form-group" id="composer-title">
+            <view class="form-label">活动标题<text class="req">*</text></view>
+            <input class="form-input title-gold" value="{{activityDraft.title}}" data-field="title" data-anchor="composer-title" bindfocus="focusActivityField" bindinput="updateActivityDraftField" bindkeyboardheightchange="onActivityKeyboardHeightChange" adjust-position="{{false}}" always-embed="{{true}}" cursor-spacing="120" confirm-type="next" placeholder="比如：周五轻聊天晚餐局" maxlength="40" />
           </view>
-          <view class="form-group">
+          <view class="form-group" id="composer-intro">
             <view class="form-label">活动介绍</view>
-            <textarea class="form-textarea" value="{{activityDraft.subtitle}}" data-field="subtitle" bindinput="updateActivityDraftField" placeholder="写写这场活动会怎么发生（长按可全选、复制）" maxlength="200" />
+            <textarea class="form-textarea" value="{{activityDraft.subtitle}}" data-field="subtitle" data-anchor="composer-intro" bindfocus="focusActivityField" bindinput="updateActivityDraftField" bindkeyboardheightchange="onActivityKeyboardHeightChange" adjust-position="{{false}}" fixed="{{true}}" cursor-spacing="120" placeholder="写写这场活动会怎么发生（长按可全选、复制）" maxlength="500" />
           </view>
         </view>
 
@@ -531,16 +532,16 @@
               </picker>
             </view>
           </view>
-          <view class="form-group">
+          <view class="form-group" id="composer-location">
             <view class="form-label">活动地点<text class="req">*</text></view>
-            <input class="form-input" value="{{activityDraft.location}}" data-field="location" bindinput="updateActivityDraftField" placeholder="比如：KIC / 大学路附近" maxlength="30" />
+            <input class="form-input" value="{{activityDraft.location}}" data-field="location" data-anchor="composer-location" bindfocus="focusActivityField" bindinput="updateActivityDraftField" bindkeyboardheightchange="onActivityKeyboardHeightChange" adjust-position="{{false}}" always-embed="{{true}}" cursor-spacing="120" confirm-type="next" placeholder="比如：KIC / 大学路附近" maxlength="80" />
           </view>
         </view>
 
         <!-- 第三板块：分组信息 -->
         <view class="composer-section">
           <view class="composer-section-title">分组信息</view>
-          <view wx:for="{{activityDraft.groups}}" wx:key="key" class="group-card">
+          <view wx:for="{{activityDraft.groups}}" wx:key="key" class="group-card" id="composer-group-{{index}}">
             <view class="group-head">
               <text>第{{index + 1}}组报名</text>
               <button wx:if="{{activityDraft.groups.length > 1}}" class="group-del" data-index="{{index}}" bindtap="removeActivityGroup">×</button>
@@ -548,11 +549,11 @@
             <view class="form-row">
               <view class="form-half">
                 <view class="form-label">报名人数上限<text class="req">*</text></view>
-                <input class="form-input" type="number" value="{{item.people}}" data-index="{{index}}" data-field="people" bindinput="updateActivityGroup" placeholder="比如：8" maxlength="3" />
+                <input class="form-input" type="number" value="{{item.people}}" data-index="{{index}}" data-field="people" data-anchor="composer-group-{{index}}" bindfocus="focusActivityField" bindinput="updateActivityGroup" bindkeyboardheightchange="onActivityKeyboardHeightChange" adjust-position="{{false}}" always-embed="{{true}}" cursor-spacing="120" confirm-type="next" placeholder="比如：8" maxlength="3" />
               </view>
               <view class="form-half">
                 <view class="form-label">活动价格</view>
-                <input class="form-input" value="{{item.price}}" data-index="{{index}}" data-field="price" bindinput="updateActivityGroup" placeholder="¥99 或 免费" maxlength="20" />
+                <input class="form-input" value="{{item.price}}" data-index="{{index}}" data-field="price" data-anchor="composer-group-{{index}}" bindfocus="focusActivityField" bindinput="updateActivityGroup" bindkeyboardheightchange="onActivityKeyboardHeightChange" adjust-position="{{false}}" always-embed="{{true}}" cursor-spacing="120" confirm-type="done" placeholder="¥99 或 免费" maxlength="30" />
               </view>
             </view>
           </view>
@@ -562,7 +563,7 @@
     </scroll-view>
     <view class="composer-bottom">
       <button class="composer-cancel" bindtap="saveActivityDraft">存草稿</button>
-      <button class="composer-publish" bindtap="publishActivity">发布活动</button>
+      <button class="composer-publish" disabled="{{activityPublishing}}" bindtap="publishActivity">{{activityPublishing ? '正在发布…' : '发布到活动库'}}</button>
     </view>
   </view>
 
