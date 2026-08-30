@@ -46,6 +46,8 @@ async function findOrCreateUser(openid, createIfMissing) {
   const canonicalId = canonicalUserId(openid)
   const result = await users.where({ _openid: openid }).limit(100).get()
   const records = Array.isArray(result.data) ? result.data : []
+  // 调用前云端是否已有该用户记录：有=老用户（曾注册/登录过），无=全新用户
+  const preExisting = records.length > 0
   let user = records.find((record) => record._id === canonicalId) || null
   const latest = newestRecord(records)
 
@@ -83,7 +85,7 @@ async function findOrCreateUser(openid, createIfMissing) {
   await removeLegacyRecords(records, canonicalId)
   const current = await users.doc(canonicalId).get()
   user = current && current.data ? current.data : null
-  return user
+  return { user, preExisting }
 }
 
 exports.main = async (event = {}) => {
@@ -92,13 +94,16 @@ exports.main = async (event = {}) => {
 
   try {
     await ensureUsersCollection()
-    const user = await findOrCreateUser(OPENID, !event.silent)
-    if (!user) return { ok: true, openid: OPENID, existing: false, user: null }
+    const { user, preExisting } = await findOrCreateUser(OPENID, !event.silent)
+    if (!user) return { ok: true, openid: OPENID, existing: false, created: false, user: null }
 
     return {
       ok: true,
       openid: OPENID,
       existing: true,
+      // created=true 表示这条用户记录是本次调用新建的（全新用户）；
+      // 老用户点击登录时 created=false，小程序据此直接进专属页。
+      created: !preExisting,
       user: {
         _id: user._id,
         openid: OPENID,

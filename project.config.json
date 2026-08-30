@@ -77,6 +77,10 @@
       },
       {
         "type": "file",
+        "value": "PRODUCT_COPY_GUIDELINES.md"
+      },
+      {
+        "type": "file",
         "value": "package.json"
       },
       {

@@ -21,76 +21,43 @@
       <view class="bridge"></view>
       <view class="lens right"></view>
     </view>
-    <view class="welcome-brand">让恰好的关系</view>
-    <view class="welcome-title">从见面开始</view>
+    <view class="welcome-brand">认真认识一个人</view>
+    <view class="welcome-title">从真实见面开始</view>
     <button class="welcome-start" bindtap="go" data-view="introLetter">开始认识彼此</button>
   </view>
 
   <scroll-view wx:if="{{view === 'introLetter'}}" scroll-y class="screen letter-screen">
     <image class="letter-portrait" src="/pages/index/images/portrait-user.jpg" mode="aspectFit" />
     <view class="letter-head">
-      <view class="letter-kicker">见字如面。</view>
-      <view class="letter-body">我是90后的小CC，和此刻正在读这封信的你一样，也想在这个快节奏的城市里，认真寻找并建立一段长期而真实的亲密关系。</view>
-      <view class="letter-body">我相信，所有恰好关系都是从见面开始的。所以我开设了针对不同情感需求场景的线下交友活动，想给你一个机会——<text class="letter-em">认真认识别人，也被认真认识。</text></view>
-      <view class="letter-body">我做这个小程序，是想先更懂你们真正的交友需求，<text class="letter-em">再用恰好的方式，把你与恰好的人的见面方式精准推送到你面前</text>，少一点出门的犹豫，多一点线下相遇的可能——让可靠的关系，从一次真实的见面开始。</view>
+      <view class="letter-kicker">你好，我是小CC。</view>
+      <view class="letter-body">恰好不做快速筛选，也不催你立刻交换联系方式。我们想让你在真实见面里，慢慢看见一个人，也让自己被认真看见。</view>
+      <view class="letter-body">先说清自己的需要、边界和靠近方式，再参加适合的小型活动。关系不是等来的答案，而是一次次真实表达、倾听和选择。</view>
       <view class="letter-sign">小CC</view>
     </view>
-    <view class="letter-faith">
-      <view class="letter-faith-title">恰好的信奉</view>
-      <view class="faith-item">喜欢要从见面开始</view>
-      <view class="faith-item">先立体识人，而后心生欢喜</view>
-      <view class="faith-item">接住不同情感需求场景</view>
-    </view>
-    <button class="primary-btn wide letter-next" bindtap="go" data-view="auth">开始吧 →</button>
+    <button class="primary-btn wide letter-next" bindtap="go" data-view="auth">继续</button>
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'auth'}}" scroll-y class="screen auth-screen">
     <view class="auth-hero">
-      <view class="auth-kicker">先登录，再慢慢认识彼此</view>
-      <view class="auth-title">你的体验会被好好保留下来</view>
-      <text>登录后，你的回答、画像和活动记录会在下次回来时继续保留。</text>
+      <view class="auth-kicker">保存你的进度</view>
+      <view class="auth-title">用微信登录恰好</view>
+      <text>回答、画像和报名意向会安全保存，换设备也能继续。</text>
     </view>
     <view class="auth-card">
       <view class="auth-account" wx:if="{{loggedIn}}">
         <view class="auth-avatar">Z</view>
         <view><text>欢迎回来，{{accountName}}</text><text>继续完成你的恰好画像</text></view>
       </view>
-      <view class="auth-switch">
-        <button class="{{authMode === 'wechat' ? 'active' : ''}}" data-mode="wechat" bindtap="switchAuthMode">微信快捷登录</button>
-        <button class="{{authMode === 'phone' ? 'active' : ''}}" data-mode="phone" bindtap="switchAuthMode">手机号登录</button>
-      </view>
-      <block wx:if="{{authMode === 'wechat'}}">
-        <view class="auth-privacy">微信登录仅用于识别你的账号，不会公开你的微信信息。</view>
-        <button class="primary-btn wide auth-login-btn" bindtap="loginUser">{{loggedIn ? '继续进入恰好' : '微信快捷进入'}}</button>
-      </block>
-      <block wx:else>
-        <input class="auth-input" type="number" value="{{phoneNumber}}" data-field="phoneNumber" bindinput="updateAuthField" cursor-spacing="20" maxlength="11" placeholder="手机号" />
-        <input class="auth-input" type="number" value="{{verificationCode}}" data-field="verificationCode" bindinput="updateAuthField" cursor-spacing="20" maxlength="6" placeholder="验证码（体验阶段可填写任意6位）" />
-        <button class="primary-btn wide auth-login-btn" bindtap="loginUser">登录并开始认识彼此</button>
-      </block>
-      <view class="auth-footnote">注册即代表你愿意遵守社区的真实、尊重与隐私约定</view>
+      <view class="auth-privacy">资料默认不公开，只用于本人画像和活动推荐。</view>
+      <button class="primary-btn wide auth-login-btn" bindtap="loginUser">{{loggedIn ? '继续' : '微信登录'}}</button>
+      <view class="auth-footnote">请真实表达，也尊重每个人的选择和边界。</view>
     </view>
-  </scroll-view>
-
-  <scroll-view wx:elif="{{view === 'wxTouch'}}" scroll-y class="screen">
-    <view class="wechat-time">今天 19:36</view>
-    <view class="wx-row">
-      <view class="wx-avatar"></view>
-      <view class="wx-bubble">你之前说「怕人多，也怕无效社交」。这周有一场6-8人轻聊天晚餐局，流程很清楚，在KIC附近。</view>
-    </view>
-    <button class="wx-card" bindtap="go" data-view="activityDetail">
-      <view class="wx-cover">
-        <view class="wx-title">周五轻聊天晚餐局</view>
-        <view class="wx-sub">成熟活动 · 少人数 · 想认识靠谱的人</view>
-      </view>
-      <view class="wx-foot">点击查看是否适合你 <text>›</text></view>
-    </button>
   </scroll-view>
 
   <scroll-view wx:elif="{{view === 'lightQa'}}" scroll-y class="screen">
     <view class="qa-intro">
-      <view class="qa-kicker">先问 6 个轻问题 · 约 1 分钟</view>
-      <view class="qa-main-title">帮你挑一场阻力最小的见面</view>
+      <view class="qa-kicker">6 个选择 · 约 1 分钟</view>
+      <view class="qa-main-title">先找到你愿意参加的见面</view>
     </view>
     <view class="entry-bar">
       <view class="entry-bar-fill" style="width: {{(entryIndex + 1) * 16.67}}%"></view>
@@ -121,9 +88,8 @@
 
   <scroll-view wx:elif="{{view === 'deepQa'}}" scroll-y class="screen">
     <view class="qa-intro">
-      <view class="qa-kicker">情感与交友 · 6 题</view>
-      <view class="qa-main-title">再问你 6 个关于"你"的问题</view>
-      <view class="qa-small">让初回画像更贴近真实的你。</view>
+      <view class="qa-kicker">关系实践 · 6 题</view>
+      <view class="qa-main-title">你如何靠近、表达与守住边界</view>
     </view>
     <view class="entry-bar">
       <view class="entry-bar-fill" style="width: {{(relIndex + 1) * 16.67}}%"></view>
@@ -194,8 +160,8 @@
       </view>
       <view class="soft-field full"><text>职业（选填）</text><input value="{{basicInfo.occupation}}" data-field="occupation" bindinput="updateBasicField" cursor-spacing="20" placeholder="比如：设计师" /></view>
       <view class="soft-field full">
-        <text>如果恰好这里是进入另一个你的平行宇宙的入口，你希望出现在一个什么样的场景里面，遇见谁？（选填）</text>
-        <textarea class="scene-editor" value="{{basicInfo.scene}}" data-field="scene" bindinput="updateBasicField" cursor-spacing="20" maxlength="160" placeholder="或写下你自己的画面：场景 + 你想遇见谁。比如：在老家的稻田边躺着看云，遇见小时候的自己……" />
+        <text>你想在怎样的场景里，认真认识怎样的人？（选填）</text>
+        <textarea class="scene-editor" value="{{basicInfo.scene}}" data-field="scene" bindinput="updateBasicField" cursor-spacing="20" maxlength="160" placeholder="比如：一起散步，能自然聊到生活和关系。" />
       </view>
     </view>
     <button class="primary-btn wide" bindtap="submitBasicInfo">生成我的初印象画像</button>
@@ -204,7 +170,7 @@
   <scroll-view wx:elif="{{view === 'profile'}}" scroll-y class="screen">
     <view class="mini-header">
       <view class="mini-title">这是你的初印象画像</view>
-      <view class="mini-desc">先认识你一点点，画像会随使用慢慢生长，不用一次填完。</view>
+      <view class="mini-desc">这是初步理解，不是标签。它会随着回答和真实见面继续更新。</view>
     </view>
     <view class="profile-mini">
       <view class="profile-mini-cover">
@@ -257,11 +223,10 @@
     <view class="portrait-strip">
       <image class="interactive-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" bindtap="tapCat" />
       <view class="portrait-strip-head">
-        <text>刚刚懂你一点</text>
-        <b>{{homeComplete}}%</b>
+        <text>先懂你一点</text>
       </view>
       <view class="portrait-summary">{{homeSummary}}</view>
-      <view class="portrait-hint">先看清自己的社交需求，再挑一场舒服的见面。</view>
+      <view class="portrait-hint">看清自己的需要，再选择愿意实践的见面。</view>
       <view class="portrait-tags">
         <text wx:for="{{homeTags}}" wx:key="*this">{{item}}</text>
       </view>
@@ -295,16 +260,16 @@
           <text class="letter-seal">见字如面</text>
         </view>
         <image class="letter-cat" src="/pages/index/images/posters/cat-stretch.png" mode="aspectFit" />
-        <view class="letter-head">小CC的来信</view>
+        <view class="letter-head">今天，认真回答一个问题</view>
         <view wx:if="{{letterMode === 'ask'}}" class="letter-q">{{letterTopic.q}}</view>
         <input wx:else class="letter-topic-input" value="{{letterMyTopic}}" bindinput="updateLetterMyTopic" cursor-spacing="20" maxlength="30" placeholder="写下你想聊的话题" />
         <textarea class="letter-answer" value="{{letterDraft}}" bindinput="updateLetterDraft" cursor-spacing="20" maxlength="200" placeholder="{{letterMode === 'free' ? '围绕你自己的话题，说几句真实感受…' : '回信给小CC，写几句此刻的真实感受…'}}" />
         <view class="letter-count">{{letterDraft.length}}/200</view>
         <view class="letter-actions">
-          <button class="letter-btn ghost" bindtap="toggleLetterSource">{{letterMode === 'ask' ? '我也有个话题' : '回到小CC的来信'}}</button>
-          <button class="letter-btn main" bindtap="submitHomeLetter">{{letterMode === 'free' ? '把话题交给小CC' : '把回信交给小CC'}}</button>
+          <button class="letter-btn ghost" bindtap="toggleLetterSource">{{letterMode === 'ask' ? '写自己的问题' : '回到今日问题'}}</button>
+          <button class="letter-btn main" bindtap="submitHomeLetter">提交给小CC</button>
         </view>
-        <view wx:if="{{letterMode === 'ask'}}" class="letter-switch" bindtap="switchHomeLetter">换一个话题 ↻</view>
+        <button wx:if="{{letterMode === 'ask'}}" class="letter-switch" bindtap="switchHomeLetter">换一个问题</button>
       </view>
     </view>
 
@@ -314,10 +279,10 @@
         <view class="letter-head">你的声音，小CC收到了</view>
         <view class="letter-done-q">{{letterSaved.q}}</view>
         <view class="letter-done-a">“{{letterSaved.answer}}”</view>
-        <view class="letter-echo">这些表达会慢慢长成你的关系画像，也会帮小CC为你找到更合适的见面。</view>
+        <view class="letter-echo">这段表达会更新你的画像，也会帮助小CC改进活动推荐。</view>
         <view class="letter-actions">
           <button class="letter-btn ghost" bindtap="editHomeLetter">补充一下</button>
-          <button class="letter-btn main" bindtap="newHomeLetter">再写一封</button>
+          <button class="letter-btn main" bindtap="newHomeLetter">回答新问题</button>
         </view>
       </view>
     </view>
@@ -345,17 +310,17 @@
       </view>
 
       <view class="block">
-        <view class="block-title">适合谁</view>
-        <view class="block-body">{{activeActivity.crowd}}<text class="block-note">不换简历、不点名配对，你可以只来听，也可以慢慢开口。</text></view>
+        <view class="block-title">这场适合你吗</view>
+        <view class="block-body">{{activeActivity.crowd}}<text class="block-note">不查条件、不强制配对。你可以先听，也可以表达。</text></view>
       </view>
 
       <view class="block cc">
-        <view class="block-title">小CC的话</view>
+        <view class="block-title">为什么推荐给你</view>
         <view class="block-body">{{matchReason}}</view>
       </view>
 
       <view wx:if="{{activeActivity.schedule && activeActivity.schedule.length}}" class="block">
-        <view class="block-title">活动流程 <text class="block-title-note">每个环节都是低压力设计</text></view>
+        <view class="block-title">活动流程</view>
         <view class="schedule">
           <view wx:for="{{activeActivity.schedule}}" wx:key="time" class="step">
             <view class="dot"></view>
@@ -370,29 +335,6 @@
         <view class="block-body safety">第一次线下见面，请优先选择公共场所，并将行程告诉一位信任的朋友。</view>
       </view>
 
-      <view wx:if="{{afterPartySpots.length}}" class="block">
-        <view class="block-title">听你们的 <text class="block-title-note">散场后，还想一起去哪？</text></view>
-        <view class="after-note">按你今晚的状态和散场时间挑的，都在 KIC 步行 10 分钟内。</view>
-        <view wx:for="{{afterPartySpots}}" wx:key="id" class="after-spot">
-          <view class="after-spot-head">
-            <text class="after-cat">{{item.cat}}</text>
-            <text class="after-name">{{item.name}}</text>
-            <text class="after-walk">{{item.walk}}</text>
-          </view>
-          <view class="after-why">{{item.why}}</view>
-          <view class="after-tags">
-            <text wx:for="{{item.vibe}}" wx:for-item="v" wx:key="*this" class="after-tag">{{v}}</text>
-            <text wx:if="{{item.open}}" class="after-tag after-open">{{item.open}}</text>
-            <text wx:if="{{item.perk}}" class="after-perk">{{item.perk}}</text>
-          </view>
-        </view>
-        <view class="after-actions">
-          <button class="after-btn line" bindtap="refreshAfterParty">换一批</button>
-          <button class="after-btn solid" bindtap="shareAfterParty">发到活动群</button>
-        </view>
-        <view class="after-foot">去不去都行，先去也是好的。报名后，就能把这三个去处发到活动群。</view>
-      </view>
-
       <view class="detail-links">
         <button class="detail-link" bindtap="openActivityGroup">{{activityGroupJoined ? '已加入活动群' : '活动群聊'}}</button>
         <button class="detail-link warn" data-id="{{activeActivity.id}}" bindtap="dismissCard">不喜欢这类</button>
@@ -400,15 +342,15 @@
     </scroll-view>
 
     <view class="detail-bar">
-      <button class="bar-btn main" bindtap="registerActivity">{{activeActivityRegistered ? '已报名，等待活动确认' : '立即报名'}}</button>
-      <button class="bar-btn ghost" bindtap="openReason">考虑一下</button>
+      <button class="bar-btn main" disabled="{{registrationSubmitting}}" bindtap="registerActivity">{{registrationSubmitting ? '提交中…' : activeActivityRegistrationPending ? '已保存，待同步' : activeActivityRegistered ? '取消报名意向' : '提交报名意向'}}</button>
+      <button class="bar-btn ghost" bindtap="openReason">我还有顾虑</button>
     </view>
   </view>
 
     <scroll-view wx:elif="{{view === 'explore'}}" scroll-y class="screen with-tab explore-page">
     <view class="explore-hero">
-      <view class="explore-hero-title">发现其他活动</view>
-      <view class="explore-hero-desc">按出门阻力和见面方式，挑一场刚刚好的局。</view>
+      <view class="explore-hero-title">找一场合适的见面</view>
+      <view class="explore-hero-desc">按人数、方式和距离选择，不用盲目报名。</view>
     </view>
     <view class="explore-search">
       <input class="explore-input" value="{{exploreSearch}}" bindinput="updateExploreSearch" cursor-spacing="20" placeholder="搜索活动、地点或场景" />
@@ -457,12 +399,6 @@
       </view>
       <button class="profile-edit" bindtap="editProfile">编辑</button>
     </view>
-    <view class="trust-strip"><text>已实名</text><text>信用良好</text></view>
-    <view class="portrait-progress">
-      <view class="pp-head"><text>画像完善度</text><text>{{homeComplete}}%</text></view>
-      <view class="pp-track"><view class="pp-fill" style="width: {{homeComplete}}%"></view></view>
-      <view class="pp-hint">每次回答和活动反馈，都会让推荐更贴合你。</view>
-    </view>
     <view class="profile-promos">
       <button class="promo-full" bindtap="go" data-view="profile"><text class="promo-title">画像成长</text><text class="promo-sub">继续认识自己</text></button>
     </view>
@@ -472,9 +408,8 @@
     <view class="club-profile-section">
       <view class="section-title">我的记录</view>
       <button bindtap="go" data-view="profile"><text>我的画像</text><text>根据回答和活动反馈持续更新</text><text class="row-arrow">›</text></button>
-      <button bindtap="mineToast" data-text="参加过活动的记录会出现在这里"><text>参加过活动</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
-      <button bindtap="mineToast" data-text="收藏的活动会出现在这里"><text>活动收藏</text><text>{{savedActivityCount}} 个</text><text class="row-arrow">›</text></button>
-      <button bindtap="openActivityComposer"><text>发布活动</text><text>小CC发起一场恰好活动</text><text class="row-arrow">›</text></button>
+      <button wx:if="{{registeredActivities.length}}" bindtap="showRegistrationSummary"><text>报名意向</text><text>{{registeredActivities.length}} 场</text><text class="row-arrow">›</text></button>
+      <button wx:if="{{hostToolsEnabled}}" bindtap="openActivityComposer"><text>发起活动</text><text>主理人工具</text><text class="row-arrow">›</text></button>
     </view>
     <view wx:if="{{publishedActivities.length}}" class="club-profile-section">
       <view class="section-title">我发布的活动</view>
@@ -487,7 +422,7 @@
       </view>
     </view>
     <view class="mine-logout">
-      <button class="logout-btn" bindtap="logoutUser">退出当前账号</button>
+      <button class="logout-btn" bindtap="logoutUser">退出登录</button>
     </view>
   </scroll-view>
 
@@ -586,10 +521,10 @@
 
   <view wx:if="{{showReasonModal}}" class="modal-mask" bindtap="closeReason">
     <view class="reason-modal" catchtap="noop">
-      <view class="modal-title">你为什么还想考虑？</view>
-      <view class="modal-desc">你的选择会让推荐更准确</view>
+      <view class="modal-title">你还在顾虑什么？</view>
+      <view class="modal-desc">反馈只用于改进推荐，不会公开。</view>
       <button wx:for="{{reasonOptions}}" wx:key="*this" class="reason" data-reason="{{item}}" bindtap="closeReason">{{item}}</button>
-      <button class="ghost-btn wide" bindtap="closeReason" data-reason="已收藏">先收藏</button>
+      <button class="ghost-btn wide" bindtap="closeReason" data-reason="暂不报名">暂不报名</button>
     </view>
   </view>
 </view>

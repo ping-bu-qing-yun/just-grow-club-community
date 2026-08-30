@@ -439,7 +439,7 @@ button::after {
 }
 
 .primary-btn {
-  background: #6b8e6b;
+  background: #587b59;
   color: #fff;
 }
 
@@ -3405,7 +3405,7 @@ button::after {
   flex: 1;
   min-height: 88rpx;
   padding: 0;
-  color: #8a948d;
+  color: #667068;
   font-size: 24rpx;
   font-weight: 800;
   display: flex;
@@ -3657,36 +3657,9 @@ button::after {
   font-weight: 900;
 }
 
-.auth-switch {
-  display: flex;
-  gap: 10rpx;
-  margin: 18rpx 0;
-  padding: 6rpx;
-  border-radius: 18rpx;
-  background: #f1eee7;
-}
-
-.auth-switch button {
-  flex: 1;
-  height: 62rpx;
-  border-radius: 14rpx;
-  color: #737e76;
-  font-size: 22rpx;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.auth-switch button.active {
-  background: #fff;
-  color: #21644e;
-  box-shadow: 0 4rpx 10rpx rgba(62,49,30,.08);
-}
-
 .auth-privacy, .auth-footnote, .settings-note {
-  color: #929991;
-  font-size: 20rpx;
+  color: #667068;
+  font-size: 22rpx;
   line-height: 1.5;
 }
 
@@ -3697,18 +3670,6 @@ button::after {
 .auth-footnote {
   margin-top: 18rpx;
   text-align: center;
-}
-
-.auth-input {
-  width: 100%;
-  height: 82rpx;
-  margin-top: 12rpx;
-  padding: 0 18rpx;
-  border-radius: 16rpx;
-  background: #fdfcf8;
-  border: 1rpx solid rgba(26,26,46,.1);
-  color: #1a1a2e;
-  font-size: 24rpx;
 }
 
 .account-entry {
@@ -4525,9 +4486,11 @@ button::after {
   font-weight: 800;
   color: #1a1a2e;
   margin-top: 8rpx;
-  white-space: nowrap;
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .detail-poster {
@@ -4751,9 +4714,13 @@ button::after {
 .detail-link {
   background: none;
   border: none;
-  font-size: 22rpx;
-  color: #8a867c;
-  padding: 10rpx;
+  min-height: 80rpx;
+  font-size: 24rpx;
+  color: #667068;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .detail-link.warn {
@@ -4796,7 +4763,7 @@ button::after {
 }
 
 .bar-btn.main {
-  background: linear-gradient(145deg, #6f916c, #587b59);
+  background: linear-gradient(145deg, #587b59, #416845);
   color: #fff;
   box-shadow: 0 10rpx 22rpx rgba(45, 72, 52, .22);
 }
@@ -4809,6 +4776,10 @@ button::after {
   color: #416054;
   border: 1rpx solid rgba(95, 127, 94, .24);
   font-size: 26rpx;
+}
+
+.bar-btn[disabled] {
+  opacity: .68;
 }
 
 .need-ask {
@@ -5334,7 +5305,7 @@ button::after {
 
 .explore-date {
   color: #d97757;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 850;
 }
 
@@ -5348,7 +5319,7 @@ button::after {
 
 .explore-loc {
   font-size: 22rpx;
-  color: #8a867c;
+  color: #667068;
   margin-top: 10rpx;
 }
 
@@ -5361,7 +5332,7 @@ button::after {
 }
 
 .explore-tags text {
-  font-size: 18rpx;
+  font-size: 22rpx;
   color: #416054;
   background: #eff5f1;
   padding: 6rpx 14rpx;
@@ -5446,6 +5417,7 @@ button::after {
   color: #fff;
   font-size: 22rpx;
   border-radius: 99rpx;
+  min-height: 80rpx;
   padding: 10rpx 24rpx;
   display: flex;
   align-items: center;
@@ -5745,9 +5717,8 @@ button::after {
   font-size: 28rpx;
   color: #333;
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.4;
 }
 .host-activity-meta {
   font-size: 22rpx;
@@ -6105,8 +6076,8 @@ button::after {
 
 .letter-count {
   text-align: right;
-  font-size: 20rpx;
-  color: #b5afa6;
+  font-size: 22rpx;
+  color: #716c64;
   margin-top: 8rpx;
 }
 
@@ -6129,7 +6100,7 @@ button::after {
 }
 
 .letter-btn.main {
-  background: linear-gradient(145deg, #6f916c, #587b59);
+  background: linear-gradient(145deg, #587b59, #416845);
   color: #fff;
 }
 
@@ -6139,10 +6110,18 @@ button::after {
 }
 
 .letter-switch {
-  margin-top: 18rpx;
-  text-align: center;
-  color: #8a867c;
-  font-size: 22rpx;
+  margin-top: 8rpx;
+  min-height: 80rpx;
+  color: #667068;
+  font-size: 24rpx;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.letter-switch::after {
+  border: 0;
 }
 
 .letter-envelope.done {

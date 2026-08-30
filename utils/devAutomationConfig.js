@@ -3,7 +3,7 @@ const path = require('path');
 const DEFAULT_DEVTOOLS_CLI_PATH = '/Applications/wechatwebdevtools.app/Contents/MacOS/cli';
 const DEFAULT_DEVTOOLS_PORT = 54448;
 const DEFAULT_ENV_ID = 'cloud1-d5gw01teoed1301d0';
-const DEFAULT_FUNCTION_NAMES = ["login", "userProfile"];
+const DEFAULT_FUNCTION_NAMES = ["login", "userProfile", "activityData"];
 const DEFAULT_COMPILE_MODE_NAME = 'dev-tools-autorun';
 
 function getProjectPath() {
